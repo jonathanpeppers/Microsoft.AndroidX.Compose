@@ -1530,6 +1530,19 @@ class.
   `RememberSaveableTests` exercises key equality, nulls, key-array mutation,
   factory counts, and scalar controls against real Compose;
   `RememberSaveableRestoreTests` covers recreation and post-restore resets.
+  `MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue>` additionally
+  uses Kotlin's `TextFieldValue.Saver` at the inner-value boundary of the
+  mutable-state overload. This saves annotated text and selection, but not
+  the IME-owned composition range, focus or keyboard visibility. Ordinary
+  edits and recompositions do not invoke restore or clear composition.
+  The UI Text Android 1.11.3.1 binding exposes the value and its copy/getters,
+  but omits the Saver-typed companion getter; `TextFieldValueSaver` uses the
+  existing companion generator to access it. No managed serialization format
+  or general custom-saver API is introduced. Other wrappers and scalar values
+  keep their existing auto-saver behavior.
+  `TextFieldValueSaveableTests` covers annotations, reversed selection,
+  restore-only composition clearing, fresh wrappers, key changes and sibling
+  isolation; `JetchatRestorationTests` exercises the actual sample activity.
 - **State primitives.** `MutableManagedState<T>` provides synchronized
   managed values that invalidate Compose readers without pretending to be a
   Kotlin flow. `MutableStateList<T>`, `MutableStateMap<K,V>`,

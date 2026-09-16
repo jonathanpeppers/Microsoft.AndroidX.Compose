@@ -35,9 +35,7 @@ public static class Conversation
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
     public static ComposableNode Build(
         ConversationUiState          ui,
-        MutableState<TextFieldValue> input,
         MutableState<string>         selectedMenu,
-        MutableState<int>            selectedSelector,
         MutableState<bool>           popupOpen,
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
@@ -46,6 +44,11 @@ public static class Conversation
         Action<string>               onAuthorClicked) =>
         new Composed(c =>
         {
+            var input = c.RememberSaveable(
+                () => new MutableState<TextFieldValue>(ComposeExtensions.NewTextFieldValue()),
+                key1: ui.ChannelName);
+            var selectedSelector = c.RememberSaveable(
+                () => new MutableState<int>(0), key1: ui.ChannelName);
             var scheme          = c.ColorScheme();
             var topBarState     = c.RememberTopAppBarState();
             var scrollBehavior  = c.PinnedScrollBehavior(topBarState);

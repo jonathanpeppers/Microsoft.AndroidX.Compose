@@ -71,7 +71,7 @@ palette extra for a system-theme change.
 | J09 — Profiles | Fresh launch; visit Ali and Taylor separately via drawer; scroll each away from top and back; tap profile FAB and More, dismiss, then Back. | Correct profile values and Edit profile/Message affordance; FAB collapses/expands and opens unavailable dialog. Tertiary-container role is wired. Header clipping, baseline heights, host collapse and custom FAB motion still differ. |
 | J10 — Profile history | Open one profile; use drawer gesture to choose the other; press Back. | C# normalizes to home before navigating, so Back returns to conversation. Pinned Kotlin directly navigates and can retain the preceding profile. Record the intentional routing difference. |
 | J11 — Links/drop | Scroll to `@aliconors` and URL messages; tap each and return. Drag one plain-text payload over/out/onto the conversation; separately try an image URI. | Mention opens Ali; URL uses the platform handler. Both provide red drag feedback and insert the first text item. C# additionally accepts image MIME types/URI text and animates to item 0; it does not render a dropped URI as an image attachment. |
-| J12 — Recreation | Type an unsent draft, open emoji, recreate the activity without clearing app data. | Kotlin explicitly saves editor value/selector; C# uses ordinary composition state and recreates them empty/closed. Record the actual result; process-death, navigation/scroll restoration and TalkBack are not established by this source audit. |
+| J12 — Recreation | Type an unsent draft, open emoji, recreate the activity without clearing app data. | Both now save editor text/selection and the input selector. The historical #349 baseline observed the earlier C# loss; see the restoration contract below. Process-death, navigation/scroll restoration and TalkBack are not established by activity recreation. |
 | J13 — Video | Kotlin fresh launch with a playable fixture: open seeded video, use playback controls, Back; choose video from picker, remove preview, choose again and Send with caption. | Kotlin has thumbnail/fullscreen playback and attachment removal/send; C# has no message `videoUri`, picker, preview or player. This is an explicit uncovered flow, not a matched screenshot case. Player/blur/platform dependencies remain uninvestigated. |
 
 ### Completed reusable work versus remaining integration
@@ -128,6 +128,45 @@ separate Gallery styling cycle passed on `8a71bb6` (`080E7771...`), and the
 on `9ba2c04` (`582282EE...`), as recorded in
 [`docs/compose-internals.md`](../../docs/compose-internals.md). Those earlier
 APKs are not presented as reruns against this merged Jetchat revision.
+
+## Draft and input-selector restoration (#386)
+
+`Conversation.Build` owns its draft and input selector inside the home
+navigation destination's composition, using `RememberSaveable` with the
+actual `ConversationUiState.ChannelName` as its input key. The drawer's
+`selectedMenu` is only a highlight: both drawer choices still show the one
+`#composers` conversation, so changing that highlight does not reset the draft.
+Changing the real conversation key in a live composition resets its state;
+this is not a multi-channel draft cache.
+
+The contract follows pinned
+[`UserInput.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/UserInput.kt):
+the native `TextFieldValue.Saver` saves annotated text and text selection
+(including caret/range direction), not the IME composition range. The
+input-selector panel is a separate saved integer, not the text selection.
+Live editing keeps its composition; only restoration intentionally drops it.
+Focus, keyboard visibility, recording gestures and popup visibility remain
+transient. Opening the restored emoji panel uses the existing focus handoff;
+editor focus closes it and Back dismisses it before navigation.
+Send still preserves the exact untrimmed nonblank text, clears the complete
+editor value and selector, and does not explicitly clear focus. Whitespace-only
+Send leaves the text untouched.
+
+`JetchatRestorationTests` hosts the actual sample `MainActivity` and uses native
+editor, emoji, Send and Back actions. Recreation requires a distinct resumed,
+focused replacement activity, destruction of the old activity and a saved
+instance bundle before comparing native text, caret and panel presence.
+`TextFieldValueSaveableTests` separately covers rich text, reversed selection,
+restore-only composition clearing, keyed reset and sibling isolation.
+The DeviceTests host reuses its existing common icon resources; this is
+behavioral coverage, not a pixel comparison.
+
+The supported sample boundary is **activity recreation with Android-provided
+saved state**, not persistence after clearing data, force-stop, dismissal of
+the task or a fresh independent activity. Process-death/saved-task acceptance
+requires a separate protocol and is not claimed here. The historic
+[parity baseline](../parity-baseline.md) remains an unchanged record of the
+older source/APKs, not a result for this implementation.
 
 ## Message identity
 
@@ -529,7 +568,7 @@ Open follow-ups from the #349 audit (issue titles verified on 2026-09-15):
 | [#388](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/388) | Programmatic Tooltip control and recording short tap; inspect the official binding before adding JNI. |
 | [#385](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/385) | Native infinite float animation for the pulse; separate from completed finite transitions in #336. |
 | [#387](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/387) | Video attachment/playback flow, beginning with a dependency/API audit. |
-| [#386](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/386) | Draft/selector activity recreation, including an audit of the TextFieldValue saver contract. |
+| [#386](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/386) | Draft/selector activity recreation now uses the native TextFieldValue saver; see the supported restoration boundary above. |
 
 #349 retains comparison execution and intentional/uninvestigated boundaries.
 Closed predecessor links below identify historical work, not open blockers;
@@ -552,7 +591,7 @@ it does **not** mean the underlying official binding is necessarily absent.
 | Profile geometry and FAB motion | **Sample integration; intentional all-Compose host.** C# uses a Scaffold, 120 dp rounded header clip and fixed text padding. [Upstream profile][upstream-profile] uses `CircleShape`, a custom [baseline-height layout][upstream-baseline-height], nested-scroll interop with a [CoordinatorLayout host][upstream-profile-host], and a -100 dp FAB compensation offset. Its [custom FAB layout/200 ms transition][upstream-fab] differs from M3 `ExtendedFloatingActionButton`. Keep the now-correct tertiary color role; do not blindly add a host-specific offset to the C# Scaffold. |
 | Jump control styling/motion | **Sample integration; typed animation convenience not investigated.** C# conditionally inserts a collapsed 48 dp FAB with default container and 16 dp bottom padding. [Upstream jump control][upstream-jump] is labeled, 36 dp high, surface/primary colored and animated from -32 to +32 dp before applying the negative offset. FAB color slots and float transitions are available; exact `animateDp` support is not established here. |
 | Drawer presentation | **Sample integration.** C# header renders the wordmark without upstream's separate 24 dp Jetchat icon. Section/row alignment and fixed heights differ from [upstream drawer][upstream-drawer]. Its scrollable C# column is a deliberate small-height accommodation, not an upstream layout match. |
-| Draft and selector recreation | **Sample integration; custom saver contract not investigated.** [Upstream input][upstream-input] uses `rememberSaveable` with `TextFieldValue.Saver` and a saveable selector. `MainActivity` uses ordinary `MutableStateOf` for both. General `RememberSaveable` exists, but exposing/reusing the exact TFV saver still needs an API audit; no rotation or process-death parity is claimed. |
+| Draft and selector recreation | **Implemented sample integration.** [Upstream input][upstream-input]'s native `TextFieldValue.Saver` is reused for text/selection, with a separate saveable selector inside the conversation destination. IME composition/focus are not restored; process-death parity is not claimed. See the restoration contract above. |
 | Sample data and send/drop behavior | **Intentional rewritten prose/local assets; other integration differences explicit.** Nine C# messages versus ten in [upstream data][upstream-data] change wrapping and date-group placement. `Message.AuthorImage` shares the non-me avatar, not one portrait per author. C# send timestamps are fixed `8:30 PM`; drops use `now`, accept image MIME/URI text as an extension, and animate scrolling. Kotlin accepts text/plain drops only and does not reset scroll on drop; ordinary Send resets with nonanimated `scrollToItem(0)`. |
 | Deliberate interaction/layout choices | **Intentional deviation.** C# day headers omit the fixed 16 dp height; selector buttons toggle closed; emoji focus is requested once per selector change rather than every upstream `SideEffect`; profile drawer navigation normalizes the stack. These choices require explicit comparison notes, not claims of exact parity. |
 | Provider fonts | **Intentional bounded font choice; provider API not investigated.** The six pinned resource fallbacks are bundled, while [upstream typography][upstream-typography] also requests Google Fonts provider faces. Different resolved fonts can change pixels even with equal metrics. |
