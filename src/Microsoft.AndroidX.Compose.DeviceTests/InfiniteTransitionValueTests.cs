@@ -37,6 +37,10 @@ public class InfiniteTransitionValueTests
             {
                 Assert.AreEqual(0.2f, low.Value, 0.001f,
                     "Disabled animations must snap to the target and suspend native frame work.");
+                int disabledCount = host.Observations.Count;
+                await Task.Delay(500);
+                Assert.AreEqual(disabledCount, host.Observations.Count,
+                    "Disabled native animation must stop publishing frames after reaching its target.");
             }
             else
             {
@@ -85,7 +89,7 @@ public class InfiniteTransitionValueTests
 
     static void AssertDirectionDuration(float expectedMilliseconds, long actualMilliseconds, string leg)
     {
-        float tolerance = MathF.Max(600f, expectedMilliseconds * 0.5f);
+        float tolerance = MathF.Max(250f, expectedMilliseconds * 0.2f);
         Assert.IsTrue(
             actualMilliseconds >= expectedMilliseconds - tolerance &&
             actualMilliseconds <= expectedMilliseconds + tolerance,

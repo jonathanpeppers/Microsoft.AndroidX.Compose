@@ -19,6 +19,10 @@ public class JetchatRecordingPulseTests
             {
                 Assert.AreEqual(0.2f, low.Value, 0.001f,
                     "Disabled Jetchat pulse must snap to its target and suspend native frame work.");
+                int disabledCount = host.Observations.Count;
+                await Task.Delay(500);
+                Assert.AreEqual(disabledCount, host.Observations.Count,
+                    "Disabled Jetchat pulse must stop publishing frames after reaching its target.");
             }
             else
             {
@@ -57,7 +61,7 @@ public class JetchatRecordingPulseTests
 
     static void AssertDirectionDuration(float expectedMilliseconds, long actualMilliseconds, string leg)
     {
-        float tolerance = MathF.Max(600f, expectedMilliseconds * 0.5f);
+        float tolerance = MathF.Max(250f, expectedMilliseconds * 0.2f);
         Assert.IsTrue(
             actualMilliseconds >= expectedMilliseconds - tolerance &&
             actualMilliseconds <= expectedMilliseconds + tolerance,

@@ -64,6 +64,11 @@ public class ComposableScopeAnalyzerTests
                 public float AnimateFloat([ComposableContent] System.Func<T, float> target) => default;
                 public object AnimateColor([ComposableContent] System.Func<T, object> target) => new();
             }
+
+            public sealed class InfiniteTransition
+            {
+                public float AnimateFloat(float initialValue, float targetValue, object spec) => default;
+            }
         }
         """;
 
@@ -149,6 +154,35 @@ public class ComposableScopeAnalyzerTests
                 public static void Content(AndroidX.Compose.Transition<bool> transition)
                 {
                     transition.AnimateColor(state => AndroidX.Compose.LocalFocusManager.Current());
+                }
+            }
+            """));
+    }
+
+    [Fact]
+    public void InfiniteTransitionAnimation_RequiresComposition()
+    {
+        Assert.Single(ScopeDiagnostics("""
+            class Screen
+            {
+                static void Plain(AndroidX.Compose.InfiniteTransition transition)
+                {
+                    transition.AnimateFloat(1f, 0.2f, new object());
+                }
+            }
+            """));
+    }
+
+    [Fact]
+    public void InfiniteTransitionAnimation_IsAllowedInComposition()
+    {
+        Assert.Empty(ScopeDiagnostics("""
+            class Screen
+            {
+                [AndroidX.Compose.Composable]
+                public static void Content(AndroidX.Compose.InfiniteTransition transition)
+                {
+                    transition.AnimateFloat(1f, 0.2f, new object());
                 }
             }
             """));

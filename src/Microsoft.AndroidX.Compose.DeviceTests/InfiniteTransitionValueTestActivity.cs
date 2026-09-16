@@ -89,12 +89,12 @@ public class InfiniteTransitionValueTestActivity : ComponentActivity
     {
         Observations.Add(snapshot);
         Committed.TrySetResult(snapshot);
-        if (snapshot.Value <= 0.25f)
+        if (snapshot.Value <= 0.205f)
         {
             sawLow = true;
             Low.TrySetResult(snapshot);
         }
-        else if (sawLow && snapshot.Value >= 0.95f)
+        else if (sawLow && snapshot.Value >= 0.995f)
         {
             Returned.TrySetResult(snapshot);
         }

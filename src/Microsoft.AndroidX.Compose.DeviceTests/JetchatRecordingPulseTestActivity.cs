@@ -75,12 +75,12 @@ public class JetchatRecordingPulseTestActivity : ComponentActivity
         var snapshot = new JetchatRecordingPulseSnapshot(phase, value, clock.ElapsedMilliseconds);
         Observations.Add(snapshot);
         Committed.TrySetResult(snapshot);
-        if (value <= 0.25f)
+        if (value <= 0.205f)
         {
             sawLow = true;
             Low.TrySetResult(snapshot);
         }
-        else if (sawLow && value >= 0.95f)
+        else if (sawLow && value >= 0.995f)
         {
             Returned.TrySetResult(snapshot);
         }
