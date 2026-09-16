@@ -49,6 +49,31 @@ on `9ba2c04` (`582282EE...`), as recorded in
 [`docs/compose-internals.md`](../../docs/compose-internals.md). Those earlier
 APKs are not presented as reruns against this merged Jetchat revision.
 
+## Scroll observation
+
+The jump-to-bottom button observes a remembered `DerivedState<bool>`, matching
+the pinned Kotlin sample's `derivedStateOf` predicate. Pixel-by-pixel scroll
+updates can change the predicate's inputs without invalidating the surrounding
+Box content when visibility stays the same. The threshold uses the current
+Compose density, and the remembered calculation is keyed by the scroll-state
+wrapper and pixel threshold. List keys, message content and jump-button actions
+are unchanged.
+
+A bounded Pixel 7 check on 2026-09-16 compared uninstrumented Mono Release
+builds with default Profiled AOT, partial trimming and D8. For three scripted
+scroll/input/send runs each, median HWUI jank changed from 6.62% (6.31-6.72%)
+to 3.12% (2.56-3.19%); the per-run histogram p90 changed from 25 ms (24-25 ms)
+to 10 ms (10-10 ms). Two return-baseline runs measured 6.36% (6.19-6.53%) and
+p90 25.5 ms (24-27 ms). Native jump show/tap/return-hide checks passed for
+baseline and candidate.
+
+This is initial evidence, not a statistical guarantee or an isolated density
+lookup benchmark. The return-baseline block followed an installation
+interruption; its third planned run was not started because of the unchanged
+time-budget guard. The scripted windows had no in-window UiAutomator query and
+included a three-second post-Back settling delay. Earlier assisted-window
+numbers and diagnostic-trace timings are not pooled with this comparison.
+
 ## Message identity
 
 Identity was checked against upstream commit
