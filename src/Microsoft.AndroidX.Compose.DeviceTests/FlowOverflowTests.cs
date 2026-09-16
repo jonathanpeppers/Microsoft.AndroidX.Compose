@@ -1,0 +1,190 @@
+using Android.Views.Accessibility;
+using AndroidX.Compose;
+
+namespace Microsoft.AndroidX.Compose.DeviceTests;
+
+/// <summary>Exact native count, clipping, interaction, scope and recomposition regressions.</summary>
+[TestClass]
+[DoNotParallelize]
+public class FlowOverflowTests
+{
+    static TestInstrumentation Runner => TestInstrumentation.Current
+        ?? throw new InvalidOperationException("Flow tests require native instrumentation.");
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public Task NativeControl_CountsFollowInteractiveLayout(bool horizontal) =>
+        Exercise(2, horizontal, 3);
+
+    [TestMethod]
+    [DataRow(0, true)] [DataRow(0, false)]
+    [DataRow(1, true)] [DataRow(1, false)]
+    public Task Managed_CountsFollowInteractiveLayout(int style, bool horizontal) =>
+        Exercise(style, horizontal, 3);
+
+    [TestMethod]
+    [DataRow(0, true)] [DataRow(0, false)]
+    [DataRow(1, true)] [DataRow(1, false)]
+    public async Task ExpandOnly_StopsShowingAnIndicatorWhenAllItemsFit(int style, bool horizontal)
+    {
+        var activity = await Start(style, horizontal, 2);
+        try
+        {
+            await Expect(activity, 0, 8, 2, true, horizontal);
+            await Click("flow-expand");
+            await WaitFor(() => activity.DrawnItems.TryGetValue(1, out var items) && items.Count == 8,
+                "Expanded flow did not draw all eight regular cells.");
+            Assert.AreEqual(1, activity.Clicks);
+            Assert.AreEqual(0, activity.Last?.Generation, "Expand-only indicator should no longer be placed.");
+        }
+        finally { await Finish(activity); }
+    }
+
+    [TestMethod]
+    [DataRow(0, true, 0)] [DataRow(0, false, 0)]
+    [DataRow(1, true, 0)] [DataRow(1, false, 0)]
+    [DataRow(0, true, 1)] [DataRow(0, false, 1)]
+    [DataRow(1, true, 1)] [DataRow(1, false, 1)]
+    public async Task OmittedAndExplicitClip_DrawExactlyThreeRegularItems(int style, bool horizontal, int policy)
+    {
+        var activity = await Start(style, horizontal, policy);
+        try
+        {
+            await WaitFor(() => activity.DrawnItems.TryGetValue(0, out var items) && items.Count >= 3,
+                "Clipped flow did not place its three regular cells.");
+            Runner.WaitForIdleSync();
+            Runner.RunOnMainSync(() =>
+            {
+                int[] expected = [0, 1, 2];
+                CollectionAssert.AreEquivalent(expected, activity.DrawnItems[0].ToArray());
+                Assert.IsNull(activity.Last);
+                Assert.IsTrue(activity.OuterRestored);
+            });
+        }
+        finally { await Finish(activity); }
+    }
+
+    static async Task Exercise(int style, bool horizontal, int policy)
+    {
+        var activity = await Start(style, horizontal, policy);
+        try
+        {
+            var first = await Expect(activity, 0, 8, 2, true, horizontal);
+            Assert.AreEqual(0, first.Counter);
+            Assert.IsTrue(activity.PrematureReadRejected, "Shown count must preserve the native pre-measure failure.");
+            await Click("flow-expand");
+            await Expect(activity, 1, 8, 8, false, horizontal);
+            await Click("flow-collapse");
+            var collapsed = await Expect(activity, 2, 8, 2, true, horizontal);
+            Assert.AreSame(first.Identity, collapsed.Identity, "Indicator remember was reset during expansion.");
+            Assert.AreEqual(1, collapsed.Counter, "Indicator-local click state was lost during expansion.");
+            Runner.RunOnMainSync(() =>
+            {
+                activity.Total.Value = 5;
+                activity.Generation.Value++;
+            });
+            await Expect(activity, 3, 5, 2, true, horizontal);
+            await Click("flow-expand");
+            await Expect(activity, 4, 5, 5, false, horizontal);
+            int rootPasses = activity.RootPasses;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Java.Lang.JavaSystem.Gc();
+            Runner.RunOnMainSync(() => activity.Tick.Value++);
+            await WaitFor(() => activity.Last?.Tick == 1, "Indicator-only state did not recompose after GC.");
+            var refreshed = await Expect(activity, 4, 5, 5, false, horizontal);
+            Assert.AreEqual(1, refreshed.Tick);
+            Assert.AreEqual(1, refreshed.Counter);
+            Assert.AreEqual(rootPasses, activity.RootPasses, "Indicator-local state should not restart the flow root.");
+            Assert.AreEqual(3, activity.Clicks);
+        }
+        finally { await Finish(activity); }
+    }
+
+    static async Task<FlowOverflowSnapshot> Expect(FlowOverflowTestActivity activity,
+        int generation, int total, int shown, bool expand, bool horizontal)
+    {
+        await WaitFor(() => activity.Last?.Generation == generation && activity.Last.Expand == expand,
+            $"Indicator did not draw generation {generation} ({(expand ? "expand" : "collapse")}).");
+        Runner.WaitForIdleSync();
+        FlowOverflowSnapshot? snapshot = null;
+        Runner.RunOnMainSync(() =>
+        {
+            snapshot = activity.Last ?? throw new InvalidOperationException("No flow draw snapshot.");
+            Console.WriteLine($"FLOW pid={(global::Android.OS.Process.MyPid())} direction={(horizontal ? "row" : "column")} " +
+                $"generation={generation} actual={snapshot.Total}/{snapshot.Shown} expected={total}/{shown} expand={snapshot.Expand}");
+            Assert.AreEqual(total, snapshot.Total, "Total count is stale.");
+            Assert.AreEqual(shown, snapshot.Shown, "Shown count is stale.");
+            Assert.AreEqual(horizontal ? ScopeKind.Row : ScopeKind.Column, snapshot.Kind);
+            Assert.IsTrue(activity.OuterRestored);
+            string key = expand ? "expand" : "collapse";
+            Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-before"]);
+            Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-after"]);
+            Assert.AreEqual((4, 1), activity.NestedCounts[key], "Nested flow inherited the outer counts.");
+            Assert.AreEqual(shown, activity.DrawnItems[generation].Count, "Drawn items disagree with the native shown count.");
+        });
+        return snapshot ?? throw new InvalidOperationException("Flow snapshot was not captured.");
+    }
+
+    static async Task<FlowOverflowTestActivity> Start(int style, bool horizontal, int policy)
+    {
+        var context = Runner.TargetContext ?? throw new InvalidOperationException("Flow test target context missing.");
+        FlowOverflowTestActivity.Ready = FlowOverflowTestActivity.NewReady();
+        using var intent = new global::Android.Content.Intent(context, typeof(FlowOverflowTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        intent.PutExtra("style", style);
+        intent.PutExtra("horizontal", horizontal);
+        intent.PutExtra("policy", policy);
+        Runner.RunOnMainSync(() => context.StartActivity(intent));
+        return await FlowOverflowTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    static async Task Finish(FlowOverflowTestActivity activity)
+    {
+        Runner.RunOnMainSync(activity.Finish);
+        await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    static async Task WaitFor(Func<bool> predicate, string message)
+    {
+        for (int i = 0; i < 150; i++)
+        {
+            bool ready = false;
+            Runner.RunOnMainSync(() => ready = predicate());
+            if (ready) return;
+            await Task.Delay(100);
+        }
+        Assert.Fail(message);
+    }
+
+    static async Task Click(string description)
+    {
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            var automation = Runner.UiAutomation ?? throw new InvalidOperationException("Flow UI automation missing.");
+            if (OperatingSystem.IsAndroidVersionAtLeast(34))
+                Assert.IsTrue(automation.ClearCache());
+            using var root = automation.RootInActiveWindow;
+            if (root is not null)
+            {
+                Assert.AreEqual("net.compose.devicetests", root.PackageName, "Refusing another app's accessibility tree.");
+                if (ClickIn(root, description)) return;
+            }
+            await Task.Delay(100);
+        }
+        Assert.Fail($"No actionable native overflow indicator '{description}'.");
+    }
+
+    static bool ClickIn(AccessibilityNodeInfo node, string description)
+    {
+        if (node.ContentDescription == description && node.Clickable)
+            return node.PerformAction(global::Android.Views.Accessibility.Action.Click);
+        for (int i = 0; i < node.ChildCount; i++)
+        {
+            using var child = node.GetChild(i);
+            if (child is not null && ClickIn(child, description)) return true;
+        }
+        return false;
+    }
+}
