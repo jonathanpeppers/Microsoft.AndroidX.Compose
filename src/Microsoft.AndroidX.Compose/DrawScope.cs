@@ -197,12 +197,12 @@ public class DrawScope
             try
             {
                 transform(scope);
-                draw(this);
             }
             finally
             {
                 scope.Invalidate();
             }
+            draw(this);
         });
     }
 

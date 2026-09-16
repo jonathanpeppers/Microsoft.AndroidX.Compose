@@ -26,6 +26,7 @@ public class AdvancedDrawingTests
         {
             await WaitFor(() => activity.Resumed
                 && activity.ExceptionRestored
+                && activity.TransformExpired
                 && activity.DrawIntoCanvasCalls > 0
                 && activity.TextDrawCalls > 0
                 && activity.CanvasOrigin.Y > 0f);
@@ -33,6 +34,7 @@ public class AdvancedDrawingTests
             await activity.OnUi(() =>
             {
                 Assert.IsTrue(activity.ExceptionRestored);
+                Assert.IsTrue(activity.TransformExpired);
                 Assert.IsTrue(activity.InsetSize.Width > 0f);
                 Assert.IsTrue(activity.InsetSize.Height > 0f);
                 AssertColor(bitmap, activity.Pixel(10, 10), NativeColor.Blue);
@@ -44,7 +46,7 @@ public class AdvancedDrawingTests
                 AssertColor(bitmap, activity.Pixel(170, 20), NativeColor.Yellow);
             });
             Console.WriteLine(
-                $"ADVANCED_DRAWING restored={activity.ExceptionRestored} "
+                $"ADVANCED_DRAWING restored={activity.ExceptionRestored} expired={activity.TransformExpired} "
                 + $"inset={activity.InsetSize} canvasCalls={activity.DrawIntoCanvasCalls} "
                 + $"textCalls={activity.TextDrawCalls} pixels=7/7");
         }

@@ -15,6 +15,10 @@ public sealed class ImageBitmap : IDisposable
     ImageBitmap(BoundImageBitmap jvm) => _jvm = jvm;
 
     /// <summary>Wraps an Android bitmap as a Compose image bitmap.</summary>
+    /// <remarks>
+    /// The caller retains ownership of <paramref name="bitmap"/> and must keep
+    /// it alive until this wrapper is disposed.
+    /// </remarks>
     public ImageBitmap(Android.Graphics.Bitmap bitmap)
     {
         ArgumentNullException.ThrowIfNull(bitmap);

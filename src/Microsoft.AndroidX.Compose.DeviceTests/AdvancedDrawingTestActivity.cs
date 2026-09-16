@@ -21,6 +21,7 @@ public class AdvancedDrawingTestActivity : ComponentActivity
     internal TaskCompletionSource Destroyed { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal (float X, float Y) CanvasOrigin;
     internal bool ExceptionRestored;
+    internal bool TransformExpired;
     internal Size InsetSize;
     internal int DrawIntoCanvasCalls;
     internal int TextDrawCalls;
@@ -97,6 +98,18 @@ public class AdvancedDrawingTestActivity : ComponentActivity
         scope.WithTransform(
             transform => transform.Translate(new Offset(110f, 0f)),
             transformed => transformed.DrawRect(Color.Magenta, size: new Size(20f, 20f)));
+        DrawTransform? escaped = null;
+        scope.WithTransform(transform => escaped = transform, _ => { });
+        var expired = escaped
+            ?? throw new InvalidOperationException("DrawTransform escape probe was not assigned.");
+        try
+        {
+            expired.Translate(Offset.Zero);
+        }
+        catch (InvalidOperationException)
+        {
+            TransformExpired = true;
+        }
         scope.ClipRect(new Rect(0f, 50f, 100f, 90f), clipped =>
             clipped.Translate(new Offset(10f, 50f), translated =>
                 translated.DrawRect(Color.Yellow, size: new Size(30f, 30f))));
