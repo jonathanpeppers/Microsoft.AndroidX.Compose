@@ -1660,8 +1660,8 @@ Confirm render, contrast, layout, no crash.
 
 ## Style
 
-- TFMs: `net10.0-android` (facade, sample); `netstandard2.0` (generator —
-  Roslyn requirement); `net10.0` (generator tests).
+- TFMs: `net10.0-android` (facade), `net11.0-android` (samples);
+  `netstandard2.0` (generator — Roslyn requirement); `net10.0` (generator tests).
 - C# 12+, nullable refs enabled, file-scoped namespaces.
 - **One class per `.cs` file.** Filename matches type. Applies to every
   project. Only exception: a tiny private nested helper struct (e.g.
@@ -1679,7 +1679,7 @@ Confirm render, contrast, layout, no crash.
 - Use `ArgumentNullException.ThrowIfNull(x)` for **method/ctor parameter**
   null checks — not hand-written
   `if (x is null) throw new ArgumentNullException(nameof(x));`. Applies to
-  net10.0 / net10.0-android projects only; the netstandard2.0 source
+  net10.0 / net10.0-android / net11.0-android projects; the netstandard2.0 source
   generator doesn't have `ThrowIfNull`.
 - **Always use collection expressions (`[]`) for empty arrays/lists, never
   `Array.Empty<T>()`.** All projects target `<LangVersion>latest</LangVersion>`

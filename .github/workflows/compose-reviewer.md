@@ -23,10 +23,10 @@ tools:
     toolsets: [actions, pull_requests, repos]
     min-integrity: none
 steps:
-  - name: Setup .NET 10
+  - name: Setup .NET 11 RC 1
     uses: actions/setup-dotnet@v6
     with:
-      dotnet-version: "10.0.x"
+      dotnet-version: "11.0.100-rc.1.26425.128"
   - name: Install maui-android workload
     run: dotnet workload install maui-android
 safe-outputs:

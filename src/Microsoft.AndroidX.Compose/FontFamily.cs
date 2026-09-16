@@ -14,12 +14,6 @@ public sealed partial class FontFamily : Java.Lang.Object
     FontFamily(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
-    FontFamily(UI.Text.Font.FontFamily family)
-        : this(family.Handle, JniHandleOwnership.DoNotTransfer)
-    {
-        GC.KeepAlive(family);
-    }
-
     /// <summary>Creates a family from one or more bound Compose font descriptors.</summary>
     /// <remarks>
     /// Snapshots the input array before passing it to AndroidX. Order is preserved for
@@ -48,7 +42,9 @@ public sealed partial class FontFamily : Java.Lang.Object
         // Select the list overload: no copy-back into the caller's array or list.
         var family = UI.Text.Font.FontFamilyKt.FontFamily((IList<UI.Text.Font.IFont>)snapshot)
             ?? throw new InvalidOperationException("AndroidX returned no family from FontFamily.FromFonts.");
-        return new FontFamily(family);
+        var value = new FontFamily(family.Handle, JniHandleOwnership.DoNotTransfer);
+        GC.KeepAlive(family);
+        return value;
     }
 
     /// <summary>

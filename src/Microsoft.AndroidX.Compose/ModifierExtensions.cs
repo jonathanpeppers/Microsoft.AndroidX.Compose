@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.UI.Layout;
@@ -1283,7 +1284,11 @@ public static class ModifierExtensions
     public static Modifier AlignByBaseline(this Modifier modifier) =>
         modifier.AlignBy(AndroidX.Compose.UI.Layout.AlignmentLineKt.FirstBaseline);
 
-    static T AlignmentScope<T>(ScopeKind expected, string operation) where T : class, IJavaObject
+    static T AlignmentScope<
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicConstructors |
+            DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+        T>(ScopeKind expected, string operation) where T : class, IJavaObject
     {
         var kind = RenderContext.CurrentScopeKind;
         var handle = RenderContext.CurrentScope;

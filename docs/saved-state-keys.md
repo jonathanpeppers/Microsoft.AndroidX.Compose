@@ -70,7 +70,7 @@ and the `net.compose.devicetests` app before installing or running it.
 
 ```powershell
 dotnet build src\Microsoft.AndroidX.Compose.DeviceTests -p:EmbedAssembliesIntoApk=true
-adb -s DEVICE_SERIAL install -r src\Microsoft.AndroidX.Compose.DeviceTests\bin\Debug\net10.0-android\net.compose.devicetests-Signed.apk
+adb -s DEVICE_SERIAL install -r src\Microsoft.AndroidX.Compose.DeviceTests\bin\Debug\net11.0-android\net.compose.devicetests-Signed.apk
 .\scripts\test-saveable-process.ps1 -Serial DEVICE_SERIAL -Adb adb
 ```
 

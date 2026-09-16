@@ -17,10 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET 10
+      - name: Setup .NET 11 RC 1
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '11.0.100-rc.1.26425.128'
 
       - name: Set package version
         run: echo "CI_PACKAGE_VERSION=$(dotnet msbuild src/Microsoft.AndroidX.Compose.Templates/Microsoft.AndroidX.Compose.Templates.csproj -getProperty:ComposePackagePrereleasePrefix).${{ github.run_number }}" >> "$GITHUB_ENV"
@@ -47,15 +47,32 @@ jobs:
             --name TemplateSmoke \
             --applicationId net.compose.template.smoke \
             --applicationTitle "Compose Template Smoke" \
+            --framework net11.0 \
             --output "$RUNNER_TEMP/template-smoke"
 
-      - name: Build project template
+      - name: Build project template (CoreCLR)
         run: |
-          dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" \
+          dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" -c Release \
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/bin/" \
+            -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/obj/" \
+            -p:AndroidPackageFormat=apk \
             -p:TreatWarningsAsErrors=true \
             -warnaserror:XA4301 \
-            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.binlog"
+            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.CoreCLR.binlog"
+
+      - name: Build project template (NativeAOT)
+        run: |
+          dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" -c Release \
+            -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/bin/" \
+            -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/obj/" \
+            -p:AndroidPackageFormat=apk \
+            -p:MicrosoftNETCoreAppRefPackageVersion=11.0.0-rc.1.26425.128 \
+            -p:PublishAot=true \
+            -p:TreatWarningsAsErrors=true \
+            -warnaserror:XA4301 \
+            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.NativeAOT.binlog"
 
       - name: Publish packages to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -76,12 +93,36 @@ jobs:
           name: Microsoft.AndroidX.Compose.binlog
           path: Microsoft.AndroidX.Compose.binlog
 
-      - name: Upload project template binlog
+      - name: Upload project template CoreCLR binlog
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Microsoft.AndroidX.Compose.Template.binlog
-          path: Microsoft.AndroidX.Compose.Template.binlog
+          name: Microsoft.AndroidX.Compose.Template.CoreCLR.binlog
+          path: Microsoft.AndroidX.Compose.Template.CoreCLR.binlog
+          if-no-files-found: warn
+
+      - name: Upload project template NativeAOT binlog
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.NativeAOT.binlog
+          path: Microsoft.AndroidX.Compose.Template.NativeAOT.binlog
+          if-no-files-found: warn
+
+      - name: Upload project template CoreCLR APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.CoreCLR.apk
+          path: ${{ runner.temp }}/template-smoke-output/coreclr/bin/Release/net11.0-android/*-Signed.apk
+          if-no-files-found: warn
+
+      - name: Upload project template NativeAOT APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.NativeAOT.apk
+          path: ${{ runner.temp }}/template-smoke-output/nativeaot/bin/Release/net11.0-android/*-Signed.apk
           if-no-files-found: warn
 
       - name: Upload NuGet packages
