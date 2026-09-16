@@ -426,8 +426,8 @@ same while switching inset modes; its saved tap count must also survive
   double-shifting the content under edge-to-edge).
 - **Voice record mic + recording indicator** — the trailing mic remains
   present beside both blank and nonblank text, while the Send affordance
-  follows input validity. The gesture target
-  gesture target that swaps the `BasicTextField` for an animated
+  follows input validity. The gesture target swaps the `BasicTextField`
+  for an animated
   recording overlay (pulsing red dot + MM:SS timer + "Swipe to
   cancel" hint). A native long press starts the UI-only recording;
   release finishes it. Per-event X/Y pixel movement accumulates, and a left
@@ -631,11 +631,14 @@ establish profile-screen pixel or host-scroll parity.
 
 ## Remaining differences and classification
 
-Open follow-ups from the #349 audit (issue titles verified on 2026-09-15):
+#384's bounded conversation/profile presentation integration and
+light/dark compact/short/larger-window matrix are complete in current source;
+the exact evidence and remaining comparison limits are recorded in the shared
+baseline. Open follow-ups from the #349 audit (issue titles verified on
+2026-09-16):
 
 | Tracking | Bounded remaining work |
 | --- | --- |
-| [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384) | Conversation/profile presentation is integrated in current source; matched light/dark compact/short/larger-window evidence remains required before closing. |
 | [#388](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/388) | Programmatic Tooltip control and recording short tap; inspect the official binding before adding JNI. |
 | [#385](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/385) | Native infinite float animation for the pulse; separate from completed finite transitions in #336. |
 | [#387](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/387) | Video attachment/playback flow, beginning with a dependency/API audit. |
