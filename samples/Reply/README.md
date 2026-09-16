@@ -12,13 +12,22 @@ This port keeps the **inbox/search data faithful** (12 emails and 13
 accounts with matching IDs, subjects and sender names) and renders a
 **single-pane phone layout** built from the same Material 3 building
 blocks. Thread ordering is fixed in C# but shuffled for most Kotlin
-emails; see the [data comparison boundary](../parity-baseline.md#sample-data-that-prevents-naive-pixel-comparison).
+emails; see the [data comparison boundary](../parity-baseline.md#data-and-rendering-caveats).
 
 The [sample parity baseline](../parity-baseline.md) fixes the reference,
 capture conditions, finite interaction checklist and remaining differences
 for [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349).
 Search and navigation are integrated; neither the checkmark in the sample
 index nor the focused device results below establish whole-app parity.
+
+The new API 36 emulator comparisons record search/selected-detail behavior
+across the size matrix and both themes, and actual activity recreation in
+both implementations. They also demonstrate the avatar difference: Kotlin
+toggles selection in place, while C# opens detail. The C# tab-Back captures
+include an unfinished navigation transition, so this driver does **not**
+establish settled tab/scroll equivalence. See the
+[per-case results and limits](../parity-baseline.md#reply); the historical
+physical-device results below keep their original source/APK identities.
 
 <img src="../docs/reply.png" alt="Reply running on an Android device" width="320" />
 

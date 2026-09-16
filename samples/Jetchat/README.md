@@ -29,16 +29,23 @@ capture configuration, artifacts, and results. An individual screenshot can
 establish only its recorded screen/state comparison, not whole-app behavior,
 animation, restoration, accessibility, or pixel parity.
 
-This README's current-state findings come from the C# source and pinned Kotlin
-source, not a new device run. The older device reports below retain their
-original build identities and limitations; they are not reruns of this audit.
+The source findings below are now accompanied by
+[native comparison results](../parity-baseline.md#jetchat) on the dedicated
+API 36 emulator. Send/IME, emoji focus handoff, synthetic text drop and the
+draft/selector recreation difference have recorded evidence; screen layouts
+were also captured in short, medium and expanded windows. Blocked navigation,
+link, picker and recording-cancel observations remain explicit.
+The older device reports below retain their original build identities and
+limitations; they are not relabeled as these new comparisons.
 In particular, the pinned Kotlin app already includes **video messages and a
 video picker/player**, whereas the C# fixture has nine text/image messages and
 no video path. Comparing only the overlapping text screens would hide this gap.
 
 ### Finite comparison checklist
 
-These are **suggested cases, not recorded passes**. Begin each independent case
+These cases define the finite protocol, **not a list of parity passes**.
+The shared baseline records verified matches, observed differences and
+not-established segments for each case. Begin each independent case
 with a fresh launch at `#composers`, 42 members, drawer/selector/dialog closed,
 empty unfocused input, IME hidden, and the list at its newest message. Record
 device/API, window size/density, font scale, IME, theme/dynamic-color inputs,

@@ -1,220 +1,194 @@
 # Sample parity baseline
 
-**Status: partial baseline, not whole-app parity.** This is the bounded
-comparison record for [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349),
-reconciled on 2026-09-15. Source comparisons and documentation corrections
-cover Jetchat and Reply; JetNews received only confirmed documentation fixes.
-Ten historical Reply light/dark screenshot pairs are retained as session
-artifacts; their results and provenance are summarized below.
-Matched Jetchat captures, additional sizes, complete capture-time environment
-metadata and a repeat on the final integrated candidate remain outstanding.
-Keep #349 open until those gates are recorded.
+**Recorded baseline: 2026-09-15.** Jetchat and Reply were compared on an
+isolated Android emulator in light/dark mode and compact, short, medium
+and expanded windows for
+[#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349).
+This report distinguishes **verified flow matches**, **observed differences**
+and **not established** behavior. It does not claim whole-app or pixel parity.
+JetNews received source-confirmed documentation corrections, not a device comparison.
 
-## Fixed references and evidence boundaries
+## References and artifact boundaries
 
-| Evidence | Revision / scope |
+| Input | Identity |
 | --- | --- |
-| Kotlin application source | [android/compose-samples `4c1fe7586e2fbf1c934925ef8ab64d3803361423`](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423). No moving `main` is used as the comparison oracle. |
-| C# source audit | `b8c93a68579a2430a54cbe3271730047516edec9`, after the search/navigation and Jetchat feature deliveries. |
-| Preserved Reply captures | C# `8da2c4f3d74b072516e47ddc733cb6974249cbfb`, from [#382](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/pull/382) / #348. The application source is unchanged at the audit revision, but runtime/generator changes exist between these revisions. These are not new captures of `b8c93a6`. |
-| Kotlin capture variant | The pinned Reply source with the user-authorized Gradle `targetSdk` change **33 to 36**, plus debug-only capture instrumentation. Original application code/resources unchanged; original signer retained. Not pristine target-33 behavior. |
-| Jetchat historical acceptance | #372 / #340 editor, Gallery and real-IME evidence; separate Surface and animation deliveries. Each result belongs to its original source/APK, not the current branch or a Kotlin comparison. |
-| Excluded claims | No new performance measurement (#346), JetNews rewrite, foldable acceptance, process-death guarantee, package publication, or exact whole-app visual match. |
+| Kotlin application source | [android/compose-samples `4c1fe7586e2fbf1c934925ef8ab64d3803361423`](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423) |
+| C# application/runtime source | `b8c93a68579a2430a54cbe3271730047516edec9`; subsequent commits on this branch change documentation only |
+| Kotlin reference adaptation | User-authorized Gradle target SDK **33 to 36**, plus debug-only capture instrumentation/manifest. Application code/resources unchanged. Not pristine target-33 behavior. |
+| Builds | Debug capture APKs, not Release profiling. C# min/target/compile SDK 24/36/36; Kotlin 23/36/37. All candidates include x86_64, install normally and are not `testOnly`. |
+| Dependency difference | C# Compose runtime 1.11.3; Kotlin APK metadata reports 1.12.0. Both use Material 3 1.4.0. Binding revisions remain in `Directory.Build.targets`. |
+| Performance | Separate [#346](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/346). Debug/software-rendered captures are not language-overhead, frame-rate or memory comparisons. |
 
-The [API coverage report](../docs/api-coverage.md) was regenerated during
-reconciliation; only its timestamp changed. Symbol matches do not establish
-overload, parameter, ownership, accessibility or behavior parity. A closed
-binding issue is a delivered prerequisite, not proof its sample integration
-is complete.
+Raw PNGs, native hierarchies, action transcripts, APKs and hash manifests
+are **session artifacts, not repository files**. `comparison-evidence-index.json`
+indexes 213 source-specific attempts and 3,711 hashed files, including failed
+and limited attempts. Those numbers are **not pass counts**. The index and
+this report belong to the #389/#349 comparison session; selected evidence
+can be attached for shared review without committing raw run output.
 
-## Capture conditions
+The earlier ten Reply state pairs from #348/#382 remain separate historical
+evidence at C# `8da2c4f3d74b072516e47ddc733cb6974249cbfb`. They are not
+relabeled as the new runs.
 
-The accepted Reply PNGs and native hierarchy files were checked against
-#348's final `paired-reference-target36.json` manifest. Older `light-failure`
-files were excluded. The raw captures and manifests are session artifacts,
-not repository assets; native hierarchy whitespace is retained verbatim
-for hash verification. The historical run is summarized in
-[#382](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/pull/382).
+### Capture APKs
 
-| Condition | Preserved Reply run |
+Full hashes, signatures, source/driver identities and embedded managed-PE
+hashes are retained in the corresponding session manifests. Prefixes below
+identify the accepted evidence groups, not interchangeable builds.
+
+| Evidence group | C# APK SHA-256 prefix | Kotlin APK SHA-256 prefix |
+| --- | --- | --- |
+| Jetchat conversation/drawer/Send | `9754a7f5dec7` | `c9431136d650` |
+| Jetchat emoji/recording/profile/recreation/synthetic drag | `8d21dfa31448` | `19cdd856935a` |
+| Jetchat size matrix | `10ddad31e63a` | `0c8414f256df` |
+| Reply search and size matrix | `e1809ee40df8` | `1ed20227e3e7` |
+| Reply scrolling/recreation and Kotlin selection/navigation | `f5e6ec30f1e1` | `a6594db41d9b` |
+| Final C# avatar/navigation/Back observations | `7da0f5f28db0` | Use the preceding Kotlin evidence, not an invented uniform-harness run |
+
+Driver corrections stayed outside application code. They addressed
+AppCompat theme admission, standard native Back dispatch, mistaking the
+long-clickable search editor for an email row, implementation-specific
+`DM`/`Direct Messages` labels, and observing actual activity recreation
+rather than requiring an optional `ActivityMonitor` notification.
+Original failures remain indexed.
+
+## Environment and size matrix
+
+| Condition | Recorded value |
 | --- | --- |
-| Date / device | 2026-09-15; physical Pixel 7. C# light/dark around 13:20-13:21 and Kotlin around 13:49, UTC-05:00. Not simultaneous captures. |
-| Android OS / API / build | Not recorded in the imported capture manifest. Must be recovered from a contemporaneous record or recaptured; APK target/compile SDK below is **not** the device API level. |
-| Display | All 20 PNGs are 1080 x 2400 pixels, portrait. Actual window dp dimensions and density overrides were not recorded in this manifest. Do not substitute assumed Pixel defaults. |
-| Font / locale / contrast | Font scale, locale tag, system contrast and font-weight adjustment were not recorded in the imported manifest. English labels and a Gboard keyboard are visible; that does not establish the settings/version. |
-| Theme | Debug harness applied a per-activity night override before creation and checked actual `nightMask`: light 16, dark 32. No global theme setting was changed. Gboard remains dark in both app themes. |
-| Dynamic color | Source-confirmed difference: C# uses default `MaterialTheme` (`UseDynamicColor = true` on API 31+); pinned Kotlin `ContrastAwareReplyTheme` defaults to `dynamicColor = false`, custom typography/shapes and contrast-aware schemes. Exact wallpaper-derived colors/system contrast were not recorded. |
-| C# build | Debug capture APK; min/target/compile SDK 24/36/36. SHA-256 `d66c0a92efe88f7638ab2090c468c2783d4836c71b43897a3c3d715dee860741`. |
-| Kotlin build | Debug target-36 capture APK; min/target/compile SDK 23/36/37. SHA-256 `3a28f98c14084f4b652569905bcc7a078126f4d052636a0a55733d3c104b5779`. Gradle wrapper 9.5.0, AGP 9.3.1, Java 17.0.16. |
-| Installation boundary | Original target-33 capture APK was rejected by normal verification. The later authorized target-36 variant installed normally. No verifier bypass, package rename or signing-identity change was used. Target modernization can change edge-to-edge behavior. |
-| Capture method | Debug instrumentation drives each real app activity and reads the owned native hierarchy. Query edits use fresh text/bounds checks. Screenshots retain system bars/IME; no pixel normalization or similarity score is claimed. |
+| Device | New, session-owned `parity349` AVD; serial `emulator-5580`; no physical Pixel input |
+| OS / API / ABI | Android 16 / API 36 / native x86_64 |
+| System image | Google Play image revision 7, extension 17; fingerprint `google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys` |
+| Emulator / host | Android Emulator 37.1.11, build 15917651; Windows/WHPX; two virtual cores, 4096 MB; `swiftshader_indirect`; headless, no snapshots |
+| Locale / font / contrast | `en-US`; font-weight adjustment 0; system contrast 0; font scale recorded per configuration below |
+| Theme | AVD-local system night mode set to the requested theme and restored after each case; actual activity night mode checked. A per-activity override alone did not override Kotlin Jetchat's AppCompat policy. |
+| Dynamic color | Jetchat follows its sample theme/dynamic-color policy. C# Reply uses default dynamic MaterialTheme; Kotlin Reply uses its custom contrast-aware theme with dynamic color off by default. Palette/provider-font differences are not normalized away. |
+| Input / bars | Native actions and bounded gestures on positively owned windows; active IME/navigation settings, window/inset data and action timestamps retained. IME Search/Send uses the editor's advertised action, not hardware Enter. |
+| Cleanup | Original AVD size/density overrides, font scale and night mode restored; owned packages stopped and emulator processes/ports verified absent. No verifier bypass or shared-device setting change. |
 
-### Required conditions for the next run
+Every size-matrix record checked the **actual activity** width/height in dp,
+density and font scale, not merely successful `wm` commands.
 
-Freeze both source revisions, build configuration, exact dependency/build
-changes and APK hashes before device use. Record OS release/API/build,
-display and app-window px/dp, density, font scale/weight adjustment, locale,
-orientation, navigation mode, IME/version, actual activity night mode,
-dynamic-color flags, wallpaper/palette and system contrast. Never fill
-missing historical values from a later device query.
+| Configuration | Pixels / density | Actual activity viewport | Font scale | Records |
+| --- | --- | --- | --- | --- |
+| Compact | 1080 x 2400 / 420 dpi | 411 x 914 dp | 1.0 | Initial and interaction runs, separately indexed |
+| Short compact | 1080 x 1920 / 480 dpi | 360 x 640 dp | 1.3 | 36 |
+| Medium | 1400 x 1800 / 320 dpi | 700 x 900 dp | 1.0 | 16 |
+| Expanded | 2000 x 1600 / 320 dpi | 1000 x 800 dp | 1.0 | 16 |
 
-Use a freshly coordinated exclusive device window: no concurrent installs,
-input or profiling. Prefer per-activity/debug configuration for comparison
-settings; do not change a shared physical device's global display/theme
-settings without authorization. Keep any reference patches, capture harness
-hash, interaction transcript, PNG/hierarchy hashes and failures with the run.
-The source apps' different theme choices should first be reported as-is,
-not silently patched to improve a screenshot.
+All **68 geometry/configuration checks** passed. This is not 68 functional
+parity passes. Short-window captures cover Jetchat conversation, emoji/input,
+nonblank-input mic and profile states plus Reply's five search/detail states.
+Larger windows cover Jetchat conversation/profile and Reply inbox/detail.
+Reply detail was reached through the verified R05 search-result route where
+the original R11 row locator was limited; that does not pass R11 navigation.
+No fold posture, arbitrary locale or every possible font size is claimed.
 
-## Finite screen and interaction checklist
+## Finite cases and results
 
-Each case has a defined starting state. Reset only the sample-owned state
-between independent cases; retain it within a navigation/editing case.
-Screenshots alone do not pass input, restoration, accessibility or animation
-checks. `Paired` below means a preserved state comparison, not a claim of
-pixel identity. `Historical C#` means one implementation was exercised.
+The [Jetchat checklist](Jetchat/README.md#finite-comparison-checklist) defines
+J01-J13 with initial state, actions and expected outcomes. Fresh independent
+cases start at the seeded conversation or Inbox; state is retained inside
+each editing/navigation/recreation case.
+
+`EXECUTED` and `observations-completed` are driver execution statuses, not
+automatic parity verdicts. **Not established** means insufficient evidence
+for that behavior, not an absent product feature or a successful comparison.
 
 ### Jetchat
 
-The [Jetchat checklist](Jetchat/README.md#finite-comparison-checklist) defines 13 cases, J01-J13, covering
-conversation, channels, input/Send, focus/emoji, attachments, recording,
-profile and restoration. They are source-audited expectations, not new
-device passes. The final current-candidate run must execute those cases
-against the fixed Kotlin reference and attach paired captures for the
-screen states, plus interaction evidence for the behavior-only cases.
-
-Historical #340 evidence establishes Foundation editing and real software
-IME Send on its exact candidate: nonblank input is sent **untrimmed**,
-input clears and focus remains; whitespace-only Send leaves the spaces
-unchanged and the visible Send control disabled. Native focus loss may
-collapse a selection before emoji insertion; do not compare a stale
-pre-handoff selection against the post-handoff caret.
+| Cases | Result and boundary |
+| --- | --- |
+| J01-J02 conversation/drawer | Both themes captured and both channel selections exercised. Both apps retain the single `#composers` conversation despite changing the drawer highlight. Seed text, avatars, video and geometry differ. |
+| J03 visible Send / IME Send | Verified matching behavior in both themes: ` hello ` and ` Ime349 ` are sent untrimmed; the editor clears and remains focused. Whitespace-only IME Send retains the spaces. Native text evidence, not a screenshot-only assertion. |
+| J04 emoji/focus/Stickers/Back | Both implementations produce `ab😀cd` from the controlled caret, hand focus to the selector, refocus the editor and dismiss the selector/dialog. Repeated in the short font-scale-1.3 configuration. Layout differs. |
+| J05 selectors | @/photo/location observations retained; C# unavailable panels differ from Kotlin dialog/animated panels. Full paired selector sequence is **not established** because the video-picker boundary did not satisfy the strict resolved-component/root-owner capture gate. |
+| J06-J07 recording | Long-press UI timer and normal release observed; Kotlin's short-tap tooltip is visually present. C# hides the mic with nonblank input. Cancel/corridor and pulse-timing equivalence are **not established**: injected cancel sequences left ambiguous UI in both implementations. No recorded audio is claimed. |
+| J08 jump control | C# jump action exercised. Kotlin's labeled control is visible in captured pixels but absent from the returned accessibility tree; its tap outcome is **not established**. Do not call the product control missing. |
+| J09-J10 profiles/history | Profile layouts/actions captured in both themes and all window classes. C# Up was exercised; Kotlin's different drawer/scrolling toolbar prevented that selector from finding an Up control. One Kotlin history sequence completed; another was blocked by an ambiguous matching label. No full navigation-equivalence claim. |
+| J11 synthetic drag | Both insert test-owned plain text `ParityDrop349`; only C# accepts the nonresolving image URI as text. Temporary test-source overlay is identified in artifacts. This is not real image loading/preview. Live mention/URL interaction equivalence is **not established** by these runs. |
+| J12 activity recreation | Verified difference in both themes: C# loses unsent `Retain349` and closes the emoji selector; Kotlin preserves both. This is activity recreation, not process-death proof. |
+| J13 video | C# has no corresponding attachment/player surface. Kotlin's platform-picker ownership mismatch stopped capture before foreign UI inspection. Selection, preview, playback and sending are **not established**; no media was accessed. |
 
 ### Reply
 
-| ID | Initial state and action | Expected outcome / current evidence |
+| ID | Initial state / action | Result |
 | --- | --- | --- |
-| R01 | Fresh Inbox, first email visible, query empty, search collapsed, no multi-selection. Capture. | Inbox/search/navigation/FAB visible. Light + dark **paired** (`collapsed`); palette, typography, card shape and FAB differences remain. |
-| R02 | R01; tap search. Capture before typing. | Expanded empty search says "No search history"; focused input and IME. Light + dark **paired** (`empty`); inline-surface versus popup geometry differs. |
-| R03 | R02; type `Bonjour`. Capture. | One result: email ID 2, "Bonjour from Paris", Allison Trabucco. Light + dark **paired** (`match`). Prefix matching, not substring/body search. |
-| R04 | R03; replace with `no-such-email`, then restore `Bonjour`. | "No item found", then the same ID-2 result returns. Light + dark **paired** no-result states; the original capture transcripts record exact query recovery. |
-| R05 | Matching `Bonjour` result; select it. Capture; use Up, repeat and use system Back. | Opens ID 2 detail with "7 Messages", no search editor. Light + dark **paired** (`selected`). Up/Back/list-offset behavior has separate **historical C#** #347 evidence, not paired navigation proof. |
-| R06 | Expanded search containing `Bonjour`; exercise leading arrow, IME Search, system Back and outside-tap dismissal independently. | Leading arrow clears/collapses; IME Search and native dismissal retain query/collapse. The C# popup consumes outside taps rather than activating Inbox. **Historical C#** #348; paired interactive repeat pending. |
-| R07 | Search query entered; trigger ordinary recomposition, then leave for a tab/detail and return. | Recomposition retains query/expansion; leaving search composition resets them. **Historical C#** #348. Native navigation/list state is distinct from unsaved search state. |
-| R08 | Inbox, no selection; long-press ID 1, tap its avatar, and inspect selected semantics. | Kotlin long-press and avatar each toggle selection. C# long-press is wired; avatar toggle and selected semantics are missing sample integration. Capture/semantics repeat pending (#383). |
-| R09 | Inbox scrolled to a recorded email ID and pixel offset; switch Articles/DMs/Groups, re-tap current tab, return and recreate activity. | Single-top tabs and retained native destination/list state; selection preserved. **Historical C#** #347. Exact paired visible IDs/offsets and final-candidate recreation repeat pending. |
-| R10 | Inbox at top; scroll forward, then backward; open ID 2 detail and scroll it. | Kotlin FAB shrinks/expands by scroll direction and remains in single-pane detail; detail app bar scrolls with the list. C# FAB stays expanded in Inbox and is absent in detail; toolbar is pinned. Source-confirmed differences (#383); paired motion pending. |
-| R11 | Fresh medium and expanded windows; repeat Inbox and ID-2 detail. | Kotlin navigation adapts; expanded width selects dual pane. C# remains bottom-nav/single-pane. Capture pending; adaptive nav #383, fold/list-detail work #168. |
-| R12 | Inbox with selected IDs, then detail, tab and root Back; separately invoke Compose/star/reply affordances. | Selection alone does not consume Back. Detail closes before root exit; tab return preserves still-open detail per the port's route contract. Stub actions remain stubs in both apps. Historical C# navigation evidence only; paired repeat pending. |
+| R01 | Fresh Inbox, collapsed empty search | Paired light/dark states, including short window. Visual theme/card/FAB differences remain. |
+| R02 | Open empty search | Both show "No search history"; inline Kotlin surface and C# focusable popup differ. |
+| R03 | Enter `Bonjour` | Both show "Bonjour from Paris" / Allison Trabucco. Matching prefix-query/result observations repeated across sizes. |
+| R04 | Enter `no-such-email` | Both show "No item found". |
+| R05 | Recover `Bonjour`, select result | Both open email ID 2's "Bonjour from Paris" / "7 Messages" detail. Repeated in compact, short, medium and expanded windows. |
+| R06 | Independently exercise leading Back, IME Search and system Back | Leading Back clears/collapses; IME/native dismissal preserve query and collapse. Outside-tap comparison is **not established** because the driver could not prove a bounded inert tap target. |
+| R07 | Query, depart to a tab, return | Query ownership observations retained. One C# re-entry snapshot was limited during navigation; universal re-entry equivalence is **not established** by this driver. |
+| R08 | Long-press email ID 0, then tap its proven avatar bounds | Verified visual difference: Kotlin toggles checkmark/avatar in place; C# opens detail. The second C# avatar toggle was deliberately not attempted after leaving Inbox. Raw `isSelected` on one wrapper is not the effective selection state. |
+| R09 | Scroll, switch/re-tap tabs, Back | Kotlin sequence completed. C# captures include overlapping outgoing placeholder and incoming Inbox during transition; stable return/offset equivalence is **not established**, not a proven navigation regression. Earlier #347 evidence retains its own source/build boundary. |
+| R10 | Scroll forward/backward, open and scroll detail | Both sequences captured. C# keeps bottom navigation and omits the Compose FAB in detail; Kotlin retains it in single-pane detail. Timing/expansion cannot be inferred solely from a missing accessibility label. |
+| R11 | Initial/detail at larger widths | Native geometry verified. Kotlin shows adaptive rail and dual pane at the recorded expanded window; C# stays bottom-nav/single-pane. Detail-size evidence uses R05, not a passed R11 locator. |
+| R11 recreation | Recreate scrolled Inbox, then detail | Both themes/implementations completed with a distinct resumed activity and destroyed old instance; before/after native state retained. No process-death or private exact-offset claim. |
+| R12 | Selection, detail Back/Up, root Back, placeholder tabs | Both implementations' corrected-driver sequences completed. Selection/root-Back observations remain distinct from the unresolved stable tab-return comparison in R09. |
 
-### Size/theme execution matrix
+## Differences and follow-ups
 
-These are finite follow-up targets, **not measurements already taken**.
-The added dimensions describe an app window in dp, not a request to resize
-the shared physical Pixel. Use an authorized emulator/window fixture.
+The categories are **sample integration**, **missing reusable API**,
+**intentional deviation**, and **not yet investigated**. A missing facade
+control is not automatically a missing official binding; inspect the
+runtime `.Android.dll` before adding JNI.
 
-| Configuration | Cases | Result |
-| --- | --- | --- |
-| Compact portrait, normal font, light + dark | J01-J13; R01-R10, R12 | Only historical R01-R05 state pairs available; all Jetchat pairing and remaining Reply interactions pending. |
-| Short compact window, 360 x 640 dp, font scale 1.3, light + dark | J01, J04, J05, J07, J09; R01-R05 | Pending. Check editor/IME/selector reachability and text clipping; exact environment must be recorded. |
-| Medium window, 700 x 900 dp, font scale 1.0, light + dark | J01, J09; R11 | Pending. Distinguish navigation adaptation from fold/list-detail support. |
-| Expanded window, 1000 x 800 dp, font scale 1.0, light + dark | J01, J09; R11 | Pending. No fold posture is simulated by width alone. |
-
-Fold postures, every locale, every font scale and every possible input
-sequence are outside this finite baseline. #168 requires separate hinge/
-posture evidence before claiming fold-aware parity.
-
-## Historical Reply comparison results
-
-The ten light/dark pairs cover five scripted states in both apps. The
-full-resolution PNGs, native hierarchy dumps and hash manifest remain
-with the session evidence. This documentation records the findings, not
-a checked-in capture bundle. For shared review, attach selected screenshots
-to the issue or PR rather than adding raw run output to Git.
-
-| State | Result in both light and dark |
+| Difference | Classification / tracking |
 | --- | --- |
-| R01 collapsed | Same initial inbox/search state; palette, typography, card shape and FAB styling differ. |
-| R02 empty | "No search history"; matching editor bounds, different expanded-surface height/modality. |
-| R03 match | `Bonjour` finds "Bonjour from Paris" by Allison Trabucco; input bounds agree, surrounding visuals differ. |
-| R04 no result | `no-such-email` shows "No item found"; transcripts also record recovery to `Bonjour`. |
-| R05 selected email | Same "Bonjour from Paris" / "7 Messages" header, no editor; toolbar placement, styling and thread order differ. |
+| Reply avatar behavior, styling, inset ownership, adaptive navigation, FAB/detail presentation | Sample integration: [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383). Preserve the demonstrated search behavior. |
+| Reply fold/list-detail APIs and exact Card/style parameter coverage | Not yet investigated at member level: [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168), #383. The size screenshots prove the layout difference, not package absence. |
+| Reply state-based popup versus legacy inline search; separate detail route/activity state | Intentional API/architecture adaptations documented in [Reply](Reply/README.md). |
+| Jetchat selector, author baseline, drawer, jump and profile presentation | Sample integration: [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384); delivered #333-#344 APIs are not reopened. |
+| Jetchat programmatic Tooltip / native infinite pulse | Missing reusable facade controls: [#388](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/388) / [#385](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/385). Binding availability still requires inspection. |
+| Jetchat draft/selector recreation | Observed sample difference: [#386](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/386). General saved-state APIs already exist. |
+| Jetchat video flow | Sample integration and dependency audit: [#387](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/387); no full media acceptance. |
+| Jetchat rewritten fixture/local fonts, image-URI text acceptance and normalized profile history | Intentional deviations; see [Jetchat](Jetchat/README.md#remaining-differences-and-classification). |
+| Stable Reply tab-return observation, outside taps, Jetchat cancel/timing/link/picker segments | Not yet investigated to a conclusive behavioral result. Retain the exact limits above with #383/#384/#387; do not turn discovery/driver limits into product defects or passes. |
+| JetNews adaptive/theme/localization/search/link work | [#159](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/159); source-only reconciliation, not a full new port. |
 
-### Observed differences and classification
+### Data and rendering caveats
 
-Use exactly these meanings: **sample integration** (port does not use an
-available behavior/API), **missing reusable API** (specific unsupported
-surface established), **intentional deviation** (explicit adaptation), or
-**not yet investigated** (insufficient behavioral/member-level evidence).
-A single screen may contain differences in several categories.
+Jetchat has nine rewritten C# messages versus ten pinned Kotlin messages,
+including video. Reply shares 12 inbox emails and 13 accounts, but Kotlin
+shuffles most thread lists while C# uses a fixed seven-item sequence.
+JetNews uses six original articles with upstream photos. Different body
+content/order cannot be scored as a pure renderer mismatch.
 
-| Difference | Classification | Evidence / action |
-| --- | --- | --- |
-| Reply dynamic/default theme versus custom contrast-aware theme/typography | Sample integration | `ReplyApp.cs`, `MaterialTheme.cs`, pinned `theme/Theme.kt`; visible in both themes. #383. Preserve this cause instead of attributing all pixel differences to bindings. |
-| Reply avatar click, selected semantics, FAB colors/scroll response/detail presence, toolbar layout and bar spacing | Sample integration | Source paths in the [Reply README](Reply/README.md#whats-missing-and-why), paired screenshots and pinned `ReplyListContent.kt` / `ReplyEmailListItem.kt`. #383. |
-| Reply Card color/shape route and all missing per-component style slots | Not yet investigated | Rectangular C# card backgrounds versus rounded Kotlin cards are visible. Audit exact Card/other parameter support before splitting any library gap from #383. A `Card` symbol match is not parameter parity. |
-| Reply focusable search popup instead of the legacy inline expanded surface | Intentional deviation | #348's existing state-based API integration. Input bounds are `[42,178,1038,326]` px in all eight editor pairs, but expanded minimum height/modality differ. Outside tap is not equivalent. |
-| Reply separate detail route and activity-owned state instead of in-Inbox detail/ViewModel | Intentional deviation | #347; native stack/list restoration is preserved by the explicit Back contract. C# also saves selected/opened IDs in the activity Bundle. |
-| Reply medium/expanded navigation | Sample integration | NavigationSuite, rail/drawer and size-read APIs already exist; #383. |
-| Reply fold-aware dual pane and exact replacement for Accompanist TwoPane | Not yet investigated | Current port is single-pane. #168 is the existing reusable-API/integration tracker; its historical "neither package bound" claim is not a member audit of today's bindings. |
-| Jetchat selector/@ dialog, nonblank-input mic presence, author baselines, drawer, jump and profile presentation | Sample integration | [Detailed source comparison](Jetchat/README.md#remaining-differences-and-classification); [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384). Reuse the completed sprint APIs, not duplicate binding requests. |
-| Jetchat programmatic short-tap tooltip and native infinite pulse | Missing reusable API | Missing **facade control** established; official-binding availability not established. [#388](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/388) and [#385](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/385) require binding inspection first. #336 covers finite, not infinite, animations. |
-| Jetchat video flow and draft/selector restoration | Sample integration | [#387](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/387) and [#386](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/386). Video dependencies and the exact TextFieldValue saver adapter remain **not yet investigated**; do not claim generic saved state is missing. |
-| Jetchat fixture/local fonts, broader drop acceptance and normalized profile history | Intentional deviation | Exact boundaries in its README. Neither app implements a second conversation log when the channel highlight changes. |
-| Jetchat widget availability, provider fonts, full accessibility and matched timing | Not yet investigated | #349 bounded follow-up; #149's closed historical acceptance described a different drawer shape and has been annotated, not reopened. No blanket missing-package claim. |
-| JetNews remaining adaptive/theme/localization/search/link behavior | Sample integration or not yet investigated, as listed in [JetNews](JetNews/README.md#whats-omitted) | #159. Hero PNGs, styled runs, refresh/retry, bookmark feedback and share chooser already exist. JetNews is not device-compared here. |
+System bars, IME, animation transitions, theme palettes and provider-font
+resolution are not silently normalized. C# R09 transition-overlap images
+are specifically excluded from claims about settled route/scroll parity.
+No screenshot similarity percentage is used.
 
-### Sample data that prevents naive pixel comparison
+## Repetition, reconciliation and acceptance
 
-Jetchat's pinned fixture contains a video message absent from the C# fixture
-(10 versus 9 initial messages). Both channel selectors retain the single
-`#composers` log. Different message/avatar/time choices and C# drop extensions
-are documented in its README. Normalize
-the chosen logical message/scroll anchor in a new fixture **only as an
-explicitly identified derived reference**, or retain the differences.
+The selected editor/search flows were repeated after the sprint deliveries:
+Jetchat's native input/focus behavior in compact and short windows; Reply's
+query/recovery/selected-detail behavior across all recorded window classes;
+and both implementations' activity recreation on frozen candidates.
+There is no matched pre-sprint image set, so no invented "before" result.
 
-Reply has 12 inbox emails and 13 accounts (3 user accounts, 10 contacts).
-The #348 source comparison checked inbox IDs/subjects/sender IDs and account
-names. C# keeps the seven thread entries in fixed order; Kotlin uses
-`threads.shuffled()` for most emails, including ID 2. Thus the selected
-email/header can match while the first thread card differs, even across
-Kotlin light/dark runs. Text whitespace, line wrapping and displayed
-timestamp styling are not covered by the search-data equality assertion.
-
-JetNews has six original articles about this library with upstream article
-photos. Its prose is intentionally not the Kotlin sample's article corpus.
-
-## Delivery and issue reconciliation
-
-| Planning-time claim in #349 | Current result / remaining boundary |
+| #349 acceptance area | Evidence / disposition |
 | --- | --- |
-| Jetchat only sets IME Send options and uses Material TextField | #340 is closed; both BasicTextField routes, generated authoring/decoration and sample keyboard actions shipped. Historical C# native/IME evidence is retained in #372. Updated tracker distinguishes completion from unperformed whole-app pairing. |
-| Reply search is a static row | #348 / #382 delivered prefix search and native dismissal. This report summarizes the final target-36 reference pairs retained in session artifacts, not the earlier failed/overflow candidates. |
-| Reply top-level navigation is plain Navigate | #347 / #380 delivered pop-to-Inbox, save/restore and single-top behavior. Focused C# navigation tests are documented; they are not paired visual or process-death evidence. |
-| JetNews hero PNGs and inline spans are absent | Corrected from `HomeCards`, `PostScreen`, `PostBody`: present. Underlined links remain non-clickable, and search does not filter. |
-| #120 still needs shared-state and veto generation invented | Corrected tracker remains **open**: `TimeInput` and `ModalBottomSheet` are generated; current search-family ownership/migration, SnackbarData forwarding and BottomSheetScaffold's two-stage state/hybrid lowering remain. #354's closure is not blanket migration completion. |
-| Closed issue links represent missing reusable APIs | Sample index and READMEs separate delivered prerequisites, concrete port work and uninvestigated APIs. #333-#337 and #339-#344 are delivered prerequisites, not open Jetchat blockers. |
+| Finite screens/interactions with initial states | J01-J13 and R01-R12 above and in the Jetchat checklist. |
+| Matched captures and interaction differences, light/dark and sizes | Recorded states and 68 actual geometry checks; every behavioral limitation remains explicit, not a pass. |
+| Classify differences and link actionable gaps | Categories/follow-ups above, including the issue's allowed **not yet investigated** category. |
+| Correct sample READMEs and links | Jetchat/Reply integrations and JetNews PNG/markup/refresh/share implementations reconciled against code. |
+| Reconcile partial trackers | #340 completed; #120 remains open for search/SnackbarHost/BottomSheetScaffold migrations. TimeInput and ModalBottomSheet already migrated. #159/#149 historical claims annotated. |
+| Repeat selected comparisons and report remaining differences | Frozen-source repeat evidence above; no blanket exact parity, full accessibility, fold or process-death claim. |
 
-There is no matched pre-sprint capture set for these cases. The earlier
-claims above are a source/backlog history, not invented "before" screenshots.
-The only available after-change paired states are R01-R05 at the recorded
-Reply candidate. **No new final-candidate device repeat was performed for
-this documentation change.** Publish a separate run record with the same
-case IDs after the remaining changes; do not overwrite historical hashes or
-promote pending cells to passes.
+This completes the bounded comparison record and documentation work for
+#349, not the implementation of every feature follow-up. The **not
+established** rows remain explicit verification work under the linked
+follow-ups and the issue's allowed "not yet investigated" category.
+Accepting this baseline must not turn those rows into passes: neither raw
+capture counts nor source-symbol coverage establish functional parity.
 
-## Reference map and attribution
+## Attribution
 
-Under the fixed Kotlin revision, the principal Reply oracles are
-[`ReplyApp.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/ReplyApp.kt),
-[`ReplyListContent.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/ReplyListContent.kt),
-[`ReplyAppBars.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/components/ReplyAppBars.kt),
-[`ReplyEmailListItem.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/components/ReplyEmailListItem.kt)
-and [`ReplyNavigationActions.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/navigation/ReplyNavigationActions.kt).
-Jetchat's README links its corresponding pinned screen/input/profile files.
-
-The captured sample imagery includes Google's Apache-2.0-licensed Reply
-assets and sample text; see [sample attribution](README.md#attribution)
-and the [pinned upstream license](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/LICENSE).
-Screenshots are unmodified evidence, not replacement artwork or a claim
-that system keyboard/chrome belongs to this project.
+The fixed [upstream source](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423)
+and its [Apache 2.0 license](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/LICENSE)
+identify the Kotlin oracle and sample assets. See [sample attribution](README.md#attribution).
+Screenshots are unmodified session evidence, not replacement artwork or a
+claim of ownership over system keyboard/chrome.
