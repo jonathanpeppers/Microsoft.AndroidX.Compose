@@ -10,6 +10,10 @@ internal static partial class TextFieldValueTestBridges
     [ComposeBridge(Class = "androidx/compose/ui/text/TextRange",
         JvmName = "box-impl", Signature = "(J)Landroidx/compose/ui/text/TextRange;")]
     internal static partial IntPtr BoxRangeCore(long range);
+
+    [ComposeBridge(Class = "androidx/compose/ui/text/TextRange",
+        JvmName = "unbox-impl", Signature = "()J", Instance = true)]
+    internal static partial long UnboxRangeCore(IntPtr range);
 #pragma warning restore CS0436
 
     internal static TextRange BoxRange(long range)
@@ -21,5 +25,11 @@ internal static partial class TextFieldValueTestBridges
                 ?? throw new InvalidOperationException("Native TextRange boxing returned null.");
         }
         finally { JNIEnv.DeleteLocalRef(local); }
+    }
+
+    internal static long UnboxRange(Java.Lang.Object range)
+    {
+        try { return UnboxRangeCore(range.Handle); }
+        finally { GC.KeepAlive(range); }
     }
 }

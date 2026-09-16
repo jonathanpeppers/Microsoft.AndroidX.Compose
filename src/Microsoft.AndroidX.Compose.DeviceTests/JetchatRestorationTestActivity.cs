@@ -4,6 +4,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.Samples.Jetchat;
 using AndroidX.Compose.UI.Platform;
+using AndroidX.Compose.UI.Semantics;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
@@ -18,6 +19,9 @@ public class JetchatRestorationTestActivity : MainActivity
     internal bool Restored { get; private set; }
     internal bool Resumed { get; private set; }
     internal MutableManagedState<ConversationUiState>? Owners { get; private set; }
+    internal ComposeView ComposeRoot => FindComposeView(Window?.DecorView
+        ?? throw new InvalidOperationException("Jetchat decor is unavailable."))
+        ?? throw new InvalidOperationException("Jetchat ComposeView is unavailable.");
 
     internal static void Prepare() => Started = NewStarted();
 
@@ -114,6 +118,37 @@ public class JetchatRestorationTestActivity : MainActivity
             catch (Exception error) { completion.TrySetException(error); }
         });
         return completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    internal (string Text, int Start, int End, bool Focused) ReadNativeEditor()
+    {
+        var child = ComposeRoot.GetChildAt(0)
+            ?? throw new InvalidOperationException("Jetchat Compose owner is unavailable.");
+        var owner = child.JavaCast<IViewRootForTest>();
+        var properties = SemanticsProperties.Instance;
+        List<SemanticsNode> editors = [];
+        CollectEditors(owner.SemanticsOwner.UnmergedRootSemanticsNode);
+        if (editors.Count != 1)
+            throw new InvalidOperationException($"Expected one placed native Jetchat editor, found {editors.Count}.");
+        var config = editors[0].Config;
+        var text = config.Get(properties.EditableText)?.JavaCast<global::AndroidX.Compose.UI.Text.AnnotatedString>()
+            ?? throw new InvalidOperationException("Native editor has no EditableText.");
+        var range = config.Get(properties.TextSelectionRange)
+            ?? throw new InvalidOperationException("Native editor has no TextSelectionRange.");
+        long selection = TextFieldValueTestBridges.UnboxRange(range);
+        var focused = config.Get(properties.Focused) as Java.Lang.Boolean
+            ?? throw new InvalidOperationException("Native editor has no Focused semantics.");
+        return (text.Text, (int)(selection >> 32), (int)selection, focused.BooleanValue());
+
+        void CollectEditors(SemanticsNode node)
+        {
+            if (!node.LayoutInfo.IsAttached || !node.LayoutInfo.IsPlaced)
+                return;
+            if (node.Config.Contains(properties.EditableText))
+                editors.Add(node);
+            foreach (var descendant in node.Children)
+                CollectEditors(descendant);
+        }
     }
 
     static ComposeView? FindComposeView(View view)

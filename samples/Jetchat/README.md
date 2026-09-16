@@ -156,6 +156,11 @@ Send leaves the text untouched.
 editor, emoji, Send and Back actions. Recreation requires a distinct resumed,
 focused replacement activity, destruction of the old activity and a saved
 instance bundle before comparing native text, caret and panel presence.
+The harness first admits the exact activity's accessibility window. Caret and
+focus come from its placed native Compose editor semantics, with text also
+checked against the visible accessibility node; an accessibility selection
+of `-1` is not interpreted as the editor's caret. A no-recreation control
+exercises that observation and focus handoff before comparing restoration.
 `TextFieldValueSaveableTests` separately covers rich text, reversed selection,
 restore-only composition clearing, keyed reset and sibling isolation.
 The DeviceTests host reuses its existing common icon resources; this is

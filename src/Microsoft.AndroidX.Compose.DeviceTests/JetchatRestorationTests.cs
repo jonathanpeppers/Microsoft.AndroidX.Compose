@@ -13,6 +13,32 @@ public class JetchatRestorationTests
     static TestInstrumentation Runner => TestInstrumentation.Current
         ?? throw new InvalidOperationException("Jetchat restoration requires native instrumentation.");
 
+    /// <summary>Admits the actual editor and proves native caret/focus observation without recreation.</summary>
+    [TestMethod]
+    public async Task NativeEditor_AdmissionAndSelectionControl()
+    {
+        var activity = await Start("light");
+        try
+        {
+            await Click(activity, n => n.Editable, "editor");
+            await SetText(activity, "  ab\U0001F600cd  ");
+            await SetSelection(activity, 4, 4);
+            var before = Editor(activity);
+            Assert.IsTrue(before.Focused);
+            await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
+            var selected = Editor(activity);
+            Assert.AreEqual(before.Text, selected.Text);
+            Assert.AreEqual(before.Start, selected.Start);
+            Assert.AreEqual(before.End, selected.End);
+            Assert.IsFalse(selected.Focused);
+            AssertPanel(activity, true);
+            await Click(activity, n => n.Editable, "editor");
+            Assert.IsTrue(Editor(activity).Focused);
+            AssertPanel(activity, false);
+        }
+        finally { await Finish(activity); }
+    }
+
     /// <summary>A destroyed activity is replaced with the saved native draft, caret and emoji panel.</summary>
     [TestMethod]
     [DataRow("light")]
@@ -26,37 +52,37 @@ public class JetchatRestorationTests
             await SetText(activity, "  Retain386 abcd  ");
             await SetSelection(activity, 13, 13);
             await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
-            var before = Editor();
+            var before = Editor(activity);
             Assert.AreEqual("  Retain386 abcd  ", before.Text);
             Assert.IsFalse(before.Focused, "The emoji panel must take focus from the editor.");
-            AssertPanel(true);
+            AssertPanel(activity, true);
 
             activity = await Recreate(activity);
-            Assert.AreEqual(before, Editor(), "Restoration must retain native text/caret, not the old wrapper.");
-            AssertPanel(true);
+            Assert.AreEqual(before, Editor(activity), "Restoration must retain native text/caret, not the old wrapper.");
+            AssertPanel(activity, true);
             await Click(activity, n => n.ContentDescription == "Emoji \U0001F600", "emoji glyph");
             string expected = before.Text[..before.Start] + "\U0001F600" + before.Text[before.End..];
-            Assert.AreEqual(expected, Editor().Text);
-            Assert.AreEqual(expected.Length, Editor().Start, "Emoji insertion moves the caret to the buffer end.");
+            Assert.AreEqual(expected, Editor(activity).Text);
+            Assert.AreEqual(expected.Length, Editor(activity).Start, "Emoji insertion moves the caret to the buffer end.");
             await Click(activity, n => n.Text == "Send", "Send");
-            Assert.AreEqual("", Editor().Text);
-            AssertPanel(false);
-            using (var message = Find(n => !n.Editable && n.Text == expected))
+            Assert.AreEqual("", Editor(activity).Text);
+            AssertPanel(activity, false);
+            using (var message = Find(activity, n => !n.Editable && n.Text == expected))
                 Assert.IsNotNull(message, "Visible Send must insert the exact untrimmed restored draft.");
 
             activity = await Recreate(activity);
-            Assert.AreEqual("", Editor().Text, "Sending must replace the saved draft, not resurrect it.");
-            AssertPanel(false);
+            Assert.AreEqual("", Editor(activity).Text, "Sending must replace the saved draft, not resurrect it.");
+            AssertPanel(activity, false);
             await Click(activity, n => n.Editable, "editor");
             await SetText(activity, "  Ime386  ");
             await ImeSend(activity);
-            Assert.AreEqual("", Editor().Text);
-            Assert.IsTrue(Editor().Focused, "IME Send must leave the native editor focused.");
-            using (var message = Find(n => !n.Editable && n.Text == "  Ime386  "))
+            Assert.AreEqual("", Editor(activity).Text);
+            Assert.IsTrue(Editor(activity).Focused, "IME Send must leave the native editor focused.");
+            using (var message = Find(activity, n => !n.Editable && n.Text == "  Ime386  "))
                 Assert.IsNotNull(message, "IME Send must also preserve surrounding spaces.");
             await SetText(activity, "   ");
             await ImeSend(activity);
-            Assert.AreEqual("   ", Editor().Text, "Whitespace-only Send must not clear the editor.");
+            Assert.AreEqual("   ", Editor(activity).Text, "Whitespace-only Send must not clear the editor.");
         }
         finally { await Finish(activity); }
     }
@@ -71,28 +97,28 @@ public class JetchatRestorationTests
             await SetText(activity, " owner386 ");
             await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
             activity = await Recreate(activity);
-            AssertPanel(true);
+            AssertPanel(activity, true);
             Runner.SendKeyDownUpSync(Keycode.Back);
-            await activity.AtNativeIdle();
-            AssertPanel(false);
-            Assert.AreEqual(" owner386 ", Editor().Text);
+            await Settle(activity);
+            AssertPanel(activity, false);
+            Assert.AreEqual(" owner386 ", Editor(activity).Text);
 
             await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
             activity = await Recreate(activity);
-            AssertPanel(true);
+            AssertPanel(activity, true);
             await Click(activity, n => n.Editable, "editor");
-            AssertPanel(false);
-            Assert.IsTrue(Editor().Focused);
-            Assert.AreEqual(" owner386 ", Editor().Text);
+            AssertPanel(activity, false);
+            Assert.IsTrue(Editor(activity).Focused);
+            Assert.AreEqual(" owner386 ", Editor(activity).Text);
             await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
             await Click(activity, n => n.ContentDescription == "Open navigation drawer", "drawer");
             await Click(activity, n => n.Text == "droidcon-nyc", "cosmetic channel");
-            Assert.AreEqual(" owner386 ", Editor().Text, "Drawer highlight is not a different conversation.");
-            AssertPanel(true);
+            Assert.AreEqual(" owner386 ", Editor(activity).Text, "Drawer highlight is not a different conversation.");
+            AssertPanel(activity, true);
             await Finish(activity);
             activity = await Start("light");
-            Assert.AreEqual("", Editor().Text, "A new activity/composition must not inherit another owner's draft.");
-            AssertPanel(false);
+            Assert.AreEqual("", Editor(activity).Text, "A new activity/composition must not inherit another owner's draft.");
+            AssertPanel(activity, false);
         }
         finally { await Finish(activity); }
     }
@@ -108,16 +134,16 @@ public class JetchatRestorationTests
             var first = owners.Value;
             await SetText(activity, " first386 ");
             await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
-            AssertPanel(true);
+            AssertPanel(activity, true);
             await activity.OnUi(() => owners.Value = new("#second", 1, []));
             await Settle(activity);
-            Assert.AreEqual("", Editor().Text);
-            AssertPanel(false);
+            Assert.AreEqual("", Editor(activity).Text);
+            AssertPanel(activity, false);
             await Click(activity, n => n.Editable, "editor");
             await SetText(activity, " second386 ");
             await ImeSend(activity);
-            Assert.AreEqual("", Editor().Text);
-            Assert.IsTrue(Editor().Focused);
+            Assert.AreEqual("", Editor(activity).Text);
+            Assert.IsTrue(Editor(activity).Focused);
             await activity.OnUi(() =>
             {
                 Assert.HasCount(0, first.Messages);
@@ -130,6 +156,7 @@ public class JetchatRestorationTests
 
     static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
+        _ = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
         JetchatRestorationTestActivity.Prepare();
         using var intent = new Intent(global::Android.App.Application.Context, typeof(JetchatRestorationTestActivity));
         intent.AddFlags(ActivityFlags.NewTask);
@@ -139,8 +166,9 @@ public class JetchatRestorationTests
         var activity = await JetchatRestorationTestActivity.Started.Task.WaitAsync(TimeSpan.FromSeconds(20));
         try
         {
-            await activity.AtNativeIdle();
+            await Settle(activity);
             Assert.IsFalse(activity.Restored);
+            Report(activity, "started");
             return activity;
         }
         catch { await Finish(activity); throw; }
@@ -154,13 +182,13 @@ public class JetchatRestorationTests
         try
         {
             await old.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(20));
-            await replacement.AtNativeIdle();
+            await Settle(replacement);
             Assert.AreNotSame(old, replacement);
             Assert.AreNotEqual(old.InstanceId, replacement.InstanceId);
             Assert.IsTrue(old.IsDestroyed && !old.Resumed);
             Assert.IsTrue(replacement.Restored && replacement.Resumed && replacement.HasWindowFocus);
-            Console.WriteLine($"J12 pid={(global::Android.OS.Process.MyPid())}, old={old.InstanceId} destroyed, " +
-                $"new={replacement.InstanceId} resumed, savedBundle={replacement.Restored}, editor={Editor()}");
+            Report(replacement, $"recreated; old={old.InstanceId}; oldDestroyed={old.IsDestroyed}; oldResumed={old.Resumed}");
+            _ = Editor(replacement);
             return replacement;
         }
         catch { await Finish(replacement); throw; }
@@ -180,7 +208,8 @@ public class JetchatRestorationTests
         Func<AccessibilityNodeInfo, bool> predicate, string name)
     {
         await activity.AtNativeIdle();
-        using var node = Find(predicate) ?? throw new InvalidOperationException($"Jetchat {name} is missing.");
+        Report(activity, $"click {name}");
+        using var node = Find(activity, predicate) ?? throw new InvalidOperationException($"Jetchat {name} is missing.");
         var target = node;
         try
         {
@@ -198,31 +227,31 @@ public class JetchatRestorationTests
 
     static async Task SetText(JetchatRestorationTestActivity activity, string text)
     {
-        using var editor = Find(n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
+        using var editor = Find(activity, n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
         using var args = new Bundle();
         args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, text);
         Assert.IsTrue(editor.PerformAction(NativeAction.SetText, args));
         await Settle(activity);
-        Assert.AreEqual(text, Editor().Text);
+        Assert.AreEqual(text, Editor(activity).Text);
     }
 
     static async Task SetSelection(JetchatRestorationTestActivity activity, int start, int end)
     {
-        using var editor = Find(n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
+        using var editor = Find(activity, n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
         using var args = new Bundle();
         args.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, start);
         args.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, end);
         Assert.IsTrue(editor.PerformAction(NativeAction.SetSelection, args));
         await Settle(activity);
-        Assert.AreEqual(start, Editor().Start);
-        Assert.AreEqual(end, Editor().End);
+        Assert.AreEqual(start, Editor(activity).Start);
+        Assert.AreEqual(end, Editor(activity).End);
     }
 
     static async Task ImeSend(JetchatRestorationTestActivity activity)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(30))
             throw new PlatformNotSupportedException("Native accessibility IME actions require Android 11 or later.");
-        using var editor = Find(n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
+        using var editor = Find(activity, n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
         var action = AccessibilityNodeInfo.AccessibilityAction.ActionImeEnter
             ?? throw new InvalidOperationException("Native IME action is unavailable.");
         Assert.IsTrue(editor.ActionList?.Any(a => a.Id == action.Id) == true, "The editor must advertise its native IME Send action.");
@@ -233,31 +262,64 @@ public class JetchatRestorationTests
     static async Task Settle(JetchatRestorationTestActivity activity)
     {
         await activity.AtNativeIdle();
+        var frame = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var secondFrame = new Java.Lang.Runnable(() => frame.TrySetResult());
+        using var firstFrame = new Java.Lang.Runnable(() => activity.ComposeRoot.PostOnAnimation(secondFrame));
+        await activity.OnUi(() => activity.ComposeRoot.PostOnAnimation(firstFrame));
+        await frame.Task.WaitAsync(TimeSpan.FromSeconds(10));
         var automation = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
         automation.WaitForIdle(200, 5000);
         await activity.AtNativeIdle();
     }
 
-    static (string Text, int Start, int End, bool Focused) Editor()
+    static (string Text, int Start, int End, bool Focused) Editor(JetchatRestorationTestActivity activity)
     {
-        using var node = Find(n => n.Editable) ?? throw new InvalidOperationException("Native Jetchat editor is missing.");
-        return (node.Text ?? "", node.TextSelectionStart, node.TextSelectionEnd, node.Focused);
+        (string Text, int Start, int End, bool Focused) snapshot = ("", 0, 0, false);
+        Runner.RunOnMainSync(() => snapshot = activity.ReadNativeEditor());
+        using var node = Find(activity, n => n.Editable) ?? throw new InvalidOperationException("Native Jetchat editor is missing.");
+        Assert.AreEqual(snapshot.Text, node.Text ?? "", "Native semantics and the visible accessible editor text must agree.");
+        Report(activity, $"nativeEditor={snapshot}; accessibilitySelection={node.TextSelectionStart}..{node.TextSelectionEnd}");
+        return snapshot;
     }
 
-    static void AssertPanel(bool present)
+    static void AssertPanel(JetchatRestorationTestActivity activity, bool present)
     {
-        using var panel = Find(n => n.ContentDescription == "Emoji selector");
+        using var panel = Find(activity, n => n.ContentDescription == "Emoji selector");
         Assert.AreEqual(present, panel is not null, "Native emoji selector presence differs.");
     }
 
-    static AccessibilityNodeInfo? Find(Func<AccessibilityNodeInfo, bool> predicate)
+    static AccessibilityNodeInfo? Find(JetchatRestorationTestActivity activity, Func<AccessibilityNodeInfo, bool> predicate)
     {
         var automation = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
+        automation.WaitForIdle(200, 5000);
         if (OperatingSystem.IsAndroidVersionAtLeast(34))
             Assert.IsTrue(automation.ClearCache());
         using var root = automation.RootInActiveWindow ?? throw new InvalidOperationException("No native active window.");
         Assert.AreEqual("net.compose.devicetests", root.PackageName, "Do not inspect an unowned native window.");
+        int windowId = -1;
+        Runner.RunOnMainSync(() =>
+        {
+            using var owned = activity.ComposeRoot.CreateAccessibilityNodeInfo()
+                ?? throw new InvalidOperationException("The owned ComposeView has no accessibility window.");
+            windowId = owned.WindowId;
+        });
+        Assert.AreEqual(windowId, root.WindowId, "The active accessibility root must belong to this activity instance.");
         return FindIn(root, n => n.VisibleToUser && predicate(n));
+    }
+
+    static void Report(JetchatRestorationTestActivity activity, string phase)
+    {
+        using var status = new Bundle();
+        status.PutString("jetchatStage", phase);
+        status.PutString("activityInstance", activity.InstanceId.ToString());
+        status.PutInt("pid", global::Android.OS.Process.MyPid());
+        Runner.RunOnMainSync(() =>
+        {
+            status.PutBoolean("resumed", activity.Resumed);
+            status.PutBoolean("focusedWindow", activity.HasWindowFocus);
+            status.PutBoolean("restoredBundle", activity.Restored);
+        });
+        Runner.SendStatus(0, status);
     }
 
     static AccessibilityNodeInfo? FindIn(AccessibilityNodeInfo node, Func<AccessibilityNodeInfo, bool> predicate)
