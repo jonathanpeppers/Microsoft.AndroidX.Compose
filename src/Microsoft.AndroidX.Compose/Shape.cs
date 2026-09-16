@@ -21,6 +21,12 @@ public class Shape : Java.Lang.Object
     private protected Shape(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
+    internal Shape(Java.Lang.Object peer)
+        : base(peer.Handle, JniHandleOwnership.DoNotTransfer)
+    {
+        GC.KeepAlive(peer);
+    }
+
     /// <summary>
     /// <c>androidx.compose.foundation.shape.RoundedCornerShape(corner: Dp)</c>
     /// — equal radius on all four corners.
@@ -82,6 +88,13 @@ public class Shape : Java.Lang.Object
     }
 
     /// <summary>
+    /// Independent density-aware cuts, ordered top-start, top-end,
+    /// bottom-end, bottom-start. Start and end mirror in right-to-left layouts.
+    /// </summary>
+    public static Shape CutCorners(Dp topStart, Dp topEnd, Dp bottomEnd, Dp bottomStart) =>
+        new CutCornerShape(topStart, topEnd, bottomEnd, bottomStart);
+
+    /// <summary>
     /// <c>androidx.compose.foundation.shape.CutCornerShape(percent: Int)</c>
     /// — chamfered corners expressed as a percentage of the smaller
     /// dimension.
@@ -91,6 +104,14 @@ public class Shape : Java.Lang.Object
         IntPtr handle = ComposeBridges.CutCornerShapePercent(percent);
         return new Shape(handle, JniHandleOwnership.TransferLocalRef);
     }
+
+    /// <summary>
+    /// Independent cuts as percentages of the shorter side, ordered top-start,
+    /// top-end, bottom-end, bottom-start. Start and end mirror in RTL.
+    /// </summary>
+    public static Shape CutCornersPercent(
+        int topStartPercent, int topEndPercent, int bottomEndPercent, int bottomStartPercent) =>
+        new CutCornerShape(topStartPercent, topEndPercent, bottomEndPercent, bottomStartPercent);
 
     /// <summary>
     /// <c>androidx.compose.ui.graphics.RectangleShape</c> — Compose's
