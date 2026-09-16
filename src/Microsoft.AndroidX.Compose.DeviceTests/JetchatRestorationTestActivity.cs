@@ -122,6 +122,8 @@ public class JetchatRestorationTestActivity : MainActivity
 
     internal (string Text, int Start, int End, bool Focused) ReadNativeEditor()
     {
+        if (!Resumed || !HasWindowFocus || IsDestroyed || IsFinishing)
+            throw new InvalidOperationException("The native editor's activity is no longer resumed and focused.");
         var child = ComposeRoot.GetChildAt(0)
             ?? throw new InvalidOperationException("Jetchat Compose owner is unavailable.");
         var owner = child.JavaCast<IViewRootForTest>();

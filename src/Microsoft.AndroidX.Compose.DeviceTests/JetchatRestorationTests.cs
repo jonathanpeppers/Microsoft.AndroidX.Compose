@@ -299,10 +299,13 @@ public class JetchatRestorationTests
         int windowId = -1;
         Runner.RunOnMainSync(() =>
         {
+            Assert.IsTrue(activity.Resumed && activity.HasWindowFocus && !activity.IsDestroyed && !activity.IsFinishing,
+                "Accessibility observation requires this activity to remain resumed and focused.");
             using var owned = activity.ComposeRoot.CreateAccessibilityNodeInfo()
                 ?? throw new InvalidOperationException("The owned ComposeView has no accessibility window.");
             windowId = owned.WindowId;
         });
+        Assert.IsTrue(windowId >= 0 && root.WindowId >= 0, "An invalid native window ID cannot establish ownership.");
         Assert.AreEqual(windowId, root.WindowId, "The active accessibility root must belong to this activity instance.");
         return FindIn(root, n => n.VisibleToUser && predicate(n));
     }
