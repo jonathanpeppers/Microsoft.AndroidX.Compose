@@ -4609,8 +4609,8 @@ internal static partial class ComposeBridges
     // The bound interfaces (Measurable, MeasurePolicy, MeasureResult,
     // MeasureScope) are empty because every abstract member has an
     // inline-class-mangled JVM name (Constraints is @JvmInline value class).
-    // We hand-bridge the four reachable methods plus the four Constraints
-    // accessors and Collections.emptyMap() (needed for MeasureScope.layout's
+    // Supporting bridges include the six Constraints accessors and
+    // Collections.emptyMap() (needed for MeasureScope.layout's
     // alignmentLines argument — null fails Kotlin null-checks).
     //
     // The MeasurePolicy interface itself can't be implemented from Java
@@ -4623,82 +4623,31 @@ internal static partial class ComposeBridges
     // Java/MeasurePolicyFactory.java.
     // ---------------------------------------------------------------------
 
-    // AndroidX.Compose.UI.Unit.Constraints — `@JvmInline value class`
-    // companion accessors. Each takes the packed `long` value and returns
-    // an `int` (or `boolean` for the bounded helpers). Hand-written
-    // because the [ComposeBridge] generator only emits CallStaticObjectMethod,
-    // and these need primitive returns (CallStaticIntMethod /
-    // CallStaticBooleanMethod). One JNI class lookup is shared across all
-    // six accessors via the lazy s_constraintsClass field.
-    static IntPtr s_constraintsClass;
-    static IntPtr s_constraintsGetMinWidthMethodId;
-    static IntPtr s_constraintsGetMaxWidthMethodId;
-    static IntPtr s_constraintsGetMinHeightMethodId;
-    static IntPtr s_constraintsGetMaxHeightMethodId;
-    static IntPtr s_constraintsHasBoundedWidthMethodId;
-    static IntPtr s_constraintsHasBoundedHeightMethodId;
+    // These synthetic accessors are absent from UI.Unit.Android. Generated FindClass
+    // caches own global refs; a temporary Class.FromType(...).Handle does not (#357).
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getMinWidth-impl", Signature = "(J)I")]
+    internal static partial int ConstraintsGetMinWidth(long value);
 
-    static IntPtr ConstraintsClass()
-    {
-        if (s_constraintsClass == IntPtr.Zero)
-            s_constraintsClass = Java.Lang.Class.FromType(
-                typeof(AndroidX.Compose.UI.Unit.Constraints)).Handle;
-        return s_constraintsClass;
-    }
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getMaxWidth-impl", Signature = "(J)I")]
+    internal static partial int ConstraintsGetMaxWidth(long value);
 
-    internal static unsafe int ConstraintsGetMinWidth(long value)
-    {
-        if (s_constraintsGetMinWidthMethodId == IntPtr.Zero)
-            s_constraintsGetMinWidthMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getMinWidth-impl", "(J)I");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMinWidthMethodId, args);
-    }
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getMinHeight-impl", Signature = "(J)I")]
+    internal static partial int ConstraintsGetMinHeight(long value);
 
-    internal static unsafe int ConstraintsGetMaxWidth(long value)
-    {
-        if (s_constraintsGetMaxWidthMethodId == IntPtr.Zero)
-            s_constraintsGetMaxWidthMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getMaxWidth-impl", "(J)I");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMaxWidthMethodId, args);
-    }
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getMaxHeight-impl", Signature = "(J)I")]
+    internal static partial int ConstraintsGetMaxHeight(long value);
 
-    internal static unsafe int ConstraintsGetMinHeight(long value)
-    {
-        if (s_constraintsGetMinHeightMethodId == IntPtr.Zero)
-            s_constraintsGetMinHeightMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getMinHeight-impl", "(J)I");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMinHeightMethodId, args);
-    }
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getHasBoundedWidth-impl", Signature = "(J)Z")]
+    internal static partial bool ConstraintsHasBoundedWidth(long value);
 
-    internal static unsafe int ConstraintsGetMaxHeight(long value)
-    {
-        if (s_constraintsGetMaxHeightMethodId == IntPtr.Zero)
-            s_constraintsGetMaxHeightMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getMaxHeight-impl", "(J)I");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMaxHeightMethodId, args);
-    }
-
-    internal static unsafe bool ConstraintsHasBoundedWidth(long value)
-    {
-        if (s_constraintsHasBoundedWidthMethodId == IntPtr.Zero)
-            s_constraintsHasBoundedWidthMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getHasBoundedWidth-impl", "(J)Z");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticBooleanMethod(ConstraintsClass(), s_constraintsHasBoundedWidthMethodId, args);
-    }
-
-    internal static unsafe bool ConstraintsHasBoundedHeight(long value)
-    {
-        if (s_constraintsHasBoundedHeightMethodId == IntPtr.Zero)
-            s_constraintsHasBoundedHeightMethodId = JNIEnv.GetStaticMethodID(
-                ConstraintsClass(), "getHasBoundedHeight-impl", "(J)Z");
-        var args = stackalloc JValue[1]; args[0] = new JValue(value);
-        return JNIEnv.CallStaticBooleanMethod(ConstraintsClass(), s_constraintsHasBoundedHeightMethodId, args);
-    }
+    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+        JvmName = "getHasBoundedHeight-impl", Signature = "(J)Z")]
+    internal static partial bool ConstraintsHasBoundedHeight(long value);
 
     // composenet.compose.MeasurePolicyFactory.create — static factory in
     // our Java helper that wraps a Function3<MeasureScope, List, Long,

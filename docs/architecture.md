@@ -1129,9 +1129,12 @@ and activity recreation. Controlled-composition tests exercise delayed
 forget, aborted insertion and retry, missing saveable registries, independent
 compositions, and observer survival/collection across managed and Java GC.
 Fresh-process loop and nested-selective probes retain distinct saved values
-while ordinary state resets. The node-order fixture
-uses fixed pixel constraints, avoiding an unrelated cached JNI class-reference
-failure exposed by repeatedly calling the current Constraints getter bridges.
+while ordinary state resets. The original node-order acceptance fixture
+used fixed pixels after a CheckJNI abort in a Constraints measurement callback;
+that avoidance was not a runtime fix. The fixture now uses the real getters
+and clamps again, with GC before structural updates. See
+[Constraints JNI lifetime](constraints-jni-lifetime.md) for the separate
+ownership investigation and source-specific measurement regression.
 
 On integrated main `c49b14e`, the final consolidated suite passed 24 device
 cases and 338 host tests. The injected slot-publication failure releases the
