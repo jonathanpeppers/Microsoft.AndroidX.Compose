@@ -236,9 +236,17 @@ public static class Conversation
             // away from the newest message (index 0 in reverse layout).
             c =>
             {
-                var visible = messagesScroll.FirstVisibleItemIndex != 0
-                           || messagesScroll.FirstVisibleItemScrollOffset > DpToPx(56);
-                if (!visible)
+                var densityValue = AndroidX.Compose.UI.Platform.CompositionLocalsKt.LocalDensity.GetCurrent(c, 0)
+                    ?? throw new InvalidOperationException("LocalDensity was unavailable in the Jetchat conversation.");
+                var density = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Unit.IDensity>(densityValue);
+                int jumpThreshold = (int)(56 * density.Density);
+                var visible = c.Remember(
+                    () => ComposeExtensions.DerivedStateOf(
+                        () => messagesScroll.FirstVisibleItemIndex != 0
+                            || messagesScroll.FirstVisibleItemScrollOffset > jumpThreshold),
+                    key1: messagesScroll,
+                    key2: jumpThreshold);
+                if (!visible.Value)
                     return null;
 
                 return new ExtendedFloatingActionButton(
@@ -680,12 +688,4 @@ public static class Conversation
             () => selectedSelector.Value = 0);
     }
 
-    static int DpToPx(int value)
-    {
-        var resources = Android.Content.Res.Resources.System
-            ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
-        var metrics = resources.DisplayMetrics
-            ?? throw new InvalidOperationException("Android display metrics were unavailable in Jetchat.");
-        return (int)(value * metrics.Density);
-    }
 }
