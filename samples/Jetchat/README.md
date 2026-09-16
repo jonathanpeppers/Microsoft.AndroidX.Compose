@@ -667,8 +667,9 @@ Media3 view controls:
 - Fullscreen playback hosts the bound `Xamarin.AndroidX.Media3.ExoPlayer` and
   `Xamarin.AndroidX.Media3.UI.PlayerView` 1.11.0 through the existing
   `AndroidView` facade. Back/close dismiss, activity pause/stop pauses playback,
-  and dismissal/composition disposal releases the player. The built-in
-  `PlayerView` reports playback errors and supplies play/pause/seek controls.
+  and dismissal/composition disposal releases the player. A bound
+  `IErrorMessageProvider` makes playback failures visible; the built-in
+  `PlayerView` supplies play/pause/seek controls.
 
 The binding audit found the required members in the runtime assemblies:
 `ExoPlayerBuilder.Build`, `IPlayer.SetMediaItem` / `Prepare` / `Pause` /

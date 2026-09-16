@@ -9,6 +9,7 @@ namespace AndroidX.Compose.Samples.Jetchat;
 internal sealed class VideoPlaybackSession
 {
     readonly string _videoUri;
+    readonly VideoErrorMessageProvider _errorMessageProvider = new();
     IExoPlayer? _player;
     PlayerView? _view;
     bool _released;
@@ -43,6 +44,7 @@ internal sealed class VideoPlaybackSession
             Player = player,
             UseController = true,
         };
+        view.SetErrorMessageProvider(_errorMessageProvider);
         view.SetShowBuffering(PlayerView.ShowBufferingAlways);
         view.ContentDescription = "Video player";
 
@@ -70,5 +72,6 @@ internal sealed class VideoPlaybackSession
             _player.Dispose();
             _player = null;
         }
+        _errorMessageProvider.Dispose();
     }
 }
