@@ -1659,14 +1659,14 @@ AndroidX.Compose.Tooltip.EnableUserInput.get -> bool
 AndroidX.Compose.Tooltip.EnableUserInput.set -> void
 AndroidX.Compose.Tooltip.Tip.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Tooltip.Tip.set -> void
-AndroidX.Compose.Tooltip.Tooltip(AndroidX.Compose.TooltipStateHolder! state) -> void
+AndroidX.Compose.Tooltip.Tooltip(AndroidX.Compose.TooltipState! state) -> void
 AndroidX.Compose.Tooltip.Tooltip(bool isPersistent = false) -> void
-AndroidX.Compose.TooltipStateHolder
-AndroidX.Compose.TooltipStateHolder.Dismiss() -> void
-AndroidX.Compose.TooltipStateHolder.IsPersistent.get -> bool
-AndroidX.Compose.TooltipStateHolder.IsVisible.get -> bool
-AndroidX.Compose.TooltipStateHolder.ShowAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-AndroidX.Compose.TooltipStateHolder.TooltipStateHolder(bool isPersistent = false) -> void
+AndroidX.Compose.TooltipState
+AndroidX.Compose.TooltipState.Dismiss() -> void
+AndroidX.Compose.TooltipState.IsPersistent.get -> bool
+AndroidX.Compose.TooltipState.IsVisible.get -> bool
+AndroidX.Compose.TooltipState.ShowAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.TooltipState.TooltipState(bool isPersistent = false) -> void
 AndroidX.Compose.TopAppBar
 AndroidX.Compose.TopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TopAppBar.Actions.set -> void

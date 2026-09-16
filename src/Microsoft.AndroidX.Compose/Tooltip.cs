@@ -16,7 +16,7 @@ namespace AndroidX.Compose;
 public sealed class Tooltip : ComposableNode
 {
     readonly bool _isPersistent;
-    readonly TooltipStateHolder? _state;
+    readonly TooltipState? _state;
 
     /// <summary>Creates a tooltip with internally remembered state.</summary>
     /// <param name="isPersistent">
@@ -28,10 +28,10 @@ public sealed class Tooltip : ComposableNode
     /// <summary>Creates a tooltip controlled by caller-supplied state.</summary>
     /// <param name="state">
     /// State remembered by the caller and shared with event handlers that call
-    /// <see cref="TooltipStateHolder.ShowAsync(CancellationToken)"/> or
-    /// <see cref="TooltipStateHolder.Dismiss"/>.
+    /// <see cref="TooltipState.ShowAsync(CancellationToken)"/> or
+    /// <see cref="TooltipState.Dismiss"/>.
     /// </param>
-    public Tooltip(TooltipStateHolder state)
+    public Tooltip(TooltipState state)
     {
         ArgumentNullException.ThrowIfNull(state);
         _state = state;

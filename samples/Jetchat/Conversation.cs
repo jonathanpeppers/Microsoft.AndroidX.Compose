@@ -415,7 +415,7 @@ public static class Conversation
         new Composed(c =>
         {
             var focused = c.MutableStateOf(false);
-            var recordingTooltip = c.Remember(() => new TooltipStateHolder());
+            var recordingTooltip = c.Remember(() => new TooltipState());
             long cursorColor = scheme.Secondary;
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
@@ -462,7 +462,7 @@ public static class Conversation
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        TooltipStateHolder           recordingTooltip,
+        TooltipState                 recordingTooltip,
         AndroidX.Compose.UI.Graphics.Brush cursorBrush,
         AndroidX.Compose.Foundation.Text.KeyboardActions keyboardActions,
         Action<FocusState> onFocusChanged,

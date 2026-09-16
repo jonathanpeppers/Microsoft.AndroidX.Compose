@@ -14,7 +14,7 @@ public static class TooltipsDemo
         Build:       c =>
         {
             var count = c.MutableStateOf(0);
-            var state = c.Remember(() => new TooltipStateHolder(isPersistent: true));
+            var state = c.Remember(() => new TooltipState(isPersistent: true));
             var dragStatus = c.MutableStateOf("Hold the second anchor, then release");
             return new Column
             {
@@ -32,7 +32,7 @@ public static class TooltipsDemo
                 new Tooltip(state)
                 {
                     EnableUserInput = false,
-                    Tip = new Surface { new Text("Controlled by TooltipStateHolder") },
+                    Tip = new Surface { new Text("Controlled by TooltipState") },
                     Anchor = new Text("Programmatic tip anchor"),
                 },
                 new Text(dragStatus.Value),

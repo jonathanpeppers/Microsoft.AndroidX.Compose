@@ -8,10 +8,10 @@ namespace AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// Create one instance inside <c>Remember</c>, then pass it to
-/// <see cref="Tooltip(TooltipStateHolder)"/>. The holder binds to
+/// <see cref="Tooltip(TooltipState)"/>. The state binds to
 /// Compose's remembered <c>TooltipState</c> when the tooltip first renders.
 /// </remarks>
-public sealed class TooltipStateHolder
+public sealed class TooltipState
 {
     internal ITooltipState? Jvm;
 
@@ -26,7 +26,7 @@ public sealed class TooltipStateHolder
     /// <c>true</c> to keep the tooltip visible until <see cref="Dismiss"/> is
     /// called; <c>false</c> to use Compose's timed dismissal.
     /// </param>
-    public TooltipStateHolder(bool isPersistent = false) =>
+    public TooltipState(bool isPersistent = false) =>
         IsPersistent = isPersistent;
 
     /// <summary>
@@ -46,5 +46,5 @@ public sealed class TooltipStateHolder
 
     ITooltipState RequireJvm() =>
         Jvm ?? throw new InvalidOperationException(
-            "TooltipStateHolder is not bound. Render it with Tooltip before controlling it.");
+            "TooltipState is not bound. Render it with Tooltip before controlling it.");
 }

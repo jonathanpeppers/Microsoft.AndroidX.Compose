@@ -28,7 +28,7 @@ public class LongPressDragTestActivity : ComponentActivity
     internal readonly MutableState<float> Y = new(0);
     internal readonly MutableState<bool> Recording = new(false);
     internal readonly MutableNumberState<float> Swipe = new(0);
-    internal readonly TooltipStateHolder RecordingTooltip = new();
+    internal readonly TooltipState RecordingTooltip = new();
     internal Task? TooltipShowTask;
     internal readonly List<string> Events = [];
     internal readonly List<PointerCancellationObservation> Cancellations = [];
