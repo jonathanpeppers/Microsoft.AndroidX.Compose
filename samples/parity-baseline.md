@@ -126,6 +126,24 @@ managed payload would execute. No override, app data, system setting, or
 unrelated package was changed. Device results remain pending a separately
 authorized package-scoped override-isolation policy.
 
+The replacement Pixel10 lease used the user-authorized stronger isolation:
+uninstall only `net.compose.samples.jetchat` without preserving data, verify
+the package and override directory were absent, then fresh-install the frozen
+self-contained APK. The installed 123,395,580-byte base APK matched SHA-256
+`9BFEAC20A6081DE45FE5206877D5A808601DFA4794DC1E3CF7D091CDEF3118C7`
+and the expected signing certificate; no fast-deployment override existed.
+On the physical API 36 phone at its original 1080 x 2424 / 420 dpi,
+font-scale-1.0 settings, activity-local light/dark runs completed
+J01/J02/J04/J05/J07/J08/J09. They covered the drawer selections, exact
+`ab😀cd` caret insertion and selector focus handoff, @/Stickers dialogs,
+centered photo/location panels, nonblank-input mic, real long-press recording
+indicator, labeled jump action, and both profiles' expanded/collapsed FAB and
+unavailable actions. The scoped log tail contained no targeted fatal runtime
+signature. This is source-matched C# behavior evidence, not a Kotlin
+pixel-equivalence result. Short/font-scale-1.3 and emulated medium/expanded
+windows remain pending a separately authorized device-settings lease; a
+physical phone with display overrides is not tablet or foldable evidence.
+
 ### Reply
 
 | ID | Initial state / action | Result |
