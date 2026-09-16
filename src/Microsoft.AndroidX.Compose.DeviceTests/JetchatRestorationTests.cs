@@ -97,12 +97,44 @@ public class JetchatRestorationTests
         finally { await Finish(activity); }
     }
 
-    static async Task<JetchatRestorationTestActivity> Start(string palette)
+    /// <summary>A real channel-key change resets the UI and rebinds IME callbacks to the replacement owner.</summary>
+    [TestMethod]
+    public async Task ChangedConversationKey_ResetsDraftSelectorAndImeTarget()
+    {
+        var activity = await Start("light", ownerSwitch: true);
+        try
+        {
+            var owners = activity.Owners ?? throw new InvalidOperationException("Conversation owners are unavailable.");
+            var first = owners.Value;
+            await SetText(activity, " first386 ");
+            await Click(activity, n => n.ContentDescription == "Show Emoji selector", "emoji toggle");
+            AssertPanel(true);
+            await activity.OnUi(() => owners.Value = new("#second", 1, []));
+            await Settle(activity);
+            Assert.AreEqual("", Editor().Text);
+            AssertPanel(false);
+            await Click(activity, n => n.Editable, "editor");
+            await SetText(activity, " second386 ");
+            await ImeSend(activity);
+            Assert.AreEqual("", Editor().Text);
+            Assert.IsTrue(Editor().Focused);
+            await activity.OnUi(() =>
+            {
+                Assert.HasCount(0, first.Messages);
+                Assert.HasCount(1, owners.Value.Messages);
+                Assert.AreEqual(" second386 ", owners.Value.Messages[0].Content);
+            });
+        }
+        finally { await Finish(activity); }
+    }
+
+    static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
         JetchatRestorationTestActivity.Prepare();
         using var intent = new Intent(global::Android.App.Application.Context, typeof(JetchatRestorationTestActivity));
         intent.AddFlags(ActivityFlags.NewTask);
         intent.PutExtra("test-palette", palette);
+        intent.PutExtra("test-owner-switch", ownerSwitch);
         Runner.RunOnMainSync(() => global::Android.App.Application.Context.StartActivity(intent));
         var activity = await JetchatRestorationTestActivity.Started.Task.WaitAsync(TimeSpan.FromSeconds(20));
         try

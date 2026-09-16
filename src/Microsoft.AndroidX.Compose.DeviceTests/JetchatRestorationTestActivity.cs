@@ -1,5 +1,6 @@
 using Android.Runtime;
 using Android.Views;
+using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.Samples.Jetchat;
 using AndroidX.Compose.UI.Platform;
@@ -16,6 +17,7 @@ public class JetchatRestorationTestActivity : MainActivity
     internal Guid InstanceId { get; } = Guid.NewGuid();
     internal bool Restored { get; private set; }
     internal bool Resumed { get; private set; }
+    internal MutableManagedState<ConversationUiState>? Owners { get; private set; }
 
     internal static void Prepare() => Started = NewStarted();
 
@@ -23,6 +25,25 @@ public class JetchatRestorationTestActivity : MainActivity
     {
         Restored = savedInstanceState is not null;
         base.OnCreate(savedInstanceState);
+        if (Intent?.GetBooleanExtra("test-owner-switch", false) == true)
+        {
+            // The sample has one channel; this mode exercises replacement in the same real conversation slot.
+            var owners = new MutableManagedState<ConversationUiState>(new("#first", 1, []));
+            Owners = owners;
+            this.SetContent(c =>
+            {
+                var ui = owners.Value;
+                var menu = c.MutableStateOf("first");
+                var popup = c.MutableStateOf(false);
+                var scroll = c.RememberLazyListState();
+                var recording = c.MutableStateOf(false);
+                var swipe = c.MutableStateOf(0f);
+                return new MaterialTheme
+                {
+                    Conversation.Build(ui, menu, popup, scroll, recording, swipe, () => { }, _ => { }),
+                };
+            });
+        }
         Started.TrySetResult(this);
     }
 

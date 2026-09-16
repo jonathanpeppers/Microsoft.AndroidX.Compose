@@ -411,7 +411,8 @@ public static class Conversation
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
             var keyboardActions = c.Remember(() => KeyboardActionsHelper.Create(
-                onSend: () => Send(ui, input, selectedSelector, messagesScroll)));
+                onSend: () => Send(ui, input, selectedSelector, messagesScroll)),
+                key1: input, key2: selectedSelector, key3: ui);
             var selectorFocus = c.Remember(() => new FocusRequester());
             int selector = selectedSelector.Value;
             c.LaunchedEffect(selector, _ =>
