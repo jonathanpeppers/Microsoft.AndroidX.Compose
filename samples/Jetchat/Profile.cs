@@ -149,8 +149,8 @@ public static class Profile
                 FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier
-                    .PaddingFrom(Baselines.FirstBaseline, before: 24)
-                    .Padding(bottom: 20),
+                    .Padding(bottom: 20)
+                    .PaddingFrom(Baselines.FirstBaseline, before: 24),
             }.WithTypography(Typography.BodyLarge),
         };
 
