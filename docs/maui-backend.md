@@ -1227,6 +1227,14 @@ at compile time. Instead we mirror maui-labs's WPF
 4. Register the proxy via
    `services.AddSingleton(serviceType: <runtime IAlertManagerSubscription>, factory)`.
 
+`DispatchProxy` requires runtime code generation, so
+`UseAndroidXCompose()` only installs this optional override when
+`RuntimeFeature.IsDynamicCodeSupported` is true. Native AOT apps keep
+MAUI's stock alert subscription; all other Compose-backed handlers remain
+active. The dynamic registration is marked `RequiresDynamicCode`, and its
+constant assembly-qualified type lookup is visible to the trimmer, so this
+path needs no trim or AOT warning suppressions.
+
 This binds us to MAUI's internal interface shape — version pinning
 hazard. Pinned to `Microsoft.Maui.Controls` 10.0.20. If the interface
 gains/renames members in a future MAUI, the proxy will throw

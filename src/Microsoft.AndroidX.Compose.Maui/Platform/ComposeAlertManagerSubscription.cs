@@ -45,6 +45,12 @@ namespace Microsoft.AndroidX.Compose.Maui.Platform;
 /// register the proxy under the resolved <see cref="System.Type"/>.
 /// </para>
 /// <para>
+/// Native AOT does not support <see cref="DispatchProxy"/> generation.
+/// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>
+/// therefore skips this optional registration when dynamic code is
+/// unavailable, leaving MAUI's stock alert subscription in place.
+/// </para>
+/// <para>
 /// MAUI version pinning hazard: the interface lives at
 /// <c>Microsoft.Maui.Controls.Platform.AlertManager+IAlertManagerSubscription</c>
 /// in MAUI 10.0.20 (and is nested-private in 10.0.x). If a future MAUI
@@ -88,12 +94,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
     /// is silently skipped — MAUI then falls back to its stock
     /// AppCompat dialog.
     /// </remarks>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
-        Justification = "MAUI's IAlertManagerSubscription type is preserved by the host (it's the only consumer of this DI registration).")]
-    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
-        Justification = "We resolve a single MAUI interface by name; trimming may rename it but we no-op on miss.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
-        Justification = "DispatchProxy.Create<T,TProxy>() emits IL at runtime; supported on Android (Mono) but not on full NativeAOT — sample uses Mono.")]
+    [RequiresDynamicCode("DispatchProxy creates an implementation of MAUI's internal alert subscription interface at runtime.")]
     public static void Register(IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -160,23 +161,15 @@ public class ComposeAlertManagerSubscription : DispatchProxy
     /// </summary>
     static Type? ResolveSubscriptionInterface()
     {
-        var asm = typeof(MauiPage).Assembly;
-
         // MAUI 10.0.x — interface is nested under AlertManager.
-        var alertManager = asm.GetType("Microsoft.Maui.Controls.Platform.AlertManager");
-        if (alertManager is not null)
-        {
-            var nested = alertManager.GetNestedType(
-                "IAlertManagerSubscription",
-                BindingFlags.Public | BindingFlags.NonPublic);
-            if (nested is not null)
-                return nested;
-        }
-
-        // Forward-compat: the type might surface as top-level if MAUI
-        // ever externalises it (mirrors WPFAlertManagerSubscription's
-        // dual lookup).
-        return asm.GetType("Microsoft.Maui.Controls.Platform.IAlertManagerSubscription");
+        return Type.GetType(
+            "Microsoft.Maui.Controls.Platform.AlertManager+IAlertManagerSubscription, Microsoft.Maui.Controls",
+            throwOnError: false)
+            // Forward-compat: the type might surface as top-level if
+            // MAUI ever externalises it.
+            ?? Type.GetType(
+                "Microsoft.Maui.Controls.Platform.IAlertManagerSubscription, Microsoft.Maui.Controls",
+                throwOnError: false);
     }
 
     /// <summary>

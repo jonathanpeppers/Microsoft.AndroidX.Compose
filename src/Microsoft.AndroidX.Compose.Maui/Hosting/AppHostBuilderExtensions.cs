@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AndroidX.Compose.Maui.Handlers;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiActivityIndicator = Microsoft.Maui.Controls.ActivityIndicator;
@@ -131,14 +132,11 @@ public static class AppHostBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        // Register a DispatchProxy-backed IAlertManagerSubscription so
-        // MAUI's per-window AlertManager.Subscribe() picks us up
-        // before falling back to AlertRequestHelper. Renders
-        // DisplayAlert / DisplayActionSheet / DisplayPromptAsync via
-        // Compose AlertDialog / ModalBottomSheet instead of stock
-        // AppCompat dialogs. See ComposeAlertManagerSubscription's
-        // remarks for the version-pinning hazard.
-        ComposeAlertManagerSubscription.Register(builder.Services);
+        // Native AOT cannot generate DispatchProxy implementations.
+        // Leave MAUI's stock alert subscription in place when dynamic
+        // code is unavailable.
+        if (RuntimeFeature.IsDynamicCodeSupported)
+            ComposeAlertManagerSubscription.Register(builder.Services);
 
         // Slice 8: install the cross-cutting view-property bumpers on
         // ViewHandler.ViewMapper *before* per-handler registration so
