@@ -70,14 +70,13 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="BuildNode(IComposer)"/> and re-snapshots the source into
 /// an <see cref="IReadOnlyList{T}"/> the lazy facades index into.</para>
 ///
-/// <para><b>Scroll events.</b> Linear lists install a remembered
-/// <see cref="LazyListState"/> and publish MAUI
-/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> events from
-/// Compose layout snapshots. Deltas are derived from the actual offset
-/// of an item visible in consecutive snapshots, so variable-size rows
-/// and first-visible-index transitions remain accurate. An instantaneous
-/// jump with no shared visible item emits no event rather than inventing
-/// a distance Compose cannot report.</para>
+/// <para><b>Nested SwipeView closure.</b> Linear lists install a
+/// remembered <see cref="LazyListState"/> and observe Compose layout
+/// snapshots internally. Nested SwipeViews register with that observer
+/// while their item template is materialized. Movement greater than
+/// 10dp, or a discontinuous viewport jump with no shared visible item,
+/// closes registered rows without approximating MAUI's public
+/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> fields.</para>
 ///
 /// <para><b>Empty view.</b> When the source is null or empty and
 /// <see cref="MauiCollectionView.EmptyView"/> is set, the handler renders
@@ -135,6 +134,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     // out to the whole list subtree.
     readonly MutableState<int> _itemsVersion = new(0);
     readonly LazyListState _linearListState = new();
+    readonly CollectionViewportObserver _viewportObserver = new();
 
     // Tracks the currently-subscribed INotifyCollectionChanged source so
     // we can unsubscribe before swapping to a new source or disposing
@@ -197,9 +197,13 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // wrapper is necessary even when the template's root is a
         // touchable Layout because MAUI's stock click delivery routes
         // through CollectionView's adapter, which we're replacing.
-        Func<object, ComposableNode> itemContent = clickable
+        Func<object, ComposableNode> renderItem = clickable
             ? item => WrapClickable(rawItemContent(item), () => OnItemTapped(view, item))
             : rawItemContent;
+        Func<object, ComposableNode> itemContent = item =>
+            CollectionViewportContext.BuildItem(
+                _viewportObserver,
+                () => renderItem(item));
 
         // Read the layout live — it's a BindableObject the consumer can
         // swap at runtime, and the mapper bumped _itemsVersion if so.
@@ -303,19 +307,18 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             horizontal.Value,
             async cancellationToken =>
             {
-                var tracker = new CollectionScrollTracker(horizontal.Value);
+                _viewportObserver.ResetTracking();
                 await foreach (var snapshot in ComposeExtensions
                     .SnapshotFlow(CaptureLinearScrollSnapshot)
                     .WithCancellation(cancellationToken))
                 {
-                    if (tracker.TryObserve(snapshot, density, out var args) &&
-                        args is not null)
+                    if (_viewportObserver.HasSignificantChange(snapshot, density))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         await dispatcher.DispatchAsync(() =>
                         {
                             if (ReferenceEquals(VirtualView, view))
-                                view.SendScrolled(args);
+                                _viewportObserver.NotifySignificantChange();
                         }).ConfigureAwait(false);
                     }
                 }
@@ -335,10 +338,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
                 item.Offset,
                 item.Size);
         }
-        return new LazyListScrollSnapshot(
-            snapshot,
-            layoutInfo.ViewportStartOffset,
-            layoutInfo.ViewportEndOffset);
+        return new LazyListScrollSnapshot(snapshot);
     }
 
     static ComposableNode BuildVerticalGrid(

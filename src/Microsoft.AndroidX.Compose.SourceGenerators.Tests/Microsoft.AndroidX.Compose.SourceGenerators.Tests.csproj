@@ -23,7 +23,7 @@
     <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrencePool.cs" Link="Runtime\CompositionOccurrencePool.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrenceRegistry.cs" Link="Runtime\CompositionOccurrenceRegistry.cs" />
-    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionScrollTracker.cs" Link="Maui\CollectionScrollTracker.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionViewportObserver.cs" Link="Maui\CollectionViewportObserver.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListScrollSnapshot.cs" Link="Maui\LazyListScrollSnapshot.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListVisibleItemSnapshot.cs" Link="Maui\LazyListVisibleItemSnapshot.cs" />
   </ItemGroup>

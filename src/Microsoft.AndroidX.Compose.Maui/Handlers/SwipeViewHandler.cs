@@ -64,6 +64,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     readonly DraggableState _horizontalDrag;
     readonly DraggableState _verticalDrag;
     readonly HashSet<Element> _observedItems = [];
+    readonly Action _closeForParentScroll;
 
     ValueAnimator? _animator;
     int _animationGeneration;
@@ -75,6 +76,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     float _rightExtent;
     float _topExtent;
     float _bottomExtent;
+    CollectionViewportObserver? _viewportObserver;
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public SwipeViewHandler() : this(Mapper, CommandMapper) { }
@@ -87,6 +89,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     {
         _horizontalDrag = new DraggableState(delta => OnDrag(horizontal: true, delta));
         _verticalDrag = new DraggableState(delta => OnDrag(horizontal: false, delta));
+        _closeForParentScroll = () => Close(animated: true);
     }
 
     /// <inheritdoc/>
@@ -100,6 +103,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             ?? throw new InvalidOperationException("VirtualView not set on SwipeViewHandler.");
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on SwipeViewHandler.");
+        BindViewportObserver(CollectionViewportContext.Current);
 
         var left = BuildPanel(view.LeftItems, MauiSwipeDirection.Right, composer, context);
         var right = BuildPanel(view.RightItems, MauiSwipeDirection.Left, composer, context);
@@ -618,11 +622,21 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         _observedItems.Clear();
     }
 
+    void BindViewportObserver(CollectionViewportObserver? observer)
+    {
+        if (ReferenceEquals(_viewportObserver, observer))
+            return;
+        _viewportObserver?.Unregister(_closeForParentScroll);
+        _viewportObserver = observer;
+        _viewportObserver?.Register(_closeForParentScroll);
+    }
+
     /// <inheritdoc/>
     protected override void DisconnectHandler(ComposeView platformView)
     {
         CancelAnimation();
         ClearItemSubscriptions();
+        BindViewportObserver(null);
         base.DisconnectHandler(platformView);
     }
 

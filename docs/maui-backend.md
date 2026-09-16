@@ -1965,7 +1965,7 @@ theme + snapshot state directly.
   affordances (checkmark, ripple emphasis). The handler already
   wires the data path for Single + Multiple selection, but the
   visual state is a follow-up.
-- `ScrollTo(int)` / `ScrollTo(item)`
+- `ScrollTo(int)` / `ScrollTo(item)` / public `Scrolled` event
   (`LazyListState.AnimateScrollToItemAsync` already exists; wiring
   MAUI's `ScrollToRequested` is mechanical).
 - `ItemsUpdatingScrollMode` (`KeepItemsInView` /
@@ -2006,18 +2006,12 @@ composition instead of falling back to MAUI's AppCompat
 - User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
   in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
   the requested side and animation flag without synthesizing user events.
-- Linear `CollectionViewHandler` paths now publish real `Scrolled` events
-  from `LazyListLayoutInfo`. Deltas match an item visible in consecutive
-  snapshots, which handles variable row sizes and index transitions and
-  lets MAUI's existing SwipeView parent-scroll subscription close open
-  rows after more than 10dp.
-
-The scroll monitor deliberately emits no delta for an instantaneous
-programmatic jump whose before/after viewports share no visible item.
-Compose exposes no absolute list distance for that discontinuity; inventing
-one from item indices would be wrong for variable-size rows. Animated
-programmatic scrolling and user scrolling produce intermediate snapshots
-and are covered normally.
+- Linear `CollectionViewHandler` paths observe `LazyListLayoutInfo`
+  internally. SwipeViews materialized under an item template register a
+  weak close callback with that viewport observer. A shared item's real
+  offset moving more than 10dp closes the row; a viewport discontinuity
+  with no shared visible item also closes it. No approximate public
+  `ItemsView.Scrolled` offsets or deltas are emitted.
 
 `SwipeViewsPage` exercises every direction, both transition modes,
 execute mode, icon/text and custom-content items, runtime collection and
