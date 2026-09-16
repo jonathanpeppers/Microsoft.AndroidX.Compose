@@ -1,3 +1,4 @@
+using Android.Runtime;
 using AndroidX.Compose.UI.Unit;
 using BoundGenericShape = AndroidX.Compose.Foundation.Shape.GenericShape;
 
@@ -16,6 +17,7 @@ namespace AndroidX.Compose;
 /// new shape when captured geometry changes: changing a capture alone does not
 /// invalidate Compose's cached outline.
 /// </remarks>
+[Register("net/compose/GenericShape", DoNotGenerateAcw = true)]
 public sealed class GenericShape : Shape
 {
     /// <summary>Creates a shape with a retained, non-composable path builder.</summary>

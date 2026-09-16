@@ -17,6 +17,7 @@ namespace AndroidX.Compose;
 /// <see cref="LinkAnnotation"/>, and so future generator-emitted
 /// bridges can accept it via the standard reference-type handle path.
 /// </remarks>
+[Register("net/compose/AnnotatedString", DoNotGenerateAcw = true)]
 public sealed class AnnotatedString : Java.Lang.Object
 {
     AnnotatedString(IntPtr handle, JniHandleOwnership transfer)

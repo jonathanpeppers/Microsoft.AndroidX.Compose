@@ -16,6 +16,7 @@ namespace AndroidX.Compose;
 /// the factory delegates to the existing
 /// <c>ComposeBridges.RoundedCornerShape</c> bridge.
 /// </summary>
+[Register("net/compose/Shape", DoNotGenerateAcw = true)]
 public class Shape : Java.Lang.Object
 {
     private protected Shape(IntPtr handle, JniHandleOwnership transfer)

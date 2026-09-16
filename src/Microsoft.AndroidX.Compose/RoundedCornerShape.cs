@@ -23,6 +23,7 @@ namespace AndroidX.Compose;
 /// <c>new RoundedCornerShape(new Dp(16))</c> for a 16dp radius.
 /// </para>
 /// </remarks>
+[Register("net/compose/RoundedCornerShape", DoNotGenerateAcw = true)]
 public sealed class RoundedCornerShape : Shape
 {
     /// <summary>

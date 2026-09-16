@@ -8,6 +8,7 @@ namespace AndroidX.Compose;
 /// Integer arguments are percentages of the shorter side; use <c>16.Dp()</c>
 /// for a density-aware cut. Kotlin validates and normalizes corner sizes.
 /// </remarks>
+[Register("net/compose/AbsoluteCutCornerShape", DoNotGenerateAcw = true)]
 public sealed class AbsoluteCutCornerShape : Shape
 {
     /// <summary>Creates equal density-aware cuts on all four corners.</summary>

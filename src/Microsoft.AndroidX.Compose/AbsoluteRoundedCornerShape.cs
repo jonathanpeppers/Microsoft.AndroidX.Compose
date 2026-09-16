@@ -8,6 +8,7 @@ namespace AndroidX.Compose;
 /// Integer arguments are percentages of the shorter side; use <c>16.Dp()</c>
 /// for a density-aware radius. Kotlin validates and normalizes corner sizes.
 /// </remarks>
+[Register("net/compose/AbsoluteRoundedCornerShape", DoNotGenerateAcw = true)]
 public sealed class AbsoluteRoundedCornerShape : Shape
 {
     /// <summary>Creates equal density-aware radii on all four corners.</summary>

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace AndroidX.Compose;
@@ -45,7 +46,11 @@ public sealed class TextStyle
     /// <summary>Text decoration (None / Underline / LineThrough). Leave <see langword="null"/> to inherit.</summary>
     public TextDecoration? TextDecoration { get; set; }
 
-    static T? Cast<T>(Java.Lang.Object? wrapper) where T : Java.Lang.Object =>
+    static T? Cast<
+        [DynamicallyAccessedMembers(
+            DynamicallyAccessedMemberTypes.PublicConstructors |
+            DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+        T>(Java.Lang.Object? wrapper) where T : Java.Lang.Object =>
         wrapper is null ? null : Java.Lang.Object.GetObject<T>(wrapper.Handle, JniHandleOwnership.DoNotTransfer);
 
     static int UnboxTextAlign(TextAlign? wrapper, int fallback)

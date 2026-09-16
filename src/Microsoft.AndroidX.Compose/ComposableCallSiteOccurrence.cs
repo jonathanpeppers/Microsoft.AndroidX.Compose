@@ -14,7 +14,7 @@ internal sealed class ComposableCallSiteOccurrence : Java.Lang.Object, IRemember
 
     internal int Ordinal { get; }
 
-    internal ComposableCallSiteOccurrence(IControlledComposition composition, long parent, string site)
+    public ComposableCallSiteOccurrence(IControlledComposition composition, long parent, string site)
     {
         _composition = composition;
         _parent = parent;
