@@ -140,9 +140,20 @@ centered photo/location panels, nonblank-input mic, real long-press recording
 indicator, labeled jump action, and both profiles' expanded/collapsed FAB and
 unavailable actions. The scoped log tail contained no targeted fatal runtime
 signature. This is source-matched C# behavior evidence, not a Kotlin
-pixel-equivalence result. Short/font-scale-1.3 and emulated medium/expanded
-windows remain pending a separately authorized device-settings lease; a
-physical phone with display overrides is not tablet or foldable evidence.
+pixel-equivalence result.
+
+A separate, fully restored Pixel10 lease completed the remaining size matrix.
+The actual activity roots were 1080 x 1920 at 480 dpi / font scale 1.3
+(360 x 640 dp), 1400 x 1800 at 320 dpi / font scale 1.0 (700 x 900 dp), and
+2000 x 1600 at 320 dpi / font scale 1.0 (1000 x 800 dp). Short-window
+J01/J04/J07/J09 and medium/expanded J01/J09 completed in activity-local light
+and dark palettes; the short controlled-caret case again produced exact
+`ab😀cd`. The installed base still matched the frozen APK, override files
+remained absent, and the scoped final log tail contained no targeted fatal
+runtime signature. Size, density, and font scale were restored to the exact
+initial physical 1080 x 2424 / 420 dpi / font-scale-1.0 values before release.
+These are display overrides on a physical phone, not tablet or foldable
+hardware evidence, and they do not establish whole-app pixel parity.
 
 ### Reply
 
