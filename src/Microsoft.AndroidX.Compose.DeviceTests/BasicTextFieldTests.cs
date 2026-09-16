@@ -16,6 +16,37 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class BasicTextFieldTests
 {
+    /// <summary>Video send accepts an empty caption and clears the shared editor state.</summary>
+    [TestMethod]
+    public void Send_WithVideo_PreservesUriAndTrimsCaption()
+    {
+        using var input = ComposeExtensions.NewTextFieldValue("  caption  ");
+        var state = new MutableState<global::AndroidX.Compose.UI.Text.Input.TextFieldValue>(input);
+        string? sentUri = null;
+        string? sentCaption = null;
+        int resetCount = 0;
+        int dismissCount = 0;
+
+        bool sent = MessageInput.Send(
+            state,
+            "file:///video.mp4",
+            _ => Assert.Fail("Video send must not use the text-only callback."),
+            (uri, caption) =>
+            {
+                sentUri = uri;
+                sentCaption = caption;
+            },
+            () => resetCount++,
+            () => dismissCount++);
+
+        Assert.IsTrue(sent);
+        Assert.AreEqual("file:///video.mp4", sentUri);
+        Assert.AreEqual("caption", sentCaption);
+        Assert.AreEqual("", state.Value.Text);
+        Assert.AreEqual(1, resetCount);
+        Assert.AreEqual(1, dismissCount);
+    }
+
     /// <summary>Diagnoses native admission independently of the editing assertions.</summary>
     [TestMethod]
     public async Task NativeControl_AdmitsTestOwnedConnection()

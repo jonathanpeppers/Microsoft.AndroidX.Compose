@@ -37,6 +37,7 @@ public static class JetchatApp
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
         ProfileViewModel             profileViewModel,
+        Action<Action<VideoPickResult>> requestVideo,
         bool?                        darkThemeOverride = null)
     {
         JetchatTheme.Build(new Composed(c =>
@@ -75,6 +76,7 @@ public static class JetchatApp
                             messagesScroll:   messagesScroll,
                             isRecording:      isRecording,
                             swipeOffset:      swipeOffset,
+                            requestVideo:     requestVideo,
                             onOpenDrawer:     () => _ = drawerState.OpenAsync(),
                             onAuthorClicked:  userId =>
                             {

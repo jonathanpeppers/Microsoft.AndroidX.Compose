@@ -44,7 +44,10 @@ public class JetchatRestorationTestActivity : MainActivity
                 var swipe = c.MutableStateOf(0f);
                 return new MaterialTheme
                 {
-                    Conversation.Build(ui, menu, popup, scroll, recording, swipe, () => { }, _ => { }),
+                    Conversation.Build(
+                        ui, menu, popup, scroll, recording, swipe,
+                        completed => completed(VideoPickResult.Cancelled),
+                        () => { }, _ => { }),
                 };
             });
         }

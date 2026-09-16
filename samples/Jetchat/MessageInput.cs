@@ -8,12 +8,30 @@ internal static class MessageInput
     internal static void Send(MutableState<TextFieldValue> input, Action<string> send,
         Action resetScroll, Action dismissSelector)
     {
-        if (string.IsNullOrWhiteSpace(input.Value.Text))
-            return;
-        send(input.Value.Text);
+        Send(input, videoUri: null, send,
+            (_, _) => throw new InvalidOperationException("Text-only send cannot create a video message."),
+            resetScroll, dismissSelector);
+    }
+
+    internal static bool Send(
+        MutableState<TextFieldValue> input,
+        string? videoUri,
+        Action<string> sendText,
+        Action<string, string> sendVideo,
+        Action resetScroll,
+        Action dismissSelector)
+    {
+        if (videoUri is not null)
+            sendVideo(videoUri, input.Value.Text.Trim());
+        else if (!string.IsNullOrWhiteSpace(input.Value.Text))
+            sendText(input.Value.Text);
+        else
+            return false;
+
         input.Value = ComposeExtensions.NewTextFieldValue();
         resetScroll();
         dismissSelector();
+        return true;
     }
 
     internal static TextFieldValue Insert(TextFieldValue current, string text)

@@ -645,9 +645,44 @@ Closed feature tickets above do not imply these sample behaviors match.
 “Missing reusable API” means the inspected public facade lacks that contract;
 it does **not** mean the underlying official binding is necessarily absent.
 
+### Video attachment and playback contract (#387)
+
+The video flow follows pinned `UserInput.kt`, `Conversation.kt`, and
+`VideoPlayer.kt`, but uses a deliberately offline fixture and the native
+Media3 view controls:
+
+- `ActivityResultContracts.GetContent` launches `video/*`. This contract grants
+  temporary read access and requires no storage or media permission. A selected
+  stream is copied into `cache/jetchat-videos` before it is attached so sent
+  messages do not depend on the picker provider remaining open. Imports are
+  capped at 25 MiB; cancel preserves the current attachment, while open/copy/
+  size failures appear below the preview and do not send a message.
+- The tenth seeded message points at the packaged, generated
+  `Resources/raw/jetchat_video_fixture.mp4` (three seconds, 480x270). There is
+  no network URL or network fallback. Stale imported cache files are pruned
+  after one day.
+- `MediaMetadataRetriever` extracts the one-second preview frame on a worker
+  thread. Codec/read failures retain the dark thumbnail and play affordance
+  rather than hiding the message.
+- Fullscreen playback hosts the bound `Xamarin.AndroidX.Media3.ExoPlayer` and
+  `Xamarin.AndroidX.Media3.UI.PlayerView` 1.11.0 through the existing
+  `AndroidView` facade. Back/close dismiss, activity pause/stop pauses playback,
+  and dismissal/composition disposal releases the player. The built-in
+  `PlayerView` reports playback errors and supplies play/pause/seek controls.
+
+The binding audit found the required members in the runtime assemblies:
+`ExoPlayerBuilder.Build`, `IPlayer.SetMediaItem` / `Prepare` / `Pause` /
+`Release`, `PlayerView.Player` / `UseController` / `SetShowBuffering`, and
+`ComponentActivity.RegisterForActivityResult`. No reusable Compose facade or
+JNI bridge gap is required for this sample integration. Unlike pinned Kotlin,
+the C# player does not hide system bars or apply Android 16 `SurfaceView` blur
+regions; it is a black, edge-to-edge in-window overlay with native controls.
+That honest window/blur limitation applies in both themes and is most visible
+on compact screens where the native control bar chooses its own layout.
+
 | Difference | Classification and precise remaining work |
 |---|---|
-| Video messages/picker/player | **Sample integration; reusable prerequisites not investigated.** Pinned [input][upstream-input] launches `video/*`, remembers an attachment, previews/removes it and sends its URI/caption. [Conversation][upstream-conversation] opens the fullscreen [player][upstream-video]. C# `Message` has only `Image`, `FakeData` omits the seeded video, and the video icon opens an unavailable panel. Audit Media3, lifecycle, SurfaceView and blur requirements before proposing new bindings; do not call this upstream-placeholder parity. |
+| Video messages/picker/player | **Implemented sample integration; intentional native-control/window deviation.** Picker, preview/removal, caption send, tenth local fixture, thumbnail and fullscreen playback are implemented with the bounded offline and lifecycle contract above. Official Media3/activity/runtime members are bound; no reusable API gap was found. Native `PlayerView` controls replace pinned Media3 Compose controls, and the C# overlay does not hide system bars or reproduce Android 16 `SurfaceView` blur regions. |
 | Composer and selector layout | **Sample integration.** `Conversation.BuildSelectorRow` uses 40 dp height/4 dp horizontal padding rather than upstream's 72 dp row/16 dp padding. @ uses a panel rather than a dialog; photo/location panels lack the upstream centered arrangement and expand/fade animation. `EmojiSelector` uses different tab colors/weights and a fixed 168 dp grid viewport. The primitives for layout, Surface/Button colors and top-level visibility animation already exist. |
 | Recording mic and indicator | **Sample integration.** Upstream keeps the mic alongside nonblank text; C# shows it only for blank input or active recording. Timer/cancellation styling differs: C# explicitly sizes the timer at 22 sp and adds an arrow/spacer; upstream uses inherited timer style and centered cancellation text. Native long-press drag and finite button transitions are already implemented. |
 | Short-tap recording tooltip | **Missing reusable API plus sample integration.** `Tooltip` internally remembers its state but exposes no caller-controlled state/show operation. C# disables automatic input and has no short-tap handler; [upstream recording][upstream-record] separately detects taps and calls `tooltipState.show()`. Expose state control and integrate a noncompeting tap path; do not replace the working long-press detector. |
@@ -657,7 +692,7 @@ it does **not** mean the underlying official binding is necessarily absent.
 | Jump control styling/motion | **Sample integration; typed animation convenience not investigated.** C# conditionally inserts a collapsed 48 dp FAB with default container and 16 dp bottom padding. [Upstream jump control][upstream-jump] is labeled, 36 dp high, surface/primary colored and animated from -32 to +32 dp before applying the negative offset. FAB color slots and float transitions are available; exact `animateDp` support is not established here. |
 | Drawer presentation | **Sample integration.** C# header renders the wordmark without upstream's separate 24 dp Jetchat icon. Section/row alignment and fixed heights differ from [upstream drawer][upstream-drawer]. Its scrollable C# column is a deliberate small-height accommodation, not an upstream layout match. |
 | Draft and selector recreation | **Implemented sample integration.** [Upstream input][upstream-input]'s native `TextFieldValue.Saver` is reused for text/selection, with a separate saveable selector inside the conversation destination. IME composition/focus are not restored; process-death parity is not claimed. See the restoration contract above. |
-| Sample data and send/drop behavior | **Intentional rewritten prose/local assets; other integration differences explicit.** Nine C# messages versus ten in [upstream data][upstream-data] change wrapping and date-group placement. `Message.AuthorImage` shares the non-me avatar, not one portrait per author. C# send timestamps are fixed `8:30 PM`; drops use `now`, accept image MIME/URI text as an extension, and animate scrolling. Kotlin accepts text/plain drops only and does not reset scroll on drop; ordinary Send resets with nonanimated `scrollToItem(0)`. |
+| Sample data and send/drop behavior | **Intentional rewritten prose/local assets; other integration differences explicit.** Both fixtures now contain ten messages, including a video message, but the C# video is a generated packaged MP4 rather than a remote HLS stream. `Message.AuthorImage` shares the non-me avatar, not one portrait per author. C# send timestamps are fixed `8:30 PM`; drops use `now`, accept image MIME/URI text as an extension, and animate scrolling. Kotlin accepts text/plain drops only and does not reset scroll on drop; ordinary Send resets with nonanimated `scrollToItem(0)`. |
 | Deliberate interaction/layout choices | **Intentional deviation.** C# day headers omit the fixed 16 dp height; selector buttons toggle closed; emoji focus is requested once per selector change rather than every upstream `SideEffect`; profile drawer navigation normalizes the stack. These choices require explicit comparison notes, not claims of exact parity. |
 | Provider fonts | **Intentional bounded font choice; provider API not investigated.** The six pinned resource fallbacks are bundled, while [upstream typography][upstream-typography] also requests Google Fonts provider faces. Different resolved fonts can change pixels even with equal metrics. |
 | Widget discoverability | **Sample omission; binding availability not investigated.** The pinned drawer has a `Settings` heading and one conditional pin-widget action, gated by API 26+ and `isRequestPinAppWidgetSupported`; it is not a settings screen plus two actions. C# has neither entry nor widget. [#149](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/149) is closed and describes an older/different shape. Recheck official package availability before treating Glance as an unavailable binding. |
