@@ -8,9 +8,26 @@ adaptive layouts (compact / medium / expanded), foldable awareness,
 multi-pane list-detail, a docked search bar, multi-select, and a
 fully animated bottom-nav / nav-rail / nav-drawer switchover.
 
-This port keeps the **data layer faithful** (12 emails with thread
-replies, 13 accounts, identical strings) and renders a **single-pane
-phone layout** built from the same Material 3 building blocks.
+This port keeps the **inbox/search data faithful** (12 emails and 13
+accounts with matching IDs, subjects and sender names) and renders a
+**single-pane phone layout** built from the same Material 3 building
+blocks. Thread ordering is fixed in C# but shuffled for most Kotlin
+emails; see the [data comparison boundary](../parity-baseline.md#data-and-rendering-caveats).
+
+The [sample parity baseline](../parity-baseline.md) fixes the reference,
+capture conditions, finite interaction checklist and remaining differences
+for [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349).
+Search and navigation are integrated; neither the checkmark in the sample
+index nor the focused device results below establish whole-app parity.
+
+The new API 36 emulator comparisons record search/selected-detail behavior
+across the size matrix and both themes, and actual activity recreation in
+both implementations. They also demonstrate the avatar difference: Kotlin
+toggles selection in place, while C# opens detail. The C# tab-Back captures
+include an unfinished navigation transition, so this driver does **not**
+establish settled tab/scroll equivalence. See the
+[per-case results and limits](../parity-baseline.md#reply); the historical
+physical-device results below keep their original source/APK identities.
 
 <img src="../docs/reply.png" alt="Reply running on an Android device" width="320" />
 
@@ -18,7 +35,7 @@ phone layout** built from the same Material 3 building blocks.
 
 - Faithful port of upstream `data/local/*`:
   - `Email`, `Account`, `MailboxType`, `EmailAttachment`
-  - `LocalAccountsDataProvider` — default account + 10 contacts
+  - `LocalAccountsDataProvider` — 3 user accounts + 10 contacts
   - `LocalEmailsDataProvider` — 12 emails with thread replies,
     matching upstream string content
 - Routes: `Inbox`, `Articles`, `DirectMessages`, `Groups`,
@@ -222,17 +239,14 @@ sample omissions, not proof that the current library lacks the corresponding API
 
 | Upstream feature | Status | Tracking issue |
 |------------------|--------|----------------|
-| `NavigationSuiteScaffold` (compact → medium → expanded switchover) | dropped — pinned to bottom nav | `Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite` not yet referenced; would also need [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163). The size-class read itself ([#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143)) shipped — see `composer.CurrentWindowAdaptiveInfo()`. |
-| `NavigationRail` / `PermanentNavigationDrawer` / `ModalNavigationDrawer` content for medium and expanded sizes | dropped — bottom nav only | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) (drawer-row facade) — branching on `WindowSizeClass` is unblocked by [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143). |
-| `accompanist.adaptive.TwoPane` + `WindowLayoutInfo`/`FoldingFeature` (list-detail with fold avoidance) | dropped — single-pane | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
-| `NavigationDrawerItem` rows inside `ModalDrawerSheet` | not used (no drawer in single-pane port) | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) |
-| `Modifier.nestedScroll(scrollBehavior)` + `TopAppBarDefaults.exitUntilCollapsedScrollBehavior()` (top-bar collapse on scroll) | dropped | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) |
-| `LazyListState.lastScrolledBackward` / `canScrollBackward` (drives search-bar lift animation) | dropped | [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) |
-| `semantics { selected = isSelected }` on email cards (screen reader announces multi-select state) | dropped | [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) |
-| `Modifier.windowInsetsPadding(WindowInsets.statusBars)` on bars | dropped | [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69) |
-| `MaterialTheme.typography.*` per-style reads (titleLarge / bodyMedium / labelMedium / …) | dropped — `FontSize` literals inline | [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) |
-| `stringResource(R.string.…)` lookups | dropped — strings inlined | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
-| `ReplyHomeViewModel` + `StateFlow` + `collectAsStateWithLifecycle` (one source of truth) | replaced with activity-owned `ReplyState` (`MutableState` / `MutableStateList`) and native navigation state | [#160](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/160) |
+| `NavigationSuiteScaffold` (compact / medium / expanded switchover), rail and drawer content | Sample integration: bottom nav only. The runtime already references Adaptive.NavigationSuite and exposes `NavigationSuiteScaffold`, `NavigationSuiteItem`, size reads and drawer/rail facades. | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383); #143, #158 and #163 are delivered prerequisites. |
+| `accompanist.adaptive.TwoPane` + folding-feature-aware list/detail | Missing reusable API/integration work: single-pane remains. Exact supported replacement and binding members still require an API audit, not inference from symbol counts. | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
+| Scroll-responsive Compose FAB, detail presence and tertiary colors | Sample integration: `expanded: true`, default colors and Inbox-only placement. Pinned Kotlin also keeps the FAB in single-pane detail and uses `lastScrolledBackward || !canScrollBackward` for the **FAB**, not a search-bar lift animation. | #383; [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) and [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) shipped. |
+| Detail toolbar scroll, title alignment and styling | Sample integration: C# puts the toolbar in `Scaffold.TopBar`; pinned Kotlin puts it in the detail `LazyColumn`. This is not an unimplemented `exitUntilCollapsedScrollBehavior` call in that reference. | #383; see pinned `ReplyListContent.kt` and `ReplyAppBars.kt`. |
+| Avatar selection and `semantics { selected = isSelected }` on email cards | Sample integration: long-press and visual checkmark/background exist; the avatar has no selection callback and selected semantics is not applied. | #383; [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) shipped. |
+| System-bar spacing, named typography, theme palette and resource-localized strings | Sample integration: generic theme, inline sizes/strings and different inset ownership remain. A particular unsupported styling slot must be checked separately. | #383; [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) and [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) shipped. |
+| Legacy inline `DockedSearchBar` | Intentional API adaptation: working state-based popup, with different outside-tap and expansion geometry; not a missing search implementation. | Completed [#348](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/348); bounded comparison in #349. |
+| `ReplyHomeViewModel` / Kotlin Flow data ownership and in-Inbox detail pane | Intentional C# adaptation: activity-owned `ReplyState`, native saved navigation and a separate detail route. | Completed [#347](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/347); ViewModel APIs from [#160](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/160) are not a blocker. |
 
 The reply / reply-all buttons, star icon, more-options menu, and
 account avatar in the search bar are all wired as no-ops —
