@@ -190,7 +190,9 @@ public class FlowOverflowTests
             var matches = new List<AccessibilityNodeInfo>();
             try
             {
-                FindTargets(root, description, matches);
+                int remaining = 100;
+                int labels = 0;
+                FindTargets(root, description, matches, activity.Admission.WindowId, ref remaining, ref labels);
                 if (matches.Count > 1 || (matches.Count == 0 && attempt == 29))
                 {
                     Console.WriteLine($"FLOW_LOOKUP_FAILURE target={description} matches={matches.Count}");
@@ -216,16 +218,37 @@ public class FlowOverflowTests
         Assert.Fail($"No actionable native overflow indicator '{description}'.");
     }
 
-    static void FindTargets(AccessibilityNodeInfo node, string description, List<AccessibilityNodeInfo> matches)
+    static void FindTargets(AccessibilityNodeInfo node, string description, List<AccessibilityNodeInfo> matches,
+        int windowId, ref int remaining, ref int labels, int depth = 0)
     {
-        if (node.ContentDescription == description && node.Clickable)
-            matches.Add((OperatingSystem.IsAndroidVersionAtLeast(33)
-                ? new AccessibilityNodeInfo(node) : AccessibilityNodeInfo.Obtain(node))
-                ?? throw new InvalidOperationException("Could not copy the overflow accessibility target."));
+        if (remaining-- <= 0 || depth > 12)
+            throw new InvalidOperationException("Cannot establish a unique overflow target within the bounded tree.");
+        if (node.PackageName != "net.compose.devicetests" || node.WindowId != windowId)
+            throw new InvalidOperationException("Overflow lookup reached a foreign package or native window.");
+        if (node.ContentDescription == description)
+        {
+            Assert.IsTrue(++labels == 1, "Overflow description label is ambiguous.");
+            using var parent = node.Clickable ? null : node.Parent;
+            var target = node.Clickable ? node : parent;
+            if (target is not null && target.Clickable && target.Enabled && target.VisibleToUser && node.VisibleToUser &&
+                target.PackageName == node.PackageName && target.WindowId == node.WindowId &&
+                target.ActionList?.Any(action => action.Id == (int)global::Android.Views.Accessibility.Action.Click) == true)
+            {
+                using var labelBounds = new global::Android.Graphics.Rect();
+                using var targetBounds = new global::Android.Graphics.Rect();
+                node.GetBoundsInScreen(labelBounds);
+                target.GetBoundsInScreen(targetBounds);
+                if (labelBounds.Equals(targetBounds))
+                    matches.Add((OperatingSystem.IsAndroidVersionAtLeast(33)
+                        ? new AccessibilityNodeInfo(target) : AccessibilityNodeInfo.Obtain(target))
+                        ?? throw new InvalidOperationException("Could not copy the overflow accessibility target."));
+            }
+        }
         for (int i = 0; i < node.ChildCount; i++)
         {
             using var child = node.GetChild(i);
-            if (child is not null) FindTargets(child, description, matches);
+            if (child is not null)
+                FindTargets(child, description, matches, windowId, ref remaining, ref labels, depth + 1);
         }
     }
 }
