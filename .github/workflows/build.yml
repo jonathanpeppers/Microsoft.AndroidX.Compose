@@ -56,6 +56,7 @@ jobs:
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
             -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/bin/" \
             -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/obj/" \
+            -p:AndroidPackageFormat=apk \
             -p:TreatWarningsAsErrors=true \
             -warnaserror:XA4301 \
             -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.CoreCLR.binlog"
@@ -66,6 +67,8 @@ jobs:
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
             -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/bin/" \
             -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/obj/" \
+            -p:AndroidPackageFormat=apk \
+            -p:MicrosoftNETCoreAppRefPackageVersion=11.0.0-rc.1.26425.128 \
             -p:PublishAot=true \
             -p:TreatWarningsAsErrors=true \
             -warnaserror:XA4301 \
@@ -111,7 +114,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Microsoft.AndroidX.Compose.Template.CoreCLR.apk
-          path: ${{ runner.temp }}/template-smoke-output/coreclr/bin/Release/net11.0-android/*.apk
+          path: ${{ runner.temp }}/template-smoke-output/coreclr/bin/Release/net11.0-android/*-Signed.apk
           if-no-files-found: warn
 
       - name: Upload project template NativeAOT APK
@@ -119,7 +122,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Microsoft.AndroidX.Compose.Template.NativeAOT.apk
-          path: ${{ runner.temp }}/template-smoke-output/nativeaot/bin/Release/net11.0-android/*.apk
+          path: ${{ runner.temp }}/template-smoke-output/nativeaot/bin/Release/net11.0-android/*-Signed.apk
           if-no-files-found: warn
 
       - name: Upload NuGet packages

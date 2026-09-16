@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net11.0-android' And '$(BundledNETCoreAppPackageVersion)' == '11.0.0-rc.1.26425.128' ">
-    <MicrosoftNETCoreAppRefPackageVersion>$(BundledNETCoreAppPackageVersion)</MicrosoftNETCoreAppRefPackageVersion>
-  </PropertyGroup>
-</Project>
