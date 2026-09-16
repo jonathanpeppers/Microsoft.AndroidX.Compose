@@ -91,6 +91,8 @@ public static class Catalog
         D.Containers.SpacerDemo.Demo,
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumnDemo.Demo,
+        D.Containers.FlowOverflowDemo.Demo,
+        D.Containers.FlowOverflowDemo.DirectDemo,
         D.Containers.SnackbarLayoutDemo.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
         D.Containers.CustomLayoutDemo.Demo,

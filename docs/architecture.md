@@ -5,6 +5,56 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Flow overflow compatibility
+
+`FlowRow.Overflow` and `FlowColumn.Overflow` accept managed `FlowRowOverflow`
+and `FlowColumnOverflow` configurations. `Clip` is also the omitted Kotlin
+default. `ExpandIndicator` supplies one indicator; `ExpandOrCollapseIndicator`
+supplies both indicators and optional minimum row/column and height/width
+thresholds. There is no separate collapse-only factory in Foundation.
+Content accepts nodes, node factories, or `[ComposableContent]` callbacks.
+Emit one layout root per indicator and update the owning flow's `maxLines`
+from its click handler; overflow does not mutate application expansion state.
+Both indicators can be composed for intrinsic measurement even when only one
+is placed, so composition is not evidence of visibility.
+
+The actual pinned **Foundation Layout 1.11.3** contract matters here. Its
+overflow overloads are deprecated ("FlowLayout overflow is no longer
+maintained"), but are still present and fully bound by the **1.11.3.1
+runtime `.Android.dll`**. The facade intentionally retains this compatibility
+surface; it does not substitute contextual or custom layouts. Factory and
+layout calls use official bindings, including the mangled bound
+`ExpandOrCollapseIndicator__jt2gSs` method. Only the omitted `Companion` field
+requires a cached lookup through bound Java reflection; no new raw JNI
+bridge or private-state reflection is used.
+
+`FlowOverflowScope.TotalItemCount` and `ShownItemCount` forward the native
+scope getters, excluding indicators. **Read counts in drawing/post-layout
+callbacks, not composition.** In particular, shown count throws before
+measurement; total count may not yet be initialized. Kotlin lazily caches
+each scope's first count read, so scopes are invocation-local and must not be
+saved across indicator invocations. No managed eager snapshot, zero fallback,
+or promise of snapshot-observable live state is added.
+
+The flow facades remain generated. An explicit managed-reference registry
+allows nullable wrapper-passthrough options without classifying arbitrary
+reference types as JNI peers. `[FacadeAdded]` preserves old catalog CLR arity
+and direct targets while new overloads carry the overflow option. Omitted
+overflow leaves Kotlin bit 6 set; explicitly supplied null in a direct call
+clears that bit and is rejected, rather than silently becoming Clip.
+Tree `Overflow = null` follows the existing tree optional-property convention
+and omits the option. Generated enums describe the eight-slot overflow
+overloads and four-slot indicator factories. Native changed masks remain
+conservative because managed configuration is resolved during composition.
+Tracked indicator lambdas enter their invocation composer and native Row or
+Column receiver, then restore the outer receiver even on exceptions.
+
+The `containers-flow-overflow` and `containers-flow-overflow-direct` Gallery
+routes demonstrate both directions/styles. `FlowOverflowFacadeTests` pins
+legacy signatures and omission/null masks. `FlowOverflowTests` includes direct
+bound-native controls alongside managed exact-count, clipping, interaction
+and nested-layout cases.
+
 ## Typed transition values
 
 `composer.UpdateTransition<T>(targetState)` and

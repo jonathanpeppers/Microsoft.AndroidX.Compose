@@ -4275,7 +4275,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
-        if (ComposeFacadeManagedTypes.IsRecognized(type)) return true;
+        if (ComposeFacadeManagedTypes.IsRecognized(type, annotation)) return true;
         // Nullable<primitive>: bool?, int?, long?, float?, double?.
         if (IsNullablePrimitive(type)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.
