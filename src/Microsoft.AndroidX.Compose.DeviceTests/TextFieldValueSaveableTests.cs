@@ -74,7 +74,14 @@ public class TextFieldValueSaveableTests
             Assert.AreNotSame(original, State());
             Assert.AreNotSame(other, Sibling());
             Assert.AreEqual(expected.Text, State().Value.Text);
-            Assert.AreEqual(expected.AnnotatedString, State().Value.AnnotatedString);
+            var expectedAnnotations = expected.AnnotatedString;
+            var restoredAnnotations = State().Value.AnnotatedString;
+            using var plain = new global::AndroidX.Compose.UI.Text.AnnotatedString(expected.Text, []);
+            Assert.IsFalse(expectedAnnotations.HasEqualAnnotations(plain),
+                "The annotation comparison must detect missing styles and metadata on identical text.");
+            // Generic managed equality compares Java peer wrappers, not Kotlin annotation values.
+            Assert.IsTrue(expectedAnnotations.HasEqualAnnotations(restoredAnnotations),
+                "The native saver must preserve the complete annotation values and ranges.");
             Assert.AreEqual(expected.Selection, State().Value.Selection);
             Assert.IsNull(State().Value.Composition, "The native saver must not serialize an IME composition range.");
             Assert.AreEqual(" sibling386 ", Sibling().Value.Text);
