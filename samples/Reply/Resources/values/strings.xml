@@ -1,3 +1,24 @@
 <resources>
-    <string name="app_name">Reply</string>
+    <string name="reply_app_name">Reply</string>
+    <string name="reply_tab_inbox">Inbox</string>
+    <string name="reply_tab_articles">Articles</string>
+    <string name="reply_tab_direct_messages">Direct Messages</string>
+    <string name="reply_tab_groups">Groups</string>
+    <string name="reply_profile">Profile</string>
+    <string name="reply_search">Search</string>
+    <string name="reply_compose">Compose</string>
+    <string name="reply_edit">Edit</string>
+    <string name="reply_action">Reply</string>
+    <string name="reply_all">Reply All</string>
+    <string name="reply_favorite">Favorite</string>
+    <string name="reply_twenty_minutes_ago">20 mins ago</string>
+    <string name="reply_back">Back</string>
+    <string name="reply_more_options">More options</string>
+    <string name="reply_email_detail_title">Email detail title</string>
+    <string name="reply_messages">%1$d Messages</string>
+    <string name="reply_search_emails">Search emails</string>
+    <string name="reply_no_item_found">No item found</string>
+    <string name="reply_no_search_history">No search history</string>
+    <string name="reply_empty_title">Screen under construction</string>
+    <string name="reply_empty_subtitle">This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose</string>
 </resources>

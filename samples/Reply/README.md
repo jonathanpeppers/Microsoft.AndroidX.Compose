@@ -9,10 +9,12 @@ multi-pane list-detail, a docked search bar, multi-select, and a
 fully animated bottom-nav / nav-rail / nav-drawer switchover.
 
 This port keeps the **inbox/search data faithful** (12 emails and 13
-accounts with matching IDs, subjects and sender names) and renders a
-**single-pane phone layout** built from the same Material 3 building
-blocks. Thread ordering is fixed in C# but shuffled for most Kotlin
-emails; see the [data comparison boundary](../parity-baseline.md#data-and-rendering-caveats).
+accounts with matching IDs, subjects and sender names), switches top-level
+navigation at the same compact/medium/expanded width breakpoints, and renders
+the email content as a **single pane**. Fold-aware dual-pane content remains
+separate [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168).
+Thread ordering is fixed in C# but shuffled for most Kotlin emails; see the
+[data comparison boundary](../parity-baseline.md#data-and-rendering-caveats).
 
 The [sample parity baseline](../parity-baseline.md) fixes the reference,
 capture conditions, finite interaction checklist and remaining differences
@@ -20,10 +22,10 @@ for [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/
 Search and navigation are integrated; neither the checkmark in the sample
 index nor the focused device results below establish whole-app parity.
 
-The new API 36 emulator comparisons record search/selected-detail behavior
+The historical API 36 emulator comparisons record search/selected-detail behavior
 across the size matrix and both themes, and actual activity recreation in
 both implementations. They also demonstrate the avatar difference: Kotlin
-toggles selection in place, while C# opens detail. The C# tab-Back captures
+toggles selection in place, while the pre-#383 C# build opens detail. The C# tab-Back captures
 include an unfinished navigation transition, so this driver does **not**
 establish settled tab/scroll equivalence. See the
 [per-case results and limits](../parity-baseline.md#reply); the historical
@@ -45,19 +47,45 @@ physical-device results below keep their original source/APK identities.
   the detail view)
 - Top-level destinations + `ReplyNavigationActions` wrapper using native
   pop-to-Inbox, save/restore-state and single-top navigation
-- `ReplyBottomNavigationBar` — 4 `NavigationBarItem`s
+- `NavigationSuiteScaffold` — bottom bar below 600 dp, rail from 600 dp,
+  and permanent drawer from 840 dp, with the same four destinations
 - `ReplyInboxScreen` — `LazyColumn` of `ReplyEmailListItem`s with a
   functioning docked search bar pinned to the top and an
-  `ExtendedFloatingActionButton` ("Compose") anchored to the
-  bottom-right
-- `ReplyEmailListItem` — `Card` with `Modifier.CombinedClickable`
+  `ExtendedFloatingActionButton` ("Compose") whose label follows native
+  scroll direction in compact windows
+- `ReplyEmailListItem` — card-shaped `Surface` with `Modifier.CombinedClickable`
   (tap → open, long-press → toggle multi-select), `AnimatedContent`
-  swapping a checkmark avatar in/out when selected
-- `ReplyEmailDetail` — `Scaffold` + `EmailDetailAppBar` over a
-  `LazyColumn` of `ReplyEmailThreadItem`s with Reply / Reply All
-  buttons
+  swapping a checkmark avatar in/out when selected, selected accessibility
+  semantics, and no-indication avatar selection
+- `ReplyEmailDetail` — a centered, inset-aware toolbar as the first
+  `LazyColumn` item, followed by `ReplyEmailThreadItem`s with styled
+  Reply / Reply All buttons; compact detail retains the Compose FAB
 - `EmptyComingSoon` — placeholder for the Articles / DMs / Groups
   tabs
+
+## Adaptive navigation and scoped styling
+
+`ReplyApp` reads `CurrentWindowAdaptiveInfo().WindowSizeClass` inside
+composition and selects `NavigationBar`, `NavigationRail`, or
+`NavigationDrawer` at the pinned 600 dp and 840 dp width boundaries. This is
+top-level navigation adaptation only: medium remains single-pane unless fold
+work in #168 explicitly changes that contract, and expanded does not claim
+the pinned Kotlin dual-pane layout.
+
+The sample now uses the pinned Reply light/dark palette, type scale, 4/8/16/24/32
+dp shape scale, system-bar inset readers, and Android string resources.
+Dynamic color remains off, matching pinned Reply's default. Contrast-level
+palette switching on API 34+ is not modeled, so high-contrast system settings
+remain a documented theme difference.
+
+The Material 3 runtime binding was inspected at the member level:
+`CardDefaults.CardColors(...)`, `CardColors`, `CardDefaults.GetShape(...)`,
+`TopAppBarDefaults.TopAppBarColors(...)`, and app-bar window insets are bound
+in `Xamarin.AndroidX.Compose.Material3Android` 1.4.0.5. The current C# `Card`
+and `TopAppBar` facades do not expose those color parameters. Reply therefore
+uses zero-elevation `Surface` compositions with the pinned container colors
+and 16 dp card shape, plus a `Surface`-based detail toolbar. This is a bounded
+sample substitution, not evidence of a missing official binding.
 
 ## Docked search
 
@@ -239,12 +267,12 @@ sample omissions, not proof that the current library lacks the corresponding API
 
 | Upstream feature | Status | Tracking issue |
 |------------------|--------|----------------|
-| `NavigationSuiteScaffold` (compact / medium / expanded switchover), rail and drawer content | Sample integration: bottom nav only. The runtime already references Adaptive.NavigationSuite and exposes `NavigationSuiteScaffold`, `NavigationSuiteItem`, size reads and drawer/rail facades. | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383); #143, #158 and #163 are delivered prerequisites. |
+| `NavigationSuiteScaffold` (compact / medium / expanded switchover), rail and drawer content | Integrated at the 600/840 dp width breakpoints. Content remains single-pane. | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383); #143, #158 and #163 are delivered prerequisites. |
 | `accompanist.adaptive.TwoPane` + folding-feature-aware list/detail | Missing reusable API/integration work: single-pane remains. Exact supported replacement and binding members still require an API audit, not inference from symbol counts. | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
-| Scroll-responsive Compose FAB, detail presence and tertiary colors | Sample integration: `expanded: true`, default colors and Inbox-only placement. Pinned Kotlin also keeps the FAB in single-pane detail and uses `lastScrolledBackward || !canScrollBackward` for the **FAB**, not a search-bar lift animation. | #383; [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) and [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) shipped. |
-| Detail toolbar scroll, title alignment and styling | Sample integration: C# puts the toolbar in `Scaffold.TopBar`; pinned Kotlin puts it in the detail `LazyColumn`. This is not an unimplemented `exitUntilCollapsedScrollBehavior` call in that reference. | #383; see pinned `ReplyListContent.kt` and `ReplyAppBars.kt`. |
-| Avatar selection and `semantics { selected = isSelected }` on email cards | Sample integration: long-press and visual checkmark/background exist; the avatar has no selection callback and selected semantics is not applied. | #383; [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) shipped. |
-| System-bar spacing, named typography, theme palette and resource-localized strings | Sample integration: generic theme, inline sizes/strings and different inset ownership remain. A particular unsupported styling slot must be checked separately. | #383; [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) and [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) shipped. |
+| Scroll-responsive Compose FAB, detail presence and tertiary colors | Integrated for compact bottom navigation; label expansion uses `lastScrolledBackward || !canScrollBackward`, and compact detail retains the FAB. | #383; [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) and [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) shipped. |
+| Detail toolbar scroll, title alignment and styling | Integrated as the first detail `LazyColumn` item with centered single-pane title and explicit insets. This is not an `exitUntilCollapsedScrollBehavior` claim. | #383; see pinned `ReplyListContent.kt` and `ReplyAppBars.kt`. |
+| Avatar selection and `semantics { selected = isSelected }` on email cards | Integrated without changing row tap or long-press behavior. | #383; [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) shipped. |
+| System-bar spacing, named typography, theme palette and resource-localized strings | Integrated for the scoped Reply UI. Contrast-level palette switching remains different. | #383; [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) and [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) shipped. |
 | Legacy inline `DockedSearchBar` | Intentional API adaptation: working state-based popup, with different outside-tap and expansion geometry; not a missing search implementation. | Completed [#348](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/348); bounded comparison in #349. |
 | `ReplyHomeViewModel` / Kotlin Flow data ownership and in-Inbox detail pane | Intentional C# adaptation: activity-owned `ReplyState`, native saved navigation and a separate detail route. | Completed [#347](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/347); ViewModel APIs from [#160](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/160) are not a blocker. |
 

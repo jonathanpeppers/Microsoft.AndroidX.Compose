@@ -82,6 +82,8 @@
                      Link="Resources\drawable\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Reply\Resources\drawable-nodpi\*"
                      Link="Resources\drawable-nodpi\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Reply\Resources\values\strings.xml"
+                     Link="Resources\values\reply_strings.xml" />
     <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\*LICENSE.txt" Link="Assets\%(Filename)%(Extension)" />
     <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\FONT_SOURCES.txt" Link="Assets\FONT_SOURCES.txt" />
   </ItemGroup>

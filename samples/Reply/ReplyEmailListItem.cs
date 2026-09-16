@@ -21,30 +21,32 @@ public static class ReplyEmailListItem
                 isOpened   ? scheme.SecondaryContainer :
                              scheme.SurfaceVariant);
 
-            return new Card
+            var surface = new Surface
             {
-                Modifier
-                    .Padding(horizontal: 16, vertical: 4)
-                    .Background(bg)
-                    .CombinedClickable(
-                        onClick:     () => navigateToDetail(email.Id),
-                        onLongClick: () => toggleSelection(email.Id)),
-                new Column
-                {
-                    Modifier.FillMaxWidth().Padding(20),
-                    BuildHeaderRow(email, isSelected, toggleSelection, scheme),
-                    new Text(email.Subject)
-                    {
-                        FontSize = 16,
-                        Modifier = Modifier.Padding(top: 12, bottom: 8),
-                    },
-                    new Text(email.Body)
-                    {
-                        FontSize = 14,
-                        MaxLines = 2,
-                    },
-                },
+                Shape = Shape.RoundedCorners(16),
+                Color = bg,
             };
+            surface.Add(Modifier
+                .Padding(horizontal: 16, vertical: 4)
+                .Semantics(s => s.Selected(isSelected))
+                .Clip(Shape.RoundedCorners(16))
+                .CombinedClickable(
+                    onClick:     () => navigateToDetail(email.Id),
+                    onLongClick: () => toggleSelection(email.Id)));
+            surface.Add(new Column
+            {
+                Modifier.FillMaxWidth().Padding(20),
+                BuildHeaderRow(email, isSelected, toggleSelection, scheme),
+                new Text(email.Subject)
+                {
+                    Modifier = Modifier.Padding(top: 12, bottom: 8),
+                }.WithTypography(ReplyTypography.BodyLarge),
+                new Text(email.Body)
+                {
+                    MaxLines = 2,
+                }.WithTypography(ReplyTypography.BodyMedium),
+            });
+            return surface;
         });
 
     static Row BuildHeaderRow(Email email, bool isSelected, Action<long> toggleSelection, AndroidX.Compose.Material3.ColorScheme scheme)
@@ -52,8 +54,14 @@ public static class ReplyEmailListItem
         var avatar = new AnimatedContent<bool>(
             targetState: isSelected,
             content:     selected => selected
-                ? ReplyProfileImage.BuildSelected()
-                : ReplyProfileImage.Build(email.Sender.Avatar, email.Sender.FullName));
+                ? ReplyProfileImage.BuildSelected(
+                    () => toggleSelection(email.Id),
+                    selectionKey: email.Id)
+                : ReplyProfileImage.Build(
+                    email.Sender.Avatar,
+                    email.Sender.FullName,
+                    () => toggleSelection(email.Id),
+                    selectionKey: email.Id));
 
         return new Row
         {
@@ -65,13 +73,9 @@ public static class ReplyEmailListItem
                     .Weight(1f)
                     .Padding(horizontal: 12, vertical: 4),
                 new Text(email.Sender.FirstName)
-                {
-                    FontSize = 12,
-                },
+                    .WithTypography(ReplyTypography.LabelMedium),
                 new Text(email.CreatedAt)
-                {
-                    FontSize = 12,
-                },
+                    .WithTypography(ReplyTypography.LabelMedium),
             },
             new IconButton(onClick: NoOp)
             {

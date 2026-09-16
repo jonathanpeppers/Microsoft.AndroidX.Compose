@@ -4,6 +4,7 @@ using Android.OS;
 using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
+using NavigationSuiteType = AndroidX.Compose.NavigationSuiteType;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
@@ -26,7 +27,7 @@ public class ReplyNavigationTests
             {
                 for (int repeat = 0; repeat < 4; repeat++)
                 {
-                    await Tap(activity, destination.IconTextId);
+                    await Tap(activity, Label(destination));
                     await AssertRoute(activity, destination.Route);
                     string? previous = null;
                     await activity.OnUi(() => previous = activity.Controller.Jvm?.PreviousBackStackEntry?.Destination.Route);
@@ -53,14 +54,21 @@ public class ReplyNavigationTests
             Assert.IsTrue(viewport[0].Id > 0, "The inbox did not move away from its initial viewport.");
             foreach (var destination in TopLevelDestinations.All.Skip(1))
             {
-                await Tap(activity, destination.IconTextId);
+                await Tap(activity, Label(destination));
                 await Tap(activity, "Inbox");
                 AssertViewport(viewport, CaptureInbox(activity));
             }
 
             long selectedId = viewport[0].Id;
+            await ClickAvatar(activity, selectedId);
+            await activity.OnUi(() => Assert.IsTrue(activity.State.SelectedEmailIds.Contains(selectedId)));
+            AssertEmailSelected(activity, selectedId, expected: true);
+            await ClickEmail(activity, selectedId, longClick: true);
+            await activity.OnUi(() => Assert.IsFalse(activity.State.SelectedEmailIds.Contains(selectedId)));
+            AssertEmailSelected(activity, selectedId, expected: false);
             await ClickEmail(activity, selectedId, longClick: true);
             await activity.OnUi(() => Assert.IsTrue(activity.State.SelectedEmailIds.Contains(selectedId)));
+            AssertEmailSelected(activity, selectedId, expected: true);
             bool[] backActions = [true, false];
             foreach (bool systemBack in backActions)
             {
@@ -87,6 +95,129 @@ public class ReplyNavigationTests
             Runner.SendKeyDownUpSync(Keycode.Back);
             await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.IsTrue(selection.Contains(selectedId));
+        }
+        finally { await Finish(activity); }
+    }
+
+    /// <summary>Actual window width selects the compact, medium, or expanded navigation presentation.</summary>
+    [TestMethod]
+    public async Task AdaptiveNavigationMatchesWindowWidth()
+    {
+        var observed = new TaskCompletionSource<NavigationSuiteType>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        ReplyApp.NavigationTypeObserver = type => observed.TrySetResult(type);
+        var activity = await Start();
+        try
+        {
+            var actual = await observed.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            float density = 0;
+            int width = 0;
+            await activity.OnUi(() =>
+            {
+                density = activity.Resources?.DisplayMetrics?.Density
+                    ?? throw new InvalidOperationException("Reply display density is unavailable.");
+                width = activity.View.Width;
+            });
+            float widthDp = width / density;
+            var expected = widthDp >= 840
+                ? NavigationSuiteType.NavigationDrawer
+                : widthDp >= 600
+                    ? NavigationSuiteType.NavigationRail
+                    : NavigationSuiteType.NavigationBar;
+            Assert.AreEqual(expected, actual, $"Reply width was {widthDp:F1}dp ({width}px at {density:F2}x).");
+            using var root = Root(activity);
+            using var inbox = Find(root, n => n.VisibleToUser &&
+                n.ContentDescription == Label(TopLevelDestinations.All[0]))
+                ?? throw new InvalidOperationException("Reply Inbox navigation item is missing.");
+            using var itemBounds = new Rect();
+            using var windowBounds = new Rect();
+            inbox.GetBoundsInScreen(itemBounds);
+            root.GetBoundsInScreen(windowBounds);
+            if (actual == NavigationSuiteType.NavigationBar)
+                Assert.IsTrue(itemBounds.CenterY() > windowBounds.CenterY(),
+                    $"Compact navigation did not render at the bottom: item={itemBounds}, window={windowBounds}.");
+            else
+                Assert.IsTrue(itemBounds.CenterX() < windowBounds.CenterX(),
+                    $"Rail/drawer navigation did not render at the start: item={itemBounds}, window={windowBounds}.");
+            Console.WriteLine($"Reply adaptive navigation: width={widthDp:F1}dp, type={actual}");
+        }
+        finally
+        {
+            ReplyApp.NavigationTypeObserver = null;
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>Compact inbox FAB follows scroll direction and remains available on detail.</summary>
+    [TestMethod]
+    public async Task CompactFabCollapsesOnForwardScroll_ExpandsOnBackwardScroll_AndRemainsOnDetail()
+    {
+        var observed = new TaskCompletionSource<NavigationSuiteType>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        ReplyApp.NavigationTypeObserver = type => observed.TrySetResult(type);
+        var activity = await Start();
+        try
+        {
+            if (await observed.Task.WaitAsync(TimeSpan.FromSeconds(15)) != NavigationSuiteType.NavigationBar)
+            {
+                Assert.Inconclusive("Scroll-responsive FAB is intentionally limited to compact bottom navigation.");
+                return;
+            }
+
+            int expandedWidth = FabBounds(activity).Width();
+            using (var list = ScrollableRoot(activity))
+                Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollForward));
+            await activity.AtNativeIdle();
+            int collapsedWidth = FabBounds(activity).Width();
+            Assert.IsTrue(collapsedWidth < expandedWidth,
+                $"Forward scroll did not collapse the FAB: expanded={expandedWidth}, collapsed={collapsedWidth}.");
+
+            using (var list = ScrollableRoot(activity))
+                Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollBackward));
+            await activity.AtNativeIdle();
+            int restoredWidth = FabBounds(activity).Width();
+            Assert.IsTrue(restoredWidth > collapsedWidth,
+                $"Backward scroll did not expand the FAB: collapsed={collapsedWidth}, restored={restoredWidth}.");
+
+            await ClickEmail(activity, 0);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            Assert.IsTrue(FabBounds(activity).Width() > 0, "Compact detail omitted the Compose FAB.");
+        }
+        finally
+        {
+            ReplyApp.NavigationTypeObserver = null;
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>The centered detail title is the first lazy-list item and scrolls with its thread.</summary>
+    [TestMethod]
+    public async Task DetailToolbarIsCenteredAndScrollsWithThread()
+    {
+        var activity = await Start();
+        try
+        {
+            var email = LocalEmailsDataProvider.AllEmails[0];
+            await ClickEmail(activity, email.Id);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            using var root = Root(activity);
+            using var title = Find(root, n => n.VisibleToUser &&
+                n.ContentDescription == String(Resource.String.reply_email_detail_title))
+                ?? throw new InvalidOperationException("Reply detail toolbar title is missing.");
+            using var list = ScrollableRoot(activity);
+            using var titleBounds = new Rect();
+            using var contentBounds = new Rect();
+            title.GetBoundsInScreen(titleBounds);
+            list.GetBoundsInScreen(contentBounds);
+            Assert.IsTrue(Math.Abs(contentBounds.CenterX() - titleBounds.CenterX()) <= 4,
+                $"Reply full-screen detail title is not centered: content={contentBounds}, title={titleBounds}.");
+
+            Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollForward));
+            await activity.AtNativeIdle();
+            using var after = Root(activity);
+            using var scrolledTitle = Find(after, n => n.VisibleToUser &&
+                n.ContentDescription == String(Resource.String.reply_email_detail_title));
+            Assert.IsNull(scrolledTitle, "Reply detail toolbar remained pinned instead of scrolling with the thread.");
         }
         finally { await Finish(activity); }
     }
@@ -254,6 +385,47 @@ public class ReplyNavigationTests
         await activity.AtNativeIdle();
     }
 
+    static async Task ClickAvatar(ReplyNavigationTestActivity activity, long id)
+    {
+        var email = LocalEmailsDataProvider.Get(id)
+            ?? throw new InvalidOperationException($"Reply email {id} was not found.");
+        using var root = Root(activity);
+        using var avatar = Find(root, n => n.VisibleToUser &&
+            n.ContentDescription == email.Sender.FullName)
+            ?? throw new InvalidOperationException($"Reply email {id} avatar was not visible.");
+        PerformClick(avatar, longClick: false);
+        await activity.AtNativeIdle();
+    }
+
+    static void AssertEmailSelected(ReplyNavigationTestActivity activity, long id, bool expected)
+    {
+        var email = LocalEmailsDataProvider.Get(id)
+            ?? throw new InvalidOperationException($"Reply email {id} was not found.");
+        using var root = Root(activity);
+        using var label = Find(root, n => n.VisibleToUser &&
+            n.Text?.Contains(email.Subject, StringComparison.Ordinal) == true)
+            ?? throw new InvalidOperationException($"Reply email {id} was not visible.");
+        var current = Copy(label);
+        try
+        {
+            while (!current.Scrollable)
+            {
+                if (current.Selected)
+                {
+                    Assert.IsTrue(expected, $"Reply email {id} unexpectedly publishes selected semantics.");
+                    return;
+                }
+                var parent = current.Parent;
+                if (parent is null)
+                    break;
+                current.Dispose();
+                current = parent;
+            }
+            Assert.IsFalse(expected, $"Reply email {id} does not publish selected semantics.");
+        }
+        finally { current.Dispose(); }
+    }
+
     static void PerformClick(AccessibilityNodeInfo node, bool longClick)
     {
         if (longClick ? node.LongClickable : node.Clickable)
@@ -280,12 +452,42 @@ public class ReplyNavigationTests
         }
     }
 
+    static AccessibilityNodeInfo ScrollableRoot(ReplyNavigationTestActivity activity)
+    {
+        using var root = Root(activity);
+        return Find(root, n => n.VisibleToUser && n.Scrollable)
+            ?? throw new InvalidOperationException("Reply has no native scrollable node.");
+    }
+
+    static Rect FabBounds(ReplyNavigationTestActivity activity)
+    {
+        using var root = Root(activity);
+        using var edit = Find(root, n => n.VisibleToUser &&
+            n.ContentDescription == String(Resource.String.reply_edit))
+            ?? throw new InvalidOperationException("Reply Compose FAB is missing.");
+        var current = Copy(edit);
+        try
+        {
+            while (!current.Clickable)
+            {
+                var parent = current.Parent
+                    ?? throw new InvalidOperationException("Reply Compose FAB has no clickable ancestor.");
+                current.Dispose();
+                current = parent;
+            }
+            var bounds = new Rect();
+            current.GetBoundsInScreen(bounds);
+            return bounds;
+        }
+        finally { current.Dispose(); }
+    }
+
     static async Task AssertRoute(ReplyNavigationTestActivity activity, string route)
     {
         await activity.OnUi(() => Assert.AreEqual(route, activity.Controller.CurrentBackStackEntry?.Route));
         using var root = Root(activity);
         string selected = route == Route.EmailDetailPattern ? "Inbox"
-            : TopLevelDestinations.All.Single(d => d.Route == route).IconTextId;
+            : Label(TopLevelDestinations.All.Single(d => d.Route == route));
         using var label = Find(root, n => n.ContentDescription == selected)
             ?? throw new InvalidOperationException($"Selected tab '{selected}' is missing.");
         AssertSelected(label);
@@ -299,6 +501,20 @@ public class ReplyNavigationTests
             ?? throw new InvalidOperationException("Reply tab has no selected native ancestor.");
         AssertSelected(parent);
     }
+
+    static string Label(ReplyTopLevelDestination destination) =>
+        String(destination.LabelResourceId);
+
+    static string String(int resourceId) =>
+        global::Android.App.Application.Context.GetString(resourceId)
+        ?? throw new InvalidOperationException(
+            $"Reply string resource {resourceId} was unavailable.");
+
+    static AccessibilityNodeInfo Copy(AccessibilityNodeInfo node) =>
+        OperatingSystem.IsAndroidVersionAtLeast(33)
+            ? new AccessibilityNodeInfo(node)
+            : AccessibilityNodeInfo.Obtain(node)
+                ?? throw new InvalidOperationException("Could not copy a Reply accessibility node.");
 
     static (long Id, int Top)[] CaptureInbox(ReplyNavigationTestActivity activity)
     {

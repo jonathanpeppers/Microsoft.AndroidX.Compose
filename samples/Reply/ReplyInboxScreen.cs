@@ -14,11 +14,12 @@ public static class ReplyInboxScreen
         long                     openedEmailId,
         IReadOnlyList<long>      selectedEmailIds,
         Action<long> navigateToDetail,
-        Action<long> toggleSelection) =>
-        new Box
+        Action<long> toggleSelection,
+        bool showComposeFab) =>
+        new Composed(c =>
         {
-            Modifier.FillMaxSize(),
-            new LazyColumn<Email>(
+            var listState = c.RememberLazyListState();
+            var list = new LazyColumn<Email>(
                 items: emails,
                 itemContent: email =>
                     ReplyEmailListItem.Build(
@@ -29,21 +30,29 @@ public static class ReplyInboxScreen
                         isSelected:       selectedEmailIds.Contains(email.Id)))
             {
                 Modifier = Modifier.FillMaxWidth().Padding(top: 80),
+                State = listState,
+                ContentPadding = c.SystemBarsInsets()
+                    .Only(WindowInsetsSides.Bottom)
+                    .AsPaddingValues(c),
                 Key = static email => email.Id,
-            },
-            new ReplySearchBar(emails, navigateToDetail),
-            new Box
+            };
+            var content = new Box
             {
-                Modifier
-                    .Align(Alignment.BottomEnd)
-                    .Padding(16),
-                new ExtendedFloatingActionButton(onClick: NoOp, expanded: true)
+                Modifier.FillMaxSize().StatusBarsPadding(),
+                list,
+                new ReplySearchBar(emails, navigateToDetail),
+            };
+            if (showComposeFab)
+            {
+                content.Add(new Box
                 {
-                    Icon = new Icon(Resource.Drawable.ic_edit, "Edit"),
-                    Text = new Text("Compose"),
-                },
-            },
-        };
+                    Modifier.Align(Alignment.BottomEnd).Padding(16),
+                    ReplyComposeFab.Build(
+                        c,
+                        expanded: listState.LastScrolledBackward || !listState.CanScrollBackward),
+                });
+            }
+            return content;
+        });
 
-    static void NoOp() { }
 }
