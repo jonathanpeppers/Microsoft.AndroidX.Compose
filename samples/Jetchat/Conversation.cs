@@ -603,6 +603,7 @@ public static class Conversation
         sendButton.Add(new Text("Send")
             {
                 FontWeight = FontWeight.SemiBold,
+                Modifier = Modifier.Padding(horizontal: 16),
             });
         row.Add(sendButton);
         return row;
