@@ -1,4 +1,14 @@
 #nullable enable
+AndroidX.Compose.AbsoluteCutCornerShape
+AndroidX.Compose.AbsoluteCutCornerShape.AbsoluteCutCornerShape(AndroidX.Compose.Dp cornerSize) -> void
+AndroidX.Compose.AbsoluteCutCornerShape.AbsoluteCutCornerShape(AndroidX.Compose.Dp topLeft, AndroidX.Compose.Dp topRight, AndroidX.Compose.Dp bottomRight, AndroidX.Compose.Dp bottomLeft) -> void
+AndroidX.Compose.AbsoluteCutCornerShape.AbsoluteCutCornerShape(int cornerPercent) -> void
+AndroidX.Compose.AbsoluteCutCornerShape.AbsoluteCutCornerShape(int topLeftPercent, int topRightPercent, int bottomRightPercent, int bottomLeftPercent) -> void
+AndroidX.Compose.AbsoluteRoundedCornerShape
+AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(AndroidX.Compose.Dp cornerSize) -> void
+AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(AndroidX.Compose.Dp topLeft, AndroidX.Compose.Dp topRight, AndroidX.Compose.Dp bottomRight, AndroidX.Compose.Dp bottomLeft) -> void
+AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(int cornerPercent) -> void
+AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(int topLeftPercent, int topRightPercent, int bottomRightPercent, int bottomLeftPercent) -> void
 AndroidX.Compose.AlertDialog
 AndroidX.Compose.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
 AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
@@ -280,6 +290,11 @@ AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.C
 AndroidX.Compose.Crossfade<T>.TargetState.get -> T
 AndroidX.Compose.CustomTab
 AndroidX.Compose.CustomTab.CustomTab(bool selected, System.Action! onClick, bool enabled = true) -> void
+AndroidX.Compose.CutCornerShape
+AndroidX.Compose.CutCornerShape.CutCornerShape(AndroidX.Compose.Dp cornerSize) -> void
+AndroidX.Compose.CutCornerShape.CutCornerShape(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> void
+AndroidX.Compose.CutCornerShape.CutCornerShape(int cornerPercent) -> void
+AndroidX.Compose.CutCornerShape.CutCornerShape(int topStartPercent, int topEndPercent, int bottomEndPercent, int bottomStartPercent) -> void
 AndroidX.Compose.DatePicker
 AndroidX.Compose.DatePicker.DatePicker(AndroidX.Compose.DatePickerState? state = null, bool showModeToggle = true) -> void
 AndroidX.Compose.DatePickerDialog
@@ -584,6 +599,8 @@ AndroidX.Compose.FontLoadingStrategy.Blocking = 0 -> AndroidX.Compose.FontLoadin
 AndroidX.Compose.FontLoadingStrategy.OptionalLocal = 1 -> AndroidX.Compose.FontLoadingStrategy
 AndroidX.Compose.FontStyle
 AndroidX.Compose.FontWeight
+AndroidX.Compose.GenericShape
+AndroidX.Compose.GenericShape.GenericShape(System.Action<AndroidX.Compose.Path!, AndroidX.Compose.Size, AndroidX.Compose.UI.Unit.LayoutDirection!>! builder) -> void
 AndroidX.Compose.GridCells
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.HorizontalCenteredHeroCarousel(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
@@ -2949,7 +2966,9 @@ static AndroidX.Compose.Rect.operator !=(AndroidX.Compose.Rect left, AndroidX.Co
 static AndroidX.Compose.Rect.operator ==(AndroidX.Compose.Rect left, AndroidX.Compose.Rect right) -> bool
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCorners(AndroidX.Compose.Dp cornerSize) -> AndroidX.Compose.Shape!
+static AndroidX.Compose.Shape.CutCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCornersPercent(int percent) -> AndroidX.Compose.Shape!
+static AndroidX.Compose.Shape.CutCornersPercent(int topStartPercent, int topEndPercent, int bottomEndPercent, int bottomStartPercent) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.Rectangle.get -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!

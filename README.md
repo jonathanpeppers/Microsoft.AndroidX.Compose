@@ -350,11 +350,37 @@ The facade [`Microsoft.AndroidX.Compose`](src/Microsoft.AndroidX.Compose) covers
 | Animation               | `AnimatedVisibility`, `AnimatedContent`, `Crossfade`, scoped child `Modifier.AnimateEnterExit` |
 | Effects                 | `composer.LaunchedEffect`, `composer.DisposableEffect`, `composer.SideEffect`, `composer.RememberCoroutineScope()` + `scope.Launch(...)` for event handlers |
 | Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `AspectRatio`, `Offset`, `Alpha`, `Background`, `Border`, `Clip`, `Clickable`, `Weight`, `VerticalScroll`/`HorizontalScroll` (+ `ScrollState`), `Draggable` (+ `DraggableState`), focus/semantics/gestures, full `WindowInsets` support (`WindowInsetsPadding`, consumption, inset-sized spacers, set operations, fixed insets), plus `SafeDrawingPadding`, `SystemBarsPadding`, and every per-inset convenience helper |
-| Value types             | `Color` (+ `FromRgb`/`FromArgb`/`FromHex` and theme reads), `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape`, `RoundedCornerShape`, `PaddingValues` |
+| Value types             | `Color` (+ `FromRgb`/`FromArgb`/`FromHex` and theme reads), `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape`, `RoundedCornerShape`, `CutCornerShape`, `AbsoluteRoundedCornerShape`, `AbsoluteCutCornerShape`, `GenericShape`, `PaddingValues` |
 | State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableManagedState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, `SnapshotFlow` (→ `IAsyncEnumerable<T>`), real Kotlin `IStateFlow.CollectAsStateWithLifecycle<T>(composer)` / `IFlow.CollectAsStateWithLifecycle(initialValue, composer)`, plus `DatePickerState`, `DateRangePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState`, `ScrollState`, `PagerState`, `PullToRefreshState`, `DraggableState`, `DrawerStateHolder` (+ `OpenAsync`/`CloseAsync`), `WideNavigationRailState`, `FocusRequester`/`FocusState` |
 | Adaptive layout         | `composer.CurrentWindowAdaptiveInfo()` → `WindowAdaptiveInfo` / `WindowSizeClass` predicates for size-class branching |
 | Composition locals      | `CompositionLocalProvider`, plus built-in `LocalContext`, `LocalConfiguration`, `LocalResources`, `LocalLifecycleOwner`, `LocalView`, `LocalColorScheme` |
 | Async                   | `SuspendBridge` — Kotlin `suspend` functions surfaced as C# `Task` / `Task<T>`; launch them safely from event handlers with `composer.RememberCoroutineScope()` + `scope.Launch(ct => ...)` |
+
+### Custom and directional shapes
+
+`CutCornerShape`, `AbsoluteCutCornerShape`, and `AbsoluteRoundedCornerShape`
+accept either one corner size or four clockwise corner sizes. Use `Dp`
+arguments for density-aware geometry and integer arguments for percentages
+of the shorter side. Relative cuts use top-start/top-end/bottom-end/bottom-start;
+absolute shapes use top-left/top-right/bottom-right/bottom-left and never mirror
+in RTL. `Shape.CutCorners` and `Shape.CutCornersPercent` also have four-corner
+factory overloads.
+
+`new GenericShape((path, size, direction) => ...)` builds a native outline using
+the existing `Path` API. Its callback runs outside composition, receives pixel
+bounds and the native layout direction, and chooses any mirroring itself.
+Kotlin closes the contour and retains the callback. The supplied path is borrowed:
+do not retain it after the callback; use `new Path(path)` for an independent copy.
+Remember the shape across recompositions, and replace it when captured geometry
+changes so Compose invalidates its cached outline.
+
+The Foundation/Geometry **runtime companion DLLs** were checked at 1.11.3.1:
+percentage factories and `IShape.CreateOutline` are bound. Only the stripped
+Dp factories, `GenericShape(Function3)` constructor and boxed `Size` unboxing
+use generated JNI bridges (binding follow-up:
+[dotnet/android-libraries#1416](https://github.com/dotnet/android-libraries/issues/1416)).
+The Gallery's **GenericShape** and **Relative and absolute corners** demos
+exercise these surfaces, including independent LTR/RTL previews.
 
 ## Samples
 

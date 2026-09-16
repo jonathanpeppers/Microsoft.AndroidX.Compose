@@ -74,6 +74,11 @@ var rxGeneratorAttr = new Regex(
     @"\[(?:ComposeBridge|ComposeFacade|ComposeDefaults)\b",
     RegexOptions.Compiled);
 
+// Match literals before looking for comment delimiters inside their contents.
+var rxAttributeNonCode = new Regex(
+    """//[^\r\n]*|/\*[\s\S]*?\*/|(?<raw>"{3,})[\s\S]*?\k<raw>|@"(?:""|[^"])*"|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'""",
+    RegexOptions.Compiled);
+
 // Stable cross-references inside leading comments — e.g. issue links,
 // `dotnet/java-interop#1440`, `dotnet/android-libraries#NNN`, `#NN`.
 // Used to derive a "Migration path" hint when the source doesn't have
@@ -86,6 +91,8 @@ if (args.Contains("--self-test", StringComparer.Ordinal))
 {
     TestJcwDeclarations(rxRegister, rxClassDecl);
     Console.WriteLine("PASS: ordinary, primary-constructor, and multiline JCW declarations.");
+    TestAttributeCounts(rxAttributeNonCode);
+    Console.WriteLine("PASS: attribute counts exclude comments and string/character literals.");
     return 0;
 }
 
@@ -128,8 +135,9 @@ foreach (var path in files)
 
     // Tally generator-emitted partials regardless of whether the file
     // also contains hand-written JNI.
-    int composeBridgeHere = CountAttribute(text, "ComposeBridge");
-    int composeFacadeHere = CountAttribute(text, "ComposeFacade");
+    var attributeCode = rxAttributeNonCode.Replace(text, " ");
+    int composeBridgeHere = CountAttribute(attributeCode, "ComposeBridge");
+    int composeFacadeHere = CountAttribute(attributeCode, "ComposeFacade");
     totalComposeBridge += composeBridgeHere;
     totalComposeFacade += composeFacadeHere;
 
@@ -340,6 +348,9 @@ sb.AppendLine("- **`[ComposeBridge]` / `[ComposeFacade]` exclusion** is by attri
 sb.AppendLine("  presence on the immediately preceding lines. If a hand-written ");
 sb.AppendLine("  member sits next to a generator-decorated one in the same file, both ");
 sb.AppendLine("  classifications are emitted independently.");
+sb.AppendLine("- **Generator attribute counts** exclude comments and string/character");
+sb.AppendLine("  literals, including multiline verbatim and raw strings. These remain");
+sb.AppendLine("  lexical counts, not a semantic source-generator execution count.");
 sb.AppendLine("- **\"Why not generated?\"** is extracted from existing source comments ");
 sb.AppendLine("  — XML doc `<remarks>` paragraphs containing _Why raw JNI_, ");
 sb.AppendLine("  `// Why raw JNI:` lines, or adjacent `// ...` blocks. Entries that ");
@@ -369,8 +380,62 @@ return 0;
 
 static int CountAttribute(string text, string name)
 {
-    var rx = new Regex($@"\[{Regex.Escape(name)}\b", RegexOptions.Compiled);
+    var rx = new Regex($@"\[\s*{Regex.Escape(name)}\b", RegexOptions.Compiled);
     return rx.Matches(text).Count;
+}
+
+static void TestAttributeCounts(Regex rxNonCode)
+{
+    string source = """""
+        // "[ComposeBridge]" and [ComposeFacade]
+        /// <summary>[ComposeBridge] and [ComposeFacade]</summary>
+        /*
+        [ComposeBridge]
+        [ComposeFacade]
+        */
+        const string regular = "[ComposeBridge] \"[ComposeFacade]\" /* not a comment";
+        const string verbatim = @"[ComposeBridge] ""[ComposeFacade]""
+        [ComposeBridge]";
+        const string raw = """
+        "[ComposeBridge]" // [ComposeFacade]
+        [ComposeBridge]
+        """;
+        const string wideRaw = """"
+        """ [ComposeBridge] """
+        [ComposeFacade]
+        """";
+        const string interpolated = $"[ComposeBridge] {42} [ComposeFacade]";
+        const char bracket = '[';
+        const char quote = '\'';
+        [ComposeBridge(Class = "example/[ComposeBridge]", JvmName = "call", Signature = "()V")]
+        [ComposeFacade]
+        internal static partial void First();
+        [ /* comment */ ComposeBridge(
+            Class = "example/Test", JvmName = "other", Signature = "()V")]
+        internal static partial void Second();
+        [ComposeBridge][ComposeFacade]
+        internal static partial void Third();
+        [ComposeBridgeLike][ComposeFacadeLike]
+        internal static partial void NotAMatch();
+        """"";
+
+    string[] samples = [source, source.Replace("\n", "\r\n")];
+    foreach (var text in samples)
+    {
+        var code = rxNonCode.Replace(text, " ");
+        int bridges = CountAttribute(code, "ComposeBridge");
+        int facades = CountAttribute(code, "ComposeFacade");
+        if (bridges != 3 || facades != 2)
+            throw new InvalidOperationException($"Incorrect attribute counts: bridges={bridges}, facades={facades}.");
+    }
+
+    const string before = "// [ComposeBridge]\n[ComposeBridge] partial void Existing();";
+    string after = before.Replace("// [ComposeBridge]\n", "") +
+        string.Concat(Enumerable.Repeat("\n[ComposeBridge] partial void Added();", 6));
+    int delta = CountAttribute(rxNonCode.Replace(after, " "), "ComposeBridge") -
+        CountAttribute(rxNonCode.Replace(before, " "), "ComposeBridge");
+    if (delta != 6)
+        throw new InvalidOperationException($"Removing prose while adding six bridges changed the count by {delta}.");
 }
 
 static List<JniSite> FindJniSites(string[] lines, Regex rx)

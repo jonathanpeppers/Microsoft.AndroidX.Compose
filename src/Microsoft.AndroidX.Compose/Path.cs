@@ -10,12 +10,21 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class Path : IDisposable
 {
-    internal BoundPath Jvm { get; }
+    BoundPath? _jvm;
+    readonly bool _borrowed;
+
+    internal BoundPath Jvm => _jvm ?? throw new ObjectDisposedException(nameof(Path));
+
+    internal Path(BoundPath borrowed)
+    {
+        _jvm = borrowed;
+        _borrowed = true;
+    }
 
     /// <summary>Creates an empty path.</summary>
     public Path()
     {
-        Jvm = AndroidPathFactory.Path()
+        _jvm = AndroidPathFactory.Path()
             ?? throw new InvalidOperationException("Compose Path factory returned null.");
     }
 
@@ -23,7 +32,7 @@ public sealed class Path : IDisposable
     public Path(Path source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        Jvm = AndroidX.Compose.UI.Graphics.PathKt.Copy(source.Jvm)
+        _jvm = AndroidX.Compose.UI.Graphics.PathKt.Copy(source.Jvm)
             ?? throw new InvalidOperationException("Compose Path copy returned null.");
     }
 
@@ -165,8 +174,17 @@ public sealed class Path : IDisposable
         return Jvm.Op(first.Jvm, second.Jvm, (int)operation);
     }
 
-    /// <summary>Releases the underlying Compose path peer.</summary>
-    public void Dispose() => Jvm.Dispose();
+    /// <summary>
+    /// Releases this path. A path borrowed by a <see cref="GenericShape"/>
+    /// callback invalidates only its managed view, not Kotlin's underlying path.
+    /// </summary>
+    public void Dispose()
+    {
+        var peer = _jvm;
+        _jvm = null;
+        if (!_borrowed)
+            peer?.Dispose();
+    }
 
     void WithNative(Action<NativePath> action)
     {
