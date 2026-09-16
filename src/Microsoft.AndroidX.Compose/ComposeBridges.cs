@@ -4198,7 +4198,7 @@ internal static partial class ComposeBridges
     public static partial void FlowRow(IModifier? modifier, IFunction3 content,
         [FacadeDefault(int.MaxValue)] int maxItemsInEachRow,
         [FacadeDefault(int.MaxValue)] int maxLines,
-        [FacadeAdded] FlowRowOverflow? overflow,
+        [FacadeAdded(PreserveArgumentPresence = true)] FlowRowOverflow? overflow,
         int defaults, IComposer composer, int _changed = 0);
 
     public static partial void FlowRow(IModifier? modifier, IFunction3 content,
@@ -4227,7 +4227,7 @@ internal static partial class ComposeBridges
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content,
         [FacadeDefault(int.MaxValue)] int maxItemsInEachColumn,
         [FacadeDefault(int.MaxValue)] int maxLines,
-        [FacadeAdded] FlowColumnOverflow? overflow,
+        [FacadeAdded(PreserveArgumentPresence = true)] FlowColumnOverflow? overflow,
         int defaults, IComposer composer, int _changed = 0);
 
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content,

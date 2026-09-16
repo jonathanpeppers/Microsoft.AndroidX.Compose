@@ -41,7 +41,14 @@ allows nullable wrapper-passthrough options without classifying arbitrary
 reference types as JNI peers. `[FacadeAdded]` preserves old catalog CLR arity
 and direct targets while new overloads carry the overflow option. Omitted
 overflow leaves Kotlin bit 6 set; explicitly supplied null in a direct call
-clears that bit and is rejected, rather than silently becoming Clip.
+clears that bit and is rejected, rather than silently becoming Clip, including
+public calls that bypass interception. The overflow slots opt into
+`[FacadeAdded(PreserveArgumentPresence = true)]`: a generated overload uses
+`CallerArgumentExpression` to capture whether overflow was supplied. Its
+compiler-only `__overflowArgument` parameter must not be set manually.
+Existing CLR overloads and direct-helper arities remain available; the old
+rich overload's required overflow argument is always considered supplied.
+Unrelated facades retain their existing conservative nullable fallback.
 Tree `Overflow = null` follows the existing tree optional-property convention
 and omits the option. Generated enums describe the eight-slot overflow
 overloads and four-slot indicator factories. Native changed masks remain

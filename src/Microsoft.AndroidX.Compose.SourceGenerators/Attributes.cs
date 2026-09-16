@@ -414,6 +414,12 @@ internal static class Attributes
                                            AllowMultiple = false)]
             internal sealed class FacadeAddedAttribute : global::System.Attribute
             {
+                /// <summary>
+                /// Capture caller argument presence so public fallbacks distinguish
+                /// omission from an explicitly supplied null without interception.
+                /// Existing CLR overloads remain available with required arguments.
+                /// </summary>
+                public bool PreserveArgumentPresence { get; set; }
             }
 
             /// <summary>

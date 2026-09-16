@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
 namespace AndroidX.Compose.SourceGenerators.Tests;
@@ -23,6 +24,8 @@ public class FlowOverflowFacadeTests
         Assert.Contains($"Flow{direction}_PrimaryResource_Implicit_WithAddedSlots", emitted);
         Assert.Contains($"Flow{direction}Default.Overflow", emitted);
         Assert.Contains($"ScopeKind.{direction}", emitted);
+        Assert.Contains("CallerArgumentExpressionAttribute(\"overflow\")", emitted);
+        Assert.Contains($"Flow{direction}_PrimaryResource_Implicit_WithAddedSlots_WithArgumentPresence", emitted);
 
         output = output.AddSyntaxTrees(CSharpSyntaxTree.ParseText($$"""
             namespace AndroidX.Compose
@@ -90,6 +93,94 @@ public class FlowOverflowFacadeTests
         Assert.Contains(diagnostics, d => d.Id == "CN3002");
     }
 
+    [Theory]
+    [InlineData("Row", "maxItemsInEachRow")]
+    [InlineData("Column", "maxItemsInEachColumn")]
+    public void UninterceptedPublicCallsPreserveOmissionAndRejectExplicitNull(string direction, string maxItems)
+    {
+        string contract = Contract(direction, maxItems).Replace(
+            "LastOverflow = overflow;",
+            """
+            LastOverflow = overflow;
+            if ((defaults & 64) == 0)
+                System.ArgumentNullException.ThrowIfNull(overflow);
+            """);
+        var (output, diagnostics, _) = FacadeGeneratorTests.Run(contract, $"Flow{direction}");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        var stubs = output.SyntaxTrees.First();
+        var root = stubs.GetRoot();
+        var contextStub = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .Single(c => c.Identifier.ValueText == "ComposableContext");
+        var replacement = SyntaxFactory.ParseMemberDeclaration("""
+            public static class ComposableContext
+            {
+                public static global::AndroidX.Compose.Runtime.IComposer Current { get; } =
+                    new global::AndroidX.Compose.TestComposer();
+            }
+            """) ?? throw new InvalidOperationException("Could not parse the active composer stand-in.");
+        output = output.ReplaceSyntaxTree(stubs, root.ReplaceNode(contextStub, replacement).SyntaxTree);
+        output = output.AddSyntaxTrees(CSharpSyntaxTree.ParseText($$"""
+            namespace AndroidX.Compose
+            {
+                public static class PublicCallProbe
+                {
+                    public static void Run()
+                    {
+                        var c = ComposableContext.Current;
+                        Composables.Flow{{direction}}(() => {});
+                        Require(ComposeBridges.LastDefaults == 127, "Omitted public overflow must use Clip.");
+                        Composables.Flow{{direction}}(() => {}, maxLines: 1);
+                        Require(ComposeBridges.LastDefaults == 95, "Named arguments must preserve omitted overflow.");
+                        RejectNull(() => Composables.Flow{{direction}}(() => {}, overflow: null));
+                        Flow{{direction}}Overflow? missing = null;
+                        RejectNull(() => Composables.Flow{{direction}}(() => {}, overflow: missing));
+                        RejectNull(() => Composables.Flow{{direction}}(() => {}, 3, 1, null, null));
+                        System.Action<System.Action, int, int, Modifier?, Flow{{direction}}Overflow?> rich =
+                            Composables.Flow{{direction}};
+                        RejectNull(() => rich(() => {}, 3, 1, null, null));
+                        System.Action<System.Action, int, int, Modifier?> legacy = Composables.Flow{{direction}};
+                        legacy(() => {}, 3, 1, null);
+                        Require(ComposeBridges.LastDefaults == 79, "Legacy public delegate must omit overflow.");
+                        var option = new Flow{{direction}}Overflow();
+                        Composables.Flow{{direction}}(() => {}, overflow: option);
+                        Require(ComposeBridges.LastDefaults == 63 &&
+                            ReferenceEquals(option, ComposeBridges.LastOverflow), "Supplied configuration was lost.");
+
+                        Composables.Flow{{direction}}(c, _ => {});
+                        Require(ComposeBridges.LastDefaults == 127, "Explicit composer must preserve omission.");
+                        RejectNull(() => Composables.Flow{{direction}}(c, _ => {}, overflow: null));
+                        RejectNull(() => Composables.Flow{{direction}}(c, _ => {}, 3, 1, null, missing));
+                        Composables.Flow{{direction}}(c, _ => {}, overflow: option);
+                        Require(ComposeBridges.LastDefaults == 63, "Explicit composer lost supplied overflow.");
+                    }
+                    static void RejectNull(System.Action call)
+                    {
+                        try { call(); }
+                        catch (System.ArgumentNullException error) when (error.ParamName == "overflow") { return; }
+                        throw new System.Exception("Explicit null did not reach the native-boundary guard.");
+                    }
+                    static void Require(bool condition, string message)
+                    {
+                        if (!condition) throw new System.Exception(message);
+                    }
+                }
+            }
+            """));
+        using var image = new MemoryStream();
+        var result = output.Emit(image);
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Diagnostics));
+        image.Position = 0;
+        var context = new AssemblyLoadContext(nameof(UninterceptedPublicCallsPreserveOmissionAndRejectExplicitNull),
+            isCollectible: true);
+        try
+        {
+            var run = context.LoadFromStream(image).GetType("AndroidX.Compose.PublicCallProbe")?.GetMethod("Run")
+                ?? throw new InvalidOperationException("Un-intercepted public call probe missing.");
+            run.Invoke(null, null);
+        }
+        finally { context.Unload(); }
+    }
+
     static string Contract(string direction, string maxItems) => $$"""
         using AndroidX.Compose;
         using AndroidX.Compose.Runtime;
@@ -108,7 +199,7 @@ public class FlowOverflowFacadeTests
                 public static partial void Flow{{direction}}(IModifier? modifier, IFunction3 content,
                     [FacadeDefault(int.MaxValue)] int {{maxItems}},
                     [FacadeDefault(int.MaxValue)] int maxLines,
-                    [FacadeAdded] Flow{{direction}}Overflow? overflow,
+                    [FacadeAdded(PreserveArgumentPresence = true)] Flow{{direction}}Overflow? overflow,
                     int defaults, IComposer composer, int _changed = 0);
                 public static partial void Flow{{direction}}(IModifier? modifier, IFunction3 content,
                     int {{maxItems}}, int maxLines, Flow{{direction}}Overflow? overflow,

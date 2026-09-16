@@ -358,6 +358,13 @@ slots surface as `Action` instead of `Action<IComposer>`.
   defaults set and suppresses changed masks; it never supplies explicit null
   for an added slot. Only defaultable optional values on a primary,
   non-painter route are supported (CN3014). Constructors are unchanged.
+  Set `PreserveArgumentPresence = true` when an added slot must distinguish
+  explicit null from omission even without interception. The generator adds
+  a caller-argument-expression overload and a `_WithArgumentPresence` helper,
+  retaining the old rich CLR overload (with required arguments) and its
+  original direct helper. The compatibility overload treats that argument as supplied; the new fallback
+  uses compiler-captured presence, not its nullable value. Other nullable
+  fallback slots retain their conservative sentinel-based defaults.
 - `[PainterResource]` — annotate `IntPtr` taking the resolved Painter handle.
   Facade exposes synthetic `int painterResourceId` ctor in its place; emits
   `PainterResource(id, composer)` + try/finally + `DeleteLocalRef` preamble.
