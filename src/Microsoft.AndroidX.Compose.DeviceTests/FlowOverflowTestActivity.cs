@@ -33,6 +33,8 @@ public class FlowOverflowTestActivity : ComponentActivity
     internal bool OuterRestored;
     internal int RootPasses;
     internal int Clicks;
+    internal FlowTestAdmission Admission { get; } = new();
+    internal global::Android.Views.View? Owner;
     int _style;
     int _policy;
     bool _horizontal;
@@ -47,10 +49,30 @@ public class FlowOverflowTestActivity : ComponentActivity
         Ready.TrySetResult(this);
     }
 
+    protected override void OnResume()
+    {
+        base.OnResume();
+        Admission.Resumed = true;
+    }
+
+    protected override void OnPause()
+    {
+        Admission.Paused();
+        base.OnPause();
+    }
+
+    /// <summary>Records loss of native fixture focus without throwing across a lifecycle callback.</summary>
+    public override void OnWindowFocusChanged(bool hasFocus)
+    {
+        base.OnWindowFocusChanged(hasFocus);
+        Admission.FocusChanged(hasFocus, Owner?.HasWindowFocus == true);
+    }
+
     [Composable]
     internal static void Root(IComposer composer, FlowOverflowTestActivity activity)
     {
         activity.RootPasses++;
+        activity.Owner = LocalView.Current(composer);
         int lines = activity.Lines.Value;
         int total = activity.Total.Value;
         int generation = activity.Generation.Value;
@@ -184,7 +206,8 @@ public class FlowOverflowTestActivity : ComponentActivity
                     .DrawWithContent(draw =>
                     {
                         draw.DrawContent();
-                        Last = new(generation, tick, expand, total(), shown(), identity, counterValue, kind);
+                        Last = new(Admission.InstanceId, global::Android.OS.Process.MyPid(),
+                            generation, tick, expand, total(), shown(), identity, counterValue, kind);
                     }),
                 new Text(expand ? "+" : "-") { Color = Color.White },
                 new Composed(c =>

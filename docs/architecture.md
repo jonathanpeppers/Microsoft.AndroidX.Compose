@@ -53,7 +53,11 @@ The `containers-flow-overflow` and `containers-flow-overflow-direct` Gallery
 routes demonstrate both directions/styles. `FlowOverflowFacadeTests` pins
 legacy signatures and omission/null masks. `FlowOverflowTests` includes direct
 bound-native controls alongside managed exact-count, clipping, interaction
-and nested-layout cases.
+and nested-layout cases. Its test-only admission gate associates each actual
+activity instance with a resumed, attached, laid-out and focused native window
+and process. Clicks reacquire the package/window-owned accessibility root and
+require one actionable target. Draw snapshots carry the fixture/process identity
+and generation; count assertions are not substituted with host focus polling.
 
 ## Typed transition values
 

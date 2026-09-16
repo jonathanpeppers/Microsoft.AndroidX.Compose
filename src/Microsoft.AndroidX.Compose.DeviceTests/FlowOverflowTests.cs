@@ -32,7 +32,7 @@ public class FlowOverflowTests
         try
         {
             await Expect(activity, 0, 8, 2, true, horizontal);
-            await Click("flow-expand");
+            await Click(activity, "flow-expand");
             await WaitFor(() => activity.DrawnItems.TryGetValue(1, out var items) && items.Count == 8,
                 "Expanded flow did not draw all eight regular cells.");
             Assert.AreEqual(1, activity.Clicks);
@@ -54,8 +54,9 @@ public class FlowOverflowTests
             await WaitFor(() => activity.DrawnItems.TryGetValue(0, out var items) && items.Count >= 3,
                 "Clipped flow did not place its three regular cells.");
             Runner.WaitForIdleSync();
-            Runner.RunOnMainSync(() =>
+            FlowTestAdmission.OnUi(() =>
             {
+                activity.Admission.RequireLive(activity);
                 int[] expected = [0, 1, 2];
                 CollectionAssert.AreEquivalent(expected, activity.DrawnItems[0].ToArray());
                 Assert.IsNull(activity.Last);
@@ -73,25 +74,25 @@ public class FlowOverflowTests
             var first = await Expect(activity, 0, 8, 2, true, horizontal);
             Assert.AreEqual(0, first.Counter);
             Assert.IsTrue(activity.PrematureReadRejected, "Shown count must preserve the native pre-measure failure.");
-            await Click("flow-expand");
+            await Click(activity, "flow-expand");
             await Expect(activity, 1, 8, 8, false, horizontal);
-            await Click("flow-collapse");
+            await Click(activity, "flow-collapse");
             var collapsed = await Expect(activity, 2, 8, 2, true, horizontal);
             Assert.AreSame(first.Identity, collapsed.Identity, "Indicator remember was reset during expansion.");
             Assert.AreEqual(1, collapsed.Counter, "Indicator-local click state was lost during expansion.");
-            Runner.RunOnMainSync(() =>
+            FlowTestAdmission.OnUi(() =>
             {
                 activity.Total.Value = 5;
                 activity.Generation.Value++;
             });
             await Expect(activity, 3, 5, 2, true, horizontal);
-            await Click("flow-expand");
+            await Click(activity, "flow-expand");
             await Expect(activity, 4, 5, 5, false, horizontal);
             int rootPasses = activity.RootPasses;
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Java.Lang.JavaSystem.Gc();
-            Runner.RunOnMainSync(() => activity.Tick.Value++);
+            FlowTestAdmission.OnUi(() => activity.Tick.Value++);
             await WaitFor(() => activity.Last?.Tick == 1, "Indicator-only state did not recompose after GC.");
             var refreshed = await Expect(activity, 4, 5, 5, false, horizontal);
             Assert.AreEqual(1, refreshed.Tick);
@@ -109,10 +110,14 @@ public class FlowOverflowTests
             $"Indicator did not draw generation {generation} ({(expand ? "expand" : "collapse")}).");
         Runner.WaitForIdleSync();
         FlowOverflowSnapshot? snapshot = null;
-        Runner.RunOnMainSync(() =>
+        FlowTestAdmission.OnUi(() =>
         {
+            activity.Admission.RequireLive(activity);
             snapshot = activity.Last ?? throw new InvalidOperationException("No flow draw snapshot.");
+            Assert.AreEqual(activity.Admission.InstanceId, snapshot.InstanceId, "Snapshot belongs to a different fixture.");
+            Assert.AreEqual(activity.Admission.NativePid, snapshot.NativePid, "Snapshot belongs to a different native process.");
             Console.WriteLine($"FLOW pid={(global::Android.OS.Process.MyPid())} direction={(horizontal ? "row" : "column")} " +
+                $"instance={snapshot.InstanceId} window={activity.Admission.WindowId} " +
                 $"generation={generation} actual={snapshot.Total}/{snapshot.Shown} expected={total}/{shown} expand={snapshot.Expand}");
             Assert.AreEqual(total, snapshot.Total, "Total count is stale.");
             Assert.AreEqual(shown, snapshot.Shown, "Shown count is stale.");
@@ -136,13 +141,27 @@ public class FlowOverflowTests
         intent.PutExtra("style", style);
         intent.PutExtra("horizontal", horizontal);
         intent.PutExtra("policy", policy);
-        Runner.RunOnMainSync(() => context.StartActivity(intent));
-        return await FlowOverflowTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        FlowTestAdmission.OnUi(() => context.StartActivity(intent));
+        var activity = await FlowOverflowTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        try
+        {
+            await activity.Admission.Admit(activity);
+            return activity;
+        }
+        catch
+        {
+            await Finish(activity);
+            throw;
+        }
     }
 
     static async Task Finish(FlowOverflowTestActivity activity)
     {
-        Runner.RunOnMainSync(activity.Finish);
+        FlowTestAdmission.OnUi(() =>
+        {
+            activity.Admission.Ending = true;
+            activity.Finish();
+        });
         await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
     }
 
@@ -151,40 +170,51 @@ public class FlowOverflowTests
         for (int i = 0; i < 150; i++)
         {
             bool ready = false;
-            Runner.RunOnMainSync(() => ready = predicate());
+            FlowTestAdmission.OnUi(() => ready = predicate());
             if (ready) return;
             await Task.Delay(100);
         }
         Assert.Fail(message);
     }
 
-    static async Task Click(string description)
+    static async Task Click(FlowOverflowTestActivity activity, string description)
     {
         for (int attempt = 0; attempt < 30; attempt++)
         {
-            var automation = Runner.UiAutomation ?? throw new InvalidOperationException("Flow UI automation missing.");
-            if (OperatingSystem.IsAndroidVersionAtLeast(34))
-                Assert.IsTrue(automation.ClearCache());
-            using var root = automation.RootInActiveWindow;
-            if (root is not null)
+            using var root = activity.Admission.AcquireRoot(activity);
+            var matches = new List<AccessibilityNodeInfo>();
+            try
             {
-                Assert.AreEqual("net.compose.devicetests", root.PackageName, "Refusing another app's accessibility tree.");
-                if (ClickIn(root, description)) return;
+                FindTargets(root, description, matches);
+                Assert.IsTrue(matches.Count <= 1, "Overflow click target is ambiguous.");
+                if (matches.Count == 1)
+                {
+                    var target = matches[0];
+                    Assert.AreEqual("net.compose.devicetests", target.PackageName);
+                    Assert.AreEqual(activity.Admission.WindowId, target.WindowId);
+                    Assert.IsTrue(target.Enabled && target.VisibleToUser, "Overflow target is not actionable.");
+                    FlowTestAdmission.OnUi(() => activity.Admission.RequireLive(activity));
+                    Assert.IsTrue(target.PerformAction(global::Android.Views.Accessibility.Action.Click),
+                        $"Native overflow action was rejected: {description}.");
+                    return;
+                }
             }
+            finally { foreach (var match in matches) match.Dispose(); }
             await Task.Delay(100);
         }
         Assert.Fail($"No actionable native overflow indicator '{description}'.");
     }
 
-    static bool ClickIn(AccessibilityNodeInfo node, string description)
+    static void FindTargets(AccessibilityNodeInfo node, string description, List<AccessibilityNodeInfo> matches)
     {
         if (node.ContentDescription == description && node.Clickable)
-            return node.PerformAction(global::Android.Views.Accessibility.Action.Click);
+            matches.Add((OperatingSystem.IsAndroidVersionAtLeast(33)
+                ? new AccessibilityNodeInfo(node) : AccessibilityNodeInfo.Obtain(node))
+                ?? throw new InvalidOperationException("Could not copy the overflow accessibility target."));
         for (int i = 0; i < node.ChildCount; i++)
         {
             using var child = node.GetChild(i);
-            if (child is not null && ClickIn(child, description)) return true;
+            if (child is not null) FindTargets(child, description, matches);
         }
-        return false;
     }
 }
