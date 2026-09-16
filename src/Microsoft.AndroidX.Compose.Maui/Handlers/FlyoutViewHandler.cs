@@ -323,6 +323,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, 
     {
         if (view.FlyoutBehavior == FlyoutBehavior.Flyout)
             handler.ApplyRequestedPresentation(view.IsPresented);
+        InvalidateDetailChrome(view);
         InvalidateLayout(handler);
     }
 
@@ -335,9 +336,20 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, 
         InvalidateLayout(handler);
 
     /// <summary>
-    /// Preserve MAUI's toolbar propagation. Drawer presentation itself is
-    /// owned by Compose rather than an AppCompat <c>DrawerLayout</c>.
+    /// Preserve MAUI's toolbar propagation and refresh a Compose-backed
+    /// detail <see cref="Microsoft.Maui.Controls.NavigationPage"/> so its
+    /// root top bar shows or removes the drawer button as the effective
+    /// adaptive behavior changes.
     /// </summary>
-    public static void MapToolbar(FlyoutViewHandler handler, IFlyoutView view) =>
+    public static void MapToolbar(FlyoutViewHandler handler, IFlyoutView view)
+    {
         ViewHandler.MapToolbar(handler, view);
+        InvalidateDetailChrome(view);
+    }
+
+    static void InvalidateDetailChrome(IFlyoutView view)
+    {
+        if (view.Detail.Handler is NavigationPageHandler navigation)
+            navigation.InvalidateParentChrome();
+    }
 }

@@ -2140,7 +2140,9 @@ visual chrome:
   `PermanentNavigationDrawer`, and `Disabled` renders detail only.
   `IsPresented` synchronizes in both directions after settled drawer
   transitions, `IsGestureEnabled` controls edge swipe, and positive
-  adaptive `FlyoutWidth` values size the sheet. The issue's
+  adaptive `FlyoutWidth` values size the sheet. A Compose-backed
+  `NavigationPage` detail shows the drawer button at its root and
+  replaces it with normal back navigation on pushed pages. The issue's
   `Popover`/`Split`/`Default` values belong to the Controls-layer
   `FlyoutLayoutBehavior`, not MAUI's handler-facing
   `FlyoutBehavior`; the handler deliberately preserves MAUI's own
