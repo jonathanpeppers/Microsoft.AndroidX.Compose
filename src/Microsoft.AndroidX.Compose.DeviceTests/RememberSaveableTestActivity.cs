@@ -17,6 +17,7 @@ public class RememberSaveableTestActivity : ComponentActivity
     internal static MutableNumberState<int> Revision { get; private set; } = new(0);
     internal static int Passes => Volatile.Read(ref s_passes);
     internal bool Restored { get; private set; }
+    internal bool Resumed { get; private set; }
 
     internal static void Reset(Action<IComposer> content)
     {
@@ -40,6 +41,18 @@ public class RememberSaveableTestActivity : ComponentActivity
         });
         SetContentView(view);
         Volatile.Write(ref s_current, this);
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        Resumed = true;
+    }
+
+    protected override void OnPause()
+    {
+        Resumed = false;
+        base.OnPause();
     }
 
     protected override void OnDestroy()

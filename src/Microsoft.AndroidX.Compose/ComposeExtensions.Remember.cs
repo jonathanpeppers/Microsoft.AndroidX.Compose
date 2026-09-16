@@ -117,6 +117,11 @@ public static partial class ComposeExtensions
     /// <see cref="MutableState{T}"/> can box / unbox) and for
     /// state-holder wrappers (<see cref="MutableState{U}"/>,
     /// <see cref="MutableNumberState{U}"/>).
+    /// A <see cref="MutableState{T}"/> of
+    /// <see cref="AndroidX.Compose.UI.Text.Input.TextFieldValue"/> uses Kotlin's
+    /// <c>TextFieldValue.Saver</c>: annotated text and selection are saved,
+    /// but the IME-owned composition range is not. Focus and keyboard visibility
+    /// are not part of the saved value.
     /// </summary>
     public static T RememberSaveable<T>(
         this IComposer composer,
@@ -242,11 +247,14 @@ public static partial class ComposeExtensions
                 $"RememberSaveable<{typeof(T).Name}>: factory returned null.");
         var iwrap = (IMutableStateWrapper)wrapper;
 
+        var stateSaver = wrapper is MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue>
+            ? TextFieldValueSaver.Instance.Handle
+            : ComposeBridges.SaverAutoSaver();
         var inputs = ComposeBridges.BuildKeysArray(keys, out var ownsInputs);
         var jcw = new ObjectFunction0(() => (Java.Lang.Object)iwrap.State);
         var handle = ComposeBridges.RememberSaveableMutableState(
             inputs,
-            ComposeBridges.SaverAutoSaver(),
+            stateSaver,
             jcw,
             composer,
             changed: 0);
