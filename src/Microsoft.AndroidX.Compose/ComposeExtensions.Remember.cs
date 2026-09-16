@@ -227,14 +227,15 @@ public static partial class ComposeExtensions
     static T RememberSaveableScalar<T>(IComposer composer, Func<T> factory, object?[]? normalizedKeys)
     {
         var inputs = ComposeBridges.BuildKeysArray(normalizedKeys, out var ownsInputs);
-        var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(factory()));
-        var handle = ComposeBridges.RememberSaveableSimple(
-            inputs,
-            jcw,
-            composer,
-            changed: 0);
+        IntPtr handle = IntPtr.Zero;
         try
         {
+            var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(factory()));
+            handle = ComposeBridges.RememberSaveableSimple(
+                inputs,
+                jcw,
+                composer,
+                changed: 0);
             if (handle == IntPtr.Zero)
                 return default!;
             var boxed = Java.Lang.Object.GetObject<Java.Lang.Object>(
@@ -263,20 +264,24 @@ public static partial class ComposeExtensions
             ? TextFieldValueSaver.Instance.Handle
             : ComposeBridges.SaverAutoSaver();
         var inputs = ComposeBridges.BuildKeysArray(normalizedKeys, out var ownsInputs);
-        var jcw = new ObjectFunction0(() => (Java.Lang.Object)iwrap.State);
-        var handle = ComposeBridges.RememberSaveableMutableState(
-            inputs,
-            stateSaver,
-            jcw,
-            composer,
-            changed: 0);
+        IntPtr handle = IntPtr.Zero;
         try
         {
+            var jcw = new ObjectFunction0(() => (Java.Lang.Object)iwrap.State);
+            handle = ComposeBridges.RememberSaveableMutableState(
+                inputs,
+                stateSaver,
+                jcw,
+                composer,
+                changed: 0);
             if (handle == IntPtr.Zero)
                 throw new InvalidOperationException(
                     $"RememberSaveable<{typeof(T).Name}>: rememberSaveable returned null.");
-            iwrap.State = Java.Lang.Object.GetObject<IMutableState>(
-                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+            var state = Java.Lang.Object.GetObject<IMutableState>(
+                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException(
+                    $"RememberSaveable<{typeof(T).Name}>: mutable state peer was unavailable.");
+            iwrap.State = state;
             return wrapper;
         }
         finally

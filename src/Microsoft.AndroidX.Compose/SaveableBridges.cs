@@ -230,6 +230,7 @@ internal static partial class ComposeBridges
                 }
                 finally
                 {
+                    GC.KeepAlive(boxed);
                     // Caller-owned Java peers remain valid; only temporary
                     // primitive/string boxing wrappers are disposed.
                     if (ownsBoxed)
