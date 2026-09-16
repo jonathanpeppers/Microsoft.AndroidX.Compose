@@ -1,3 +1,4 @@
+using AndroidX.Compose.UI.Text.Input;
 using AndroidX.Compose.Gallery.Registry;
 
 namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
@@ -15,6 +16,8 @@ public static class RememberSaveableDemo
         {
             var count = c.RememberSaveable(() => new MutableNumberState<int>(0));
             var name  = c.RememberSaveable(() => new MutableState<string>(""));
+            var draft = c.RememberSaveable(() =>
+                new MutableState<TextFieldValue>(ComposeExtensions.NewTextFieldValue()));
 
             return new Column
             {
@@ -22,6 +25,13 @@ public static class RememberSaveableDemo
                 new Button(onClick: () => count++) { new Text("+1") },
                 new TextField(name) { Placeholder = new Text("Type something") },
                 new Text($"You typed: {name}"),
+                new Text("Draft text and selection restore; IME composition and focus do not."),
+                new BasicTextField(draft.Value, value => draft.Value = value)
+                {
+                    Modifier = Modifier.FillMaxWidth().Height(56),
+                    TextStyle = new TextStyle { Color = Color.FromPacked(c.ColorScheme().OnSurface) },
+                    CursorBrush = Brush.SolidColor(Color.FromPacked(c.ColorScheme().Primary)),
+                },
             };
         });
 }

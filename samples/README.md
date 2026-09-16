@@ -7,6 +7,10 @@ to demonstrate the `Microsoft.AndroidX.Compose` facade running on
 surface — the per-sample `README.md` lists what was kept, what was cut,
 and which facade features had to land first.
 
+The [sample parity baseline](parity-baseline.md) pins the Kotlin reference,
+defines finite Jetchat/Reply flows and separates source findings from paired
+device evidence. A runnable port is not a claim of whole-app parity.
+
 Build any sample with:
 
 ```pwsh
@@ -16,14 +20,14 @@ dotnet build samples/<Name> -t:Run        # deploy + run on device
 
 ## Checklist
 
-Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
+Port status legend: ✅ runnable port · 🚧 in progress · ⬜️ not started · ❌ blocked
 (needs binding work upstream).
 
 | Complexity (upstream) | Sample      | Status | Notes |
 |----------------------:|-------------|:------:|-------|
-| Low                   | **Jetchat** | ✅      | Multi-channel chat with programmatic navigation drawer, profile routes, reverse-layout message log, emoji selector, recording approximation, attachments, drag/drop feedback, dynamic color, and upstream wordmark. Remaining differences are linked reusable API gaps in `Jetchat/README.md`. |
-| Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations and auto-close on item tap, hamburger top-bar toggle, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, and real hero PNGs are all pending. See `JetNews/README.md`. |
-| Medium                | Reply       | ✅      | Simplified phone-only single-pane port — bottom-nav scaffold with 4 destinations, inbox `LazyColumn` of cards with `AnimatedContent`-swapped selected avatar and `CombinedClickable` (tap/long-press) multi-select, email-detail `Scaffold` with thread cards, Articles/DMs/Groups stub screens. The only outstanding facade gap is TwoPane / fold-aware list-detail ([#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168)); `NavigationDrawerItem` (#163), `BackHandler` (#166), `NavOptions` (#169), the state-based search-bar pair (#165), `LazyListState` scroll-direction reads (#164), `semantics { selected }` (#167), `Modifier.nestedScroll` (#142), and adaptive `WindowSizeClass` reads (#143) all shipped — those are deferred port wiring, not facade gaps. See `Reply/README.md`. |
+| Low                   | **Jetchat** | ✅      | Channel drawer UI over one chat log, profile routes, Foundation `BasicTextField` with working IME Send, emoji/focus handoff, native long-press recording gestures, placeholder attachment panels, drag/drop feedback, custom fonts and Surface/FAB styling. Remaining differences include sample integration, data/deviation and uninvestigated behavior, not just missing reusable APIs. See [Jetchat](Jetchat/README.md). |
+| Medium                | JetNews     | ✅      | Phone-only Home / Article / Interests, drawer, bookmarks, bundled hero PNGs, styled paragraph runs, refresh/retry, snackbar feedback and share chooser. Six original seed articles; adaptive layouts, theme/localization polish, clickable links and search filtering remain. See [JetNews](JetNews/README.md). |
+| Medium                | Reply       | ✅      | Phone-only inbox/detail and four tabs, interactive docked prefix search, single-top/save-restore navigation, stable email keys and long-press selection. Search/navigation are integrated, not placeholders. Adaptive navigation, FAB response, selected semantics and visual styling remain sample work; fold-aware list/detail has separate scope. See [Reply](Reply/README.md). |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
 | High                  | JetLagged   | ⬜️     | Custom drawing + heavy animation. |
@@ -31,26 +35,23 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 When adding a new sample, append a row above and create
 `samples/<Name>/README.md` describing the omissions.
 
-## Tracked facade gaps
+## Tracked differences
 
-Sample fidelity is currently bounded by what the facade can express. Each
-omission points to a real issue — work the sample, find a gap, file an
-issue, link it back here. Closing one of these unblocks every sample
-that needs the same primitive.
+Reconciled against live issue titles/states and C# source
+`b8c93a68579a2430a54cbe3271730047516edec9` on 2026-09-15.
+Do not reopen a completed binding issue merely because a sample still
+omits a parameter or interaction. Check the exact member and classify the
+difference first.
 
-| Issue | Area                        | Blocks (in samples) |
-|------:|-----------------------------|--------------------|
-| [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
-| [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
-| [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
-| [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336) | Transition float/color value animations | Record-button transitions in **Jetchat**. |
-| [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | Long-press pointer-input drag gestures | Exact push-to-talk gesture in **Jetchat**. |
-| [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | `Scaffold.contentWindowInsets` customization | Exact inset ownership in **Jetchat**. |
-| [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340) | `BasicTextField` + keyboard actions | Exact message-editor structure and IME Send in **Jetchat**. |
-| [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341) | Baseline layout + `clipToBounds` modifiers | Exact input alignment and clipped profile parallax in **Jetchat**. |
-| [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342) | Focus target/observation/manager APIs | Emoji-panel focus transfer in **Jetchat**. |
-| [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343) | Complete Material 3 `Surface` styling slots | Input and selector elevation/content color in **Jetchat**. |
-| [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) | Material 3 FAB color/elevation slots | Tertiary profile FAB styling in **Jetchat**. |
+| Issue | Current scope |
+| --- | --- |
+| [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349) | Finite Jetchat/Reply parity baseline, remaining matched captures and documented limitations. Source-level Jetchat differences are listed in its README; not all have device evidence. |
+| [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384) | **Jetchat presentation integration** using delivered APIs. Its README separately links Tooltip control (#388), infinite pulse (#385), video (#387) and draft restoration (#386). |
+| [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383) | **Reply sample integration**: delivered adaptive-navigation, FAB, selection, inset and theme APIs; exact remaining styling slots still require an audit. |
+| [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | **Reply fold/list-detail**: reusable API and integration scope, separate from already-delivered NavigationSuite and size reads. Verify current binding members before repeating the tracker's historical package-availability claims. |
+| [#159](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/159) | **JetNews** remaining adaptive, navigation and sample polish; existing hero images, styled runs, refresh and share behavior are not missing features. |
+| [#120](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/120) | Remaining generator migrations: search family, SnackbarHost and BottomSheetScaffold. TimeInput and ModalBottomSheet already migrated. Not a reason to call existing sample controls unavailable. |
+| [#346](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/346) | Separate frozen-build performance work. Screenshot or symbol parity does not establish performance parity. |
 
 Closed gaps that previously appeared here (now usable in samples):
 **#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
@@ -60,13 +61,15 @@ Closed gaps that previously appeared here (now usable in samples):
 **#61** Theming reads + `Color` value type + parameterized `MaterialTheme`,
 **#62** State primitives (`RememberSaveable` / `mutableStateListOf` / `mutableStateMapOf` / `derivedStateOf`),
 **#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
+**#64** Drawing primitives (the specific advanced follow-ups #292/#293 remain separate),
 **#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
 **#69** WindowInsets padding modifiers (`imePadding` / `navigationBarsPadding` / `statusBarsPadding` / `displayCutoutPadding` / …),
 **#70** Row/Column `Arrangement`,
 **#140** `DrawerState.open()` / `close()` suspend bridges,
 **#141** `AnnotatedString` + `SpanStyle` for inline-run text styling,
 **#142** `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors,
-**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold, SharedTransitionLayout, and ListDetailScene bindings still missing — see [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) for the fold-aware TwoPane piece),
+**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold is also available; fold-aware list/detail remains separate in #168),
+**#144** Custom `Layout` measure/place primitive,
 **#145** `ContentScale` + `Alignment` slots on the `Image` facade,
 **#146** `stringResource(id)` lookup,
 **#163** `NavigationDrawerItem` facade,
@@ -75,11 +78,26 @@ Closed gaps that previously appeared here (now usable in samples):
 **#166** `BackHandler {}` from `androidx.activity.compose`,
 **#167** Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …),
 **#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`),
-**#335** Resource-backed `Font` / custom `FontFamily` (bundled Karla/Montserrat in **Jetchat**).
+**#333** Child enter/exit transition modifiers,
+**#334** Fractional `Sp`,
+**#335** Resource-backed `Font` / custom `FontFamily` (bundled Karla/Montserrat in **Jetchat**),
+**#336** Transition float/color animations,
+**#337** Long-press drag gestures,
+**#339** Scaffold content-inset customization,
+**#340** BasicTextField and Jetchat IME Send,
+**#341** Baseline alignment and clip-to-bounds,
+**#342** Focus target/manager APIs,
+**#343** Surface styling slots,
+**#344** FAB color/elevation slots,
+**#347** Reply tab navigation/state integration,
+**#348** Reply docked-search integration.
 
 Per-sample READMEs may still note these features as deferred — closing
 the facade gap unblocks the sample, but each port has to be updated
 separately to actually consume the new binding.
+In particular, #336 is transition animation, #337 is long-press drag,
+and #339-#344 are respectively insets, editor/IME, baseline/clip, focus,
+Surface and FAB. These links identify delivered work, not open API gaps.
 
 ## Attribution
 

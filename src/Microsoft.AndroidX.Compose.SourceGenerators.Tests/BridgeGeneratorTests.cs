@@ -24,6 +24,8 @@ public class BridgeGeneratorTests
                 public static unsafe void CallStaticVoidMethod(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) { }
                 public static unsafe void CallVoidMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) { }
                 public static unsafe System.IntPtr CallStaticObjectMethod(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
+                public static unsafe int CallStaticIntMethod(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
+                public static unsafe bool CallStaticBooleanMethod(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr CallObjectMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
                 public static unsafe long CallLongMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr NewObject(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
@@ -132,6 +134,41 @@ public class BridgeGeneratorTests
             }
         }
         return (output, diags, emitted);
+    }
+
+    [Theory]
+    [InlineData("getMinWidth-impl", "int", "I", "Int")]
+    [InlineData("getMaxWidth-impl", "int", "I", "Int")]
+    [InlineData("getMinHeight-impl", "int", "I", "Int")]
+    [InlineData("getMaxHeight-impl", "int", "I", "Int")]
+    [InlineData("getHasBoundedWidth-impl", "bool", "Z", "Boolean")]
+    [InlineData("getHasBoundedHeight-impl", "bool", "Z", "Boolean")]
+    public void ConstraintsAccessor_OwnsClassAndUsesPrimitiveDispatch(
+        string jvmName, string returnType, string signature, string dispatch)
+    {
+        var (output, diags, emitted) = Run($$"""
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "androidx/compose/ui/unit/Constraints",
+                        JvmName = "{{jvmName}}", Signature = "(J){{signature}}")]
+                    internal static partial {{returnType}} Accessor(long value);
+                }
+            }
+            """);
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("s_Accessor_class = global::Android.Runtime.JNIEnv.FindClass(\"androidx/compose/ui/unit/Constraints\")", emitted);
+        Assert.Contains($"\"{jvmName}\", \"(J){signature}\"", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(value);", emitted);
+        Assert.Contains($"return global::Android.Runtime.JNIEnv.CallStatic{dispatch}Method(s_Accessor_class, s_Accessor_method, args);", emitted);
+        Assert.DoesNotContain("Class.FromType", emitted);
+        Assert.DoesNotContain("NewGlobalRef", emitted);
+        Assert.DoesNotContain("DeleteLocalRef", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Theory]

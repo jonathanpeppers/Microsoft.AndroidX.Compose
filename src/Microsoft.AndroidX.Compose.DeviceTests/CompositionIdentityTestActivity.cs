@@ -249,9 +249,11 @@ public class CompositionIdentityTestActivity : ComponentActivity
     static MeasureResult MeasureOrder(MeasureScope scope, IReadOnlyList<Measurable> children,
         Constraints constraints)
     {
-        var childConstraints = Constraints.Create(0, 400, 0, 2000);
+        var childConstraints = Constraints.Create(0, Math.Min(400, constraints.MaxWidth),
+            0, Math.Min(2000, constraints.MaxHeight));
         var measured = children.Select(child => child.Measure(childConstraints)).ToArray();
-        return scope.Layout(400, measured.Sum(child => child.Height), placement =>
+        return scope.Layout(constraints.ConstrainWidth(400),
+            constraints.ConstrainHeight(measured.Sum(child => child.Height)), placement =>
             {
                 int y = 0;
                 foreach (var child in measured)

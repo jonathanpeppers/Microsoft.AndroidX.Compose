@@ -319,6 +319,8 @@ public class CompositionIdentityTests
     static async Task ChangeStructure(CompositionIdentityTestActivity activity, Action update)
     {
         int pass = CompositionIdentityTestActivity.ParentPasses;
+        if (CompositionIdentityTestActivity.CheckNodeOrder)
+            ConstraintsMeasurementTests.Collect();
         await OnUi(activity, update);
         await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > pass,
             "Structural recomposition did not complete.");
