@@ -4,6 +4,8 @@
     <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <IsAotCompatible>true</IsAotCompatible>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
     <RootNamespace>Microsoft.AndroidX.Compose.Maui</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
