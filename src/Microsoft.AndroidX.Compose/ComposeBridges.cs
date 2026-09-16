@@ -3252,6 +3252,41 @@ internal static partial class ComposeBridges
         Signature = "(I)Landroidx/compose/foundation/shape/CutCornerShape;")]
     internal static partial IntPtr CutCornerShapePercent(int percent);
 
+    // Foundation.Android binds the percent/px factories, but strips these Dp overloads.
+    [ComposeBridge(
+        Class = "androidx/compose/foundation/shape/CutCornerShapeKt",
+        JvmName = "CutCornerShape-a9UjIt4",
+        Signature = "(FFFF)Landroidx/compose/foundation/shape/CutCornerShape;")]
+    internal static partial IntPtr CutCornerShape4Dp(
+        float topStart, float topEnd, float bottomEnd, float bottomStart);
+
+    [ComposeBridge(
+        Class = "androidx/compose/foundation/shape/AbsoluteRoundedCornerShapeKt",
+        JvmName = "AbsoluteRoundedCornerShape-a9UjIt4",
+        Signature = "(FFFF)Landroidx/compose/foundation/shape/AbsoluteRoundedCornerShape;")]
+    internal static partial IntPtr AbsoluteRoundedCornerShape4Dp(
+        float topLeft, float topRight, float bottomRight, float bottomLeft);
+
+    [ComposeBridge(
+        Class = "androidx/compose/foundation/shape/AbsoluteCutCornerShapeKt",
+        JvmName = "AbsoluteCutCornerShape-a9UjIt4",
+        Signature = "(FFFF)Landroidx/compose/foundation/shape/AbsoluteCutCornerShape;")]
+    internal static partial IntPtr AbsoluteCutCornerShape4Dp(
+        float topLeft, float topRight, float bottomRight, float bottomLeft);
+
+    [ComposeBridge(
+        Class = "androidx/compose/foundation/shape/GenericShape",
+        JvmName = "<init>",
+        Signature = "(Lkotlin/jvm/functions/Function3;)V")]
+    internal static partial AndroidX.Compose.Foundation.Shape.GenericShape GenericShapeCreate(IFunction3 builder);
+
+    [ComposeBridge(
+        Class = "androidx/compose/ui/geometry/Size",
+        JvmName = "unbox-impl",
+        Signature = "()J",
+        Instance = true)]
+    internal static partial long ShapeSizeUnbox(IntPtr size);
+
     // androidx.compose.material3.AppBarKt — TopAppBar / CenterAlignedTopAppBar
     // share the `-GHTll3U` shape (extra `expandedHeight: Dp` vs. the older
     // unmangled overload). 8 user params: title, modifier, navigationIcon,

@@ -19,12 +19,15 @@ internal sealed class SurfacePixelCopy : Java.Lang.Object, PixelCopy.IOnPixelCop
         _completion = completion;
     }
 
-    internal static async Task<Bitmap> Capture(SurfaceStylingTestActivity activity)
+    internal static Task<Bitmap> Capture(SurfaceStylingTestActivity activity) =>
+        Capture(activity, activity.OnUi);
+
+    internal static async Task<Bitmap> Capture(global::AndroidX.Activity.ComponentActivity activity, Func<Action, Task> onUi)
     {
         var completion = new TaskCompletionSource<Bitmap>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            await activity.OnUi(() =>
+            await onUi(() =>
             {
                 if (!OperatingSystem.IsAndroidVersionAtLeast(26))
                     throw new PlatformNotSupportedException("Window PixelCopy requires Android 8 or newer.");
