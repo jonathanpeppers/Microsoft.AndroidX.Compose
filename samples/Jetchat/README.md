@@ -173,6 +173,35 @@ requires a separate protocol and is not claimed here. The historic
 [parity baseline](../parity-baseline.md) remains an unchanged record of the
 older source/APKs, not a result for this implementation.
 
+### Native acceptance (2026-09-16)
+
+The bounded regression run used a Pixel 10 on API 36, `arm64-v8a`, with
+4096-byte pages. APKs were Debug, target/compile SDK 36, with embedded
+assemblies. A user-authorized clean reinstall removed stale deployment
+overrides; installed APK, embedded ELF and managed PE hashes were verified.
+Light/dark cases use the sample's Compose palette override, not changes to
+device settings.
+
+| Source / APK SHA-256 prefix | Accepted result |
+| --- | --- |
+| Baseline application/runtime `4241672`; `99AE918F4821` | Admission/selection control passed. Both J12 cases then lost the draft/caret after the old activity was destroyed and a distinct replacement resumed with saved state. These are expected regression failures, not harness failures. |
+| Fixed product `3e5cb09`, tests `f7f1ee0`; `7AEFEEF2B9E6` | All five Jetchat cases passed: control, light/dark recreation with continued emoji/Send/clear/IME behavior, Back/focus/fresh-owner behavior, and real conversation-key/IME-target replacement. |
+| Same fixed product, tests `37d33ff`; `2284CD932100` | Native saver round-trip and isolation (1), existing saveable/keyed/restoration tests (24), and Foundation editor tests (9) passed with no failures or skips. |
+
+This is **39 accepted fixed cases across two disclosed APKs**, not one
+39-case invocation. The earlier separate saver case compared managed Java
+wrapper references and failed; its corrected native `HasEqualAnnotations`
+comparison, same-text/no-annotations negative control, reversed selection,
+live-versus-restored IME composition, key reset and sibling assertions all
+passed in the final run. No product change was needed for that test correction.
+
+Native lifecycle/window/editor stage records, fresh per-run PIDs/IDs, TRXs
+and complete hashes remain session artifacts, not repository binaries.
+PID-filtered logcat was empty and is not evidence of error absence. Earlier
+Pixel 7 admission/harness failures are retained separately and are not
+counted as restoration proof. No standalone sample/Gallery smoke, painted
+caret-pixel, process-death or cross-device performance result is claimed.
+
 ## Message identity
 
 Identity was checked against upstream commit
