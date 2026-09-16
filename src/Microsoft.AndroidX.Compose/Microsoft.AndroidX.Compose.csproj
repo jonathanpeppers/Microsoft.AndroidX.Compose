@@ -4,7 +4,8 @@
     <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>AndroidX.Compose</RootNamespace>
     <!--

@@ -1067,9 +1067,14 @@ that allocate local refs from `Call*ObjectMethod` /
 `NewObject` / `JValue.NewString`.
 
 For class refs, **don't** wrap `JNIEnv.FindClass` results in
-`NewGlobalRef`/`DeleteLocalRef` — Mono.Android returns stable
-globally-registered class refs (re-stated from the suspend-bridge
-section).
+`NewGlobalRef`/`DeleteLocalRef` — Mono.Android already returns a global
+reference. Generated bridges retain it for their cache lifetime.
+`Java.Lang.Class.FromType(...).Handle` is different: it borrows the
+global reference owned by a collectible Class peer. Never store that
+raw handle for later calls without retaining its owner. Prefer an
+available bound API or a `[ComposeBridge]` (including primitive returns),
+not a new hand-written class cache. See `docs/constraints-jni-lifetime.md`
+and #357.
 
 
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —

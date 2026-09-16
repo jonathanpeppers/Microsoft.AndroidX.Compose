@@ -30,11 +30,9 @@ public class MainActivity : ComponentActivity
         this.SetContent(() =>
         {
             var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = MutableStateOf(ComposeExtensions.NewTextFieldValue());
             var selectedMenu     = MutableStateOf("composers");
             var drawerScroll     = Remember(() => new ScrollState());
             var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
-            var selectedSelector = MutableStateOf(0);
             var popupOpen        = MutableStateOf(false);
             var messagesScroll   = RememberLazyListState();
             var isRecording      = MutableStateOf(false);
@@ -44,11 +42,9 @@ public class MainActivity : ComponentActivity
             JetchatApp.Content(
                 nav:              nav,
                 ui:               ui,
-                input:            input,
                 selectedMenu:     selectedMenu,
                 drawerScroll:     drawerScroll,
                 drawerState:      drawerState,
-                selectedSelector: selectedSelector,
                 popupOpen:        popupOpen,
                 messagesScroll:   messagesScroll,
                 isRecording:      isRecording,

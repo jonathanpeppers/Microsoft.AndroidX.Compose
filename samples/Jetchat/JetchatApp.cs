@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Text.Input;
 namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
@@ -30,11 +29,9 @@ public static class JetchatApp
     public static void Content(
         NavController                nav,
         ConversationUiState          ui,
-        MutableState<TextFieldValue> input,
         MutableState<string>         selectedMenu,
         ScrollState                  drawerScroll,
         DrawerStateHolder            drawerState,
-        MutableState<int>            selectedSelector,
         MutableState<bool>           popupOpen,
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
@@ -73,9 +70,7 @@ public static class JetchatApp
                     {
                         Conversation.Build(
                             ui:               ui,
-                            input:            input,
                             selectedMenu:     selectedMenu,
-                            selectedSelector: selectedSelector,
                             popupOpen:        popupOpen,
                             messagesScroll:   messagesScroll,
                             isRecording:      isRecording,

@@ -52,6 +52,9 @@
     <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
     <Compile Include="..\..\samples\Jetchat\MessageInput.cs" Link="Samples\MessageInput.cs" />
+    <Compile Include="..\..\samples\Jetchat\*.cs"
+             Exclude="..\..\samples\Jetchat\JetchatFonts.cs;..\..\samples\Jetchat\RecordButton.cs;..\..\samples\Jetchat\RecordButtonVisuals.cs;..\..\samples\Jetchat\RecordingGestureState.cs;..\..\samples\Jetchat\MessageInput.cs"
+             Link="Samples\Jetchat\%(Filename)%(Extension)" />
     <Compile Include="..\..\samples\Reply\*.cs"
              Exclude="..\..\samples\Reply\MainActivity.cs"
              Link="Samples\Reply\%(Filename)%(Extension)" />
@@ -64,6 +67,17 @@
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_light.ttf" Link="Resources\font\montserrat_light.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_medium.ttf" Link="Resources\font\montserrat_medium.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_semibold.ttf" Link="Resources\font\montserrat_semibold.ttf" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\font\karla_*.ttf;..\..\samples\Jetchat\Resources\font\montserrat_regular.ttf"
+                     Link="Resources\font\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\drawable\*"
+                     Exclude="..\..\samples\Jetchat\Resources\drawable\ic_mic.xml;..\..\samples\Jetchat\Resources\drawable\ic_arrow_back.xml;..\..\samples\Jetchat\Resources\drawable\ic_menu.xml;..\..\samples\Jetchat\Resources\drawable\ic_more_vert.xml;..\..\samples\Jetchat\Resources\drawable\ic_search.xml"
+                     Link="Resources\drawable\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\drawable-nodpi\*"
+                     Link="Resources\drawable-nodpi\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\drawable-night\*"
+                     Link="Resources\drawable-night\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\values\strings.xml"
+                     Link="Resources\values\jetchat_strings.xml" />
     <AndroidResource Include="..\..\samples\Reply\Resources\drawable\*"
                      Link="Resources\drawable\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Reply\Resources\drawable-nodpi\*"
