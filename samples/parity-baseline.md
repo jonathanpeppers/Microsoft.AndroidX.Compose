@@ -117,6 +117,15 @@ host build is not matched-device proof; the J01/J02/J04/J05/J07/J08/J09
 light/dark and compact/short/larger-window matrix must be rerun with exact
 source and APK identities before replacing the historical outcomes.
 
+The first Pixel10 acceptance lease for that rerun stopped before installation:
+the existing package-private fast-deployment override contained `Jetchat.dll`
+and `Microsoft.AndroidX.Compose.dll` payloads that differed from the frozen,
+self-contained APK. The installed signing certificate was compatible, but
+`install -r` preserves package data and therefore could not establish which
+managed payload would execute. No override, app data, system setting, or
+unrelated package was changed. Device results remain pending a separately
+authorized package-scoped override-isolation policy.
+
 ### Reply
 
 | ID | Initial state / action | Result |
