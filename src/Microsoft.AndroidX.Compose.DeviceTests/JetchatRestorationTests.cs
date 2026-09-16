@@ -250,7 +250,10 @@ public class JetchatRestorationTests
     static async Task ImeSend(JetchatRestorationTestActivity activity)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(30))
-            throw new PlatformNotSupportedException("Native accessibility IME actions require Android 11 or later.");
+        {
+            Assert.Inconclusive("Native accessibility IME actions require Android 11 or later.");
+            return;
+        }
         using var editor = Find(activity, n => n.Editable) ?? throw new InvalidOperationException("Jetchat editor is missing.");
         var action = AccessibilityNodeInfo.AccessibilityAction.ActionImeEnter
             ?? throw new InvalidOperationException("Native IME action is unavailable.");

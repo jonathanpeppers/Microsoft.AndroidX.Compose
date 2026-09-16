@@ -29,6 +29,8 @@ public static class RememberSaveableDemo
                 new BasicTextField(draft.Value, value => draft.Value = value)
                 {
                     Modifier = Modifier.FillMaxWidth().Height(56),
+                    TextStyle = new TextStyle { Color = Color.FromPacked(c.ColorScheme().OnSurface) },
+                    CursorBrush = Brush.SolidColor(Color.FromPacked(c.ColorScheme().Primary)),
                 },
             };
         });
