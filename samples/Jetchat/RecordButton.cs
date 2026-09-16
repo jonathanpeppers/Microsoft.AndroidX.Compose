@@ -85,6 +85,12 @@ public static class RecordButton
     public static ComposableNode BuildRecordingIndicator(
         MutableNumberState<float> swipeOffset,
         ColorScheme               scheme) =>
+        BuildRecordingIndicator(swipeOffset, scheme, null);
+
+    internal static ComposableNode BuildRecordingIndicator(
+        MutableNumberState<float> swipeOffset,
+        ColorScheme               scheme,
+        Action<float>?            pulseObserver) =>
         new Composed(c =>
         {
             var seconds = c.MutableStateOf(0);
@@ -105,6 +111,8 @@ public static class RecordButton
             int   secs      = seconds.Value % 60;
             string timer    = $"{mins:D2}:{secs:D2}";
             float pulseValue = pulse.Value;
+            if (pulseObserver is not null)
+                c.SideEffect(() => pulseObserver(pulseValue));
 
             return new Row
             {
