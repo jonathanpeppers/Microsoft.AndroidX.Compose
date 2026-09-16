@@ -220,8 +220,22 @@ public class LongPressDragTests
             Assert.IsFalse(activity.RecordingTooltip.IsVisible);
             await (activity.TooltipShowTask
                 ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
+            Runner.RunOnMainSync(() => activity.UseAlternateRecordingTooltip.Value = true);
+            await Frames(activity);
+            Assert.ThrowsExactly<InvalidOperationException>(activity.RecordingTooltip.Dismiss,
+                "Replacing Tooltip state must unbind the prior managed wrapper.");
+            down = Touch(activity, MotionEventActions.Down);
+            Touch(activity, MotionEventActions.Up, down);
+            down = 0;
+            await Frames(activity);
+            Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
+            activity.AlternateRecordingTooltip.Dismiss();
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Replacement Tooltip state did not receive the short tap."));
             await Finish(activity);
             finished = true;
+            Assert.ThrowsExactly<InvalidOperationException>(activity.AlternateRecordingTooltip.Dismiss,
+                "Removing Tooltip from composition must unbind its managed wrapper.");
             Assert.AreEqual(0, activity.CancelCount, "Disposing an idle detector must not cancel a recording that never started.");
 
             activity = await Start(recording: true);
