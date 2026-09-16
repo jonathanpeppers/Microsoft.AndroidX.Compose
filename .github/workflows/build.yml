@@ -51,8 +51,10 @@ jobs:
 
       - name: Build project template
         run: |
+          # The RC 1 Android workload otherwise requests an unpublished 11.0.0-rc.1.26428.117 pack.
           dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" -c Release \
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:MicrosoftNETCoreAppRefPackageVersion=11.0.0-rc.1.26425.128 \
             -p:PublishAot=true \
             -p:TreatWarningsAsErrors=true \
             -warnaserror:XA4301 \
