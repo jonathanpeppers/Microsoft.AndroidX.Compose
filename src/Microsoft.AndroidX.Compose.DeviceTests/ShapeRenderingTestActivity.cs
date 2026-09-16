@@ -129,11 +129,15 @@ public class ShapeRenderingTestActivity : ComponentActivity
         await committed.Committed.WaitAsync(TimeSpan.FromSeconds(10));
     }
 
-    internal (int X, int Y) Pixel(string id, float fractionX, float fractionY)
+    internal (int X, int Y) Pixel(string id, float fractionX, float fractionY, bool screen = false)
     {
         var tile = Tiles[id];
         int[] location = new int[2];
-        (_view ?? throw new InvalidOperationException("Shape view missing.")).GetLocationOnScreen(location);
+        var view = _view ?? throw new InvalidOperationException("Shape view missing.");
+        if (screen)
+            view.GetLocationOnScreen(location);
+        else
+            view.GetLocationInWindow(location);
         return ((int)(location[0] + tile.X + tile.Width * fractionX),
             (int)(location[1] + tile.Y + tile.Height * fractionY));
     }

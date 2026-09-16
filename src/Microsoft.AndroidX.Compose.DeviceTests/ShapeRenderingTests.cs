@@ -4,7 +4,7 @@ using LayoutDirection = AndroidX.Compose.UI.Unit.LayoutDirection;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
-/// <summary>Checks actual compositor pixels and retained callbacks after live recomposition and GC.</summary>
+/// <summary>Checks committed native window pixels and retained callbacks after live recomposition and GC.</summary>
 [TestClass]
 [DoNotParallelize]
 public class ShapeRenderingTests
@@ -38,8 +38,12 @@ public class ShapeRenderingTests
                 await activity.CommitFrame();
                 var automation = instrumentation.UiAutomation
                     ?? throw new InvalidOperationException("Shape native screenshot service unavailable.");
-                using var bitmap = automation.TakeScreenshot()
+                using var compositor = automation.TakeScreenshot()
                     ?? throw new InvalidOperationException("Shape compositor screenshot failed.");
+                await activity.CommitFrame();
+                using var bitmap = await SurfacePixelCopy.Capture(activity, activity.OnUi);
+                SaveCapture(compositor, cycle, "compositor");
+                SaveCapture(bitmap, cycle, "window");
                 bool rtl = cycle % 2 == 1;
                 await activity.OnUi(() =>
                 {
@@ -49,6 +53,11 @@ public class ShapeRenderingTests
                     Assert.AreEqual(activity.Tiles["generic"].Width, activity.Probe.LastSize.Width, 0.01f);
                     Assert.AreEqual(activity.Tiles["generic"].Height, activity.Probe.LastSize.Height, 0.01f);
                     Assert.AreEqual(rtl ? LayoutDirection.Rtl : LayoutDirection.Ltr, activity.Probe.LastDirection);
+                    var screenPoint = activity.Pixel("generic", 0.1f, 0.1f, screen: true);
+                    var windowPoint = activity.Pixel("generic", 0.1f, 0.1f);
+                    Console.WriteLine($"SHAPE_CAPTURE cycle={cycle} windowPoint={windowPoint} "
+                        + $"windowPixel={bitmap.GetPixel(windowPoint.X, windowPoint.Y):X8} screenPoint={screenPoint} "
+                        + $"compositorPixel={compositor.GetPixel(screenPoint.X, screenPoint.Y):X8}");
                     Check(bitmap, activity.Pixel("generic", 0.1f, 0.1f), red: !rtl);
                     Check(bitmap, activity.Pixel("generic", 0.9f, 0.1f), red: rtl);
                     Check(bitmap, activity.Pixel("generic", 0.5f, 0.5f), red: true);
@@ -60,13 +69,6 @@ public class ShapeRenderingTests
                         Check(bitmap, activity.Pixel(id, 0.5f, 0.5f), red: true);
                     }
                 });
-                string directory = System.IO.Path.Combine(
-                    Application.Context.GetExternalFilesDir(null)?.AbsolutePath
-                        ?? throw new InvalidOperationException("Shape capture directory unavailable."), "shape-captures");
-                Directory.CreateDirectory(directory);
-                using var output = File.Create(System.IO.Path.Combine(directory, $"cycle-{cycle}.png"));
-                Assert.IsTrue(bitmap.Compress(Bitmap.CompressFormat.Png
-                    ?? throw new InvalidOperationException("PNG unavailable."), 100, output));
                 Console.WriteLine($"SHAPE_FRAME cycle={cycle} rtl={rtl} calls={activity.Probe.Calls} "
                     + $"size={activity.Probe.LastSize} pid={(global::Android.OS.Process.MyPid())} pixels=12/12");
             }
@@ -77,6 +79,17 @@ public class ShapeRenderingTests
             await activity.OnUi(() => { activity.Ending = true; activity.Finish(); });
             await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
         }
+    }
+
+    static void SaveCapture(Bitmap bitmap, int cycle, string surface)
+    {
+        string directory = System.IO.Path.Combine(
+            Application.Context.GetExternalFilesDir(null)?.AbsolutePath
+                ?? throw new InvalidOperationException("Shape capture directory unavailable."), "shape-captures");
+        Directory.CreateDirectory(directory);
+        using var output = File.Create(System.IO.Path.Combine(directory, $"cycle-{cycle}-{surface}.png"));
+        Assert.IsTrue(bitmap.Compress(Bitmap.CompressFormat.Png
+            ?? throw new InvalidOperationException("PNG unavailable."), 100, output));
     }
 
     static void Check(Bitmap bitmap, (int X, int Y) point, bool red)
