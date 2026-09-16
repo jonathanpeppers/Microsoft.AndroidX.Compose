@@ -10,9 +10,13 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class ShapeRenderingTests
 {
     /// <summary>RTL mirrors relative cuts and the builder, but never absolute corners.</summary>
+    /// <remarks>Frame-commit capture requires Android 10 (API 29) or newer.</remarks>
     [TestMethod]
     public async Task NativeClippingSurvivesRtlResizeAndGc()
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            Assert.Inconclusive("Shape frame-commit rendering checks require Android 10 or newer.");
+
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("Shape instrumentation missing.");
         ShapeRenderingTestActivity.Prepare();
