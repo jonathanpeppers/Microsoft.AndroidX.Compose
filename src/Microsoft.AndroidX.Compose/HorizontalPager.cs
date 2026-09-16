@@ -63,8 +63,26 @@ public sealed class HorizontalPager<T> : ComposableNode
     /// </summary>
     public PaddingValues? ContentPadding { get; set; }
 
+    /// <summary>
+    /// Number of pages to compose and lay out before and after the visible
+    /// viewport. Null uses Compose's default.
+    /// </summary>
+    public int? BeyondViewportPageCount { get; set; }
+
+    /// <summary>
+    /// Whether touch gestures may scroll the pager. Programmatic scrolling
+    /// through <see cref="PagerState"/> remains available when disabled.
+    /// </summary>
+    public bool UserScrollEnabled { get; set; } = true;
+
     public override void Render(IComposer composer)
     {
+        if (BeyondViewportPageCount is < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(BeyondViewportPageCount),
+                BeyondViewportPageCount,
+                "Beyond-viewport page count must be greater than or equal to zero.");
+
         var (items, key) = CollectionItemKey.Create(_items, Key);
         // When the caller supplies a PagerState wrapper its Jvm is
         // built eagerly in the wrapper's ctor (via the non-@Composable
@@ -109,6 +127,8 @@ public sealed class HorizontalPager<T> : ComposableNode
         int defaults = (int)HorizontalPagerDefault.All;
         if (modifier       is not null) defaults &= ~(int)HorizontalPagerDefault.Modifier;
         if (ContentPadding is not null) defaults &= ~(int)HorizontalPagerDefault.ContentPadding;
+        if (BeyondViewportPageCount is not null) defaults &= ~(int)HorizontalPagerDefault.BeyondViewportPageCount;
+        defaults &= ~(int)HorizontalPagerDefault.UserScrollEnabled;
         if (key            is not null) defaults &= ~(int)HorizontalPagerDefault.Key;
 
         PagerKt.HorizontalPager(
@@ -116,11 +136,11 @@ public sealed class HorizontalPager<T> : ComposableNode
             modifier:                    modifier,
             contentPadding:              ContentPadding?.Jvm,
             pageSize:                    null,
-            p4:                          0,    // beyondViewportPageCount
+            p4:                          BeyondViewportPageCount ?? 0,
             pageSpacing:                 0f,
             verticalAlignment:           null,
             flingBehavior:               null,
-            userScrollEnabled:           true,
+            userScrollEnabled:           UserScrollEnabled,
             reverseLayout:               false,
             key:                         key,
             pageNestedScrollConnection:  null,

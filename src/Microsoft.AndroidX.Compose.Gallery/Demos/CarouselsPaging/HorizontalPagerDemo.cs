@@ -16,6 +16,7 @@ public static class HorizontalPagerDemo
         {
             var items = new[] { 0, 1, 2 };
             var state = c.Remember(() => new PagerState(pageCount: () => items.Length));
+            var gestures = c.Remember(() => new MutableState<bool>(true));
             return new Column
             {
                 new HorizontalPager<int>(
@@ -33,10 +34,19 @@ public static class HorizontalPagerDemo
                         },
                     })
                 {
-                    State    = state,
+                    State = state,
+                    UserScrollEnabled = gestures.Value,
+                    BeyondViewportPageCount = 1,
                     Modifier = Modifier.FillMaxWidth().Height(200),
                 },
                 new Text($"Page {state.CurrentPage + 1} of {state.PageCount}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Switch(
+                        gestures.Value,
+                        value => gestures.Value = value),
+                    new Text("Swipe gestures"),
+                },
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     new Button(() => _ = state.ScrollToPageAsync(0))

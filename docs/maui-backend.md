@@ -2117,7 +2117,45 @@ hosting `NavStackPage` (in-code, no XAML per depth level) so the
 gallery can verify push / pop / hardware-back / top-bar back
 arrow without converting the Shell host itself.
 
-#### Slices 2-5 — deferred follow-ups
+#### Slice 2 — `TabbedViewHandler` ✅ shipped
+
+`Microsoft.Maui.Controls.TabbedPage` now replaces MAUI's AppCompat
+`TabLayout` / `BottomNavigationView` host with a Material 3
+`TabRow` or `NavigationBar` around Foundation `HorizontalPager`:
+
+- Android `ToolbarPlacement.Top` renders `TabRow` + `Tab`; bottom placement
+  renders `NavigationBar` + `NavigationBarItem`.
+- The handler snapshots `TabbedPage.Children` whenever MAUI raises its
+  `ItemsSource` mapper key, assigns stable integer pager keys per `Page`, and
+  subscribes to title, icon, and enabled changes. Insert/remove/reorder updates
+  recompose the chrome without disconnecting surviving page handlers.
+- Each pager item owns an `AndroidView` `FrameLayout` that hosts the child's
+  normal `PageHandler` platform view. A `DisposableEffect` detaches the child
+  when that pager slot leaves composition; the MAUI handler remains attached
+  so re-adding or revisiting a page preserves its state.
+- MAUI `CurrentPage` writes drive `PagerState.RequestScrollToPage` or
+  `AnimateScrollToPageAsync` according to Android's smooth-scroll setting.
+  Pager gestures publish the settled index back through
+  `TabbedPage.CurrentPage` from a Compose `SideEffect`, so bindings and
+  `CurrentPageChanged` observe user swipes without a feedback loop.
+- `IsSwipePagingEnabled` maps to `HorizontalPager.UserScrollEnabled`;
+  obsolete `OffscreenPageLimit` maps to
+  `HorizontalPager.BeyondViewportPageCount`.
+- Tab icons use the shared `ImageSourceLoader`, preserving packaged drawable
+  resources and MAUI's URI/stream/font image-source pipeline. Bar background
+  and selected/unselected text colors are projected into a nested M3 color
+  scheme for the tab chrome.
+- MAUI's stock bottom host moves tabs beyond its five-item capacity into a
+  "More" sheet. The Compose handler does not truncate or silently switch
+  placement: it keeps every child directly selectable in the bottom
+  `NavigationBar`. Apps should still follow Material 3's three-to-five item
+  guidance to avoid compressed labels.
+
+The sample's "Tabbed pages" demo launches both placements and exercises tab
+taps, swipes, programmatic `CurrentPage`, disabled tabs, icon/title updates,
+and dynamic child insertion/removal.
+
+#### Slices 3-5 — deferred follow-ups
 
 All three remaining navigation surfaces work **functionally** via
 stock today (each registers against its concrete type, so our
@@ -2125,13 +2163,6 @@ stock today (each registers against its concrete type, so our
 host already get our converted leaves. The remaining gap is purely
 visual chrome:
 
-- **Slice 2 — `TabbedPageHandler`** (`TabbedPage` →
-  `NavigationBar` for `BarPosition.Bottom`, `TabRow` for
-  `BarPosition.Top`). Stock = AppCompat `BottomNavigationView`.
-  Compose-side facades (`NavigationBar`, `NavigationBarItem`,
-  `TabRow`) already shipped. Two-way `CurrentPage` binding +
-  per-tab content swap via the same `AndroidView` host pattern
-  Slice 1 uses.
 - **Slice 3 — `FlyoutPageHandler`** (`FlyoutPage` →
   `ModalNavigationDrawer`). Stock = `DrawerLayout`. The
   `ModalNavigationDrawer` facade + `[ConfirmStateChange]` adapter
