@@ -52,6 +52,7 @@ public static class AbsoluteCornerShapesDemo
                     .Select(variant => Create(family, variant)).ToArray(), family);
                 return new Column(verticalArrangement: Arrangement.SpacedBy(8))
                 {
+                    Modifier.FillMaxSize().Background(Color.White),
                     new Row(horizontalArrangement: Arrangement.SpacedBy(12))
                     {
                         Tile("Uniform 12 Dp", shapes[0]), Tile("Uniform 25%", shapes[1]),
@@ -70,7 +71,8 @@ public static class AbsoluteCornerShapesDemo
 
     static Column Tile(string caption, Shape shape) => new()
     {
-        new Text(caption),
+        Modifier.Background(Color.White),
+        new Text(caption) { Color = Color.Black },
         new Box { Modifier.Size(120, 60).Clip(shape).Background(Color.Blue) },
     };
 

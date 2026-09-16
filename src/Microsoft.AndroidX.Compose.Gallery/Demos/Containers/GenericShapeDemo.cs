@@ -50,7 +50,8 @@ public static class GenericShapeDemo
                 }));
                 return new Box
                 {
-                    Modifier.Size(wide.Value ? 200 : 120, 80).Clip(shape).Background(Color.Blue),
+                    Modifier.FillMaxSize().Background(Color.White),
+                    new Box { Modifier.Size(wide.Value ? 200 : 120, 80).Clip(shape).Background(Color.Blue) },
                 };
             }));
             return view;
