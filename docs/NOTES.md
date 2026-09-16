@@ -339,7 +339,7 @@ dotnet build
 To inspect the dex:
 
 ```pwsh
-Expand-Archive bin\Debug\net10.0-android\net.compose.gallery-Signed.apk -DestinationPath dex-inspect
+Expand-Archive bin\Debug\net11.0-android\net.compose.gallery-Signed.apk -DestinationPath dex-inspect
 $bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
 & $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|net/gallery/HelloComposable"
 ```

@@ -113,7 +113,7 @@ All other sample drawables and string content under each `samples/<Name>/` folde
 
 ## Conventions
 
-- Each sample is its own `net10.0-android` Exe project under
+- Each sample is its own `net11.0-android` Exe project under
   `samples/<Name>/`.
 - `<ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />`.
 - Reuse the existing root `Directory.Build.targets` for AndroidX

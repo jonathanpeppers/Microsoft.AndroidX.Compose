@@ -7,6 +7,7 @@
   <Folder Name="/Samples/">
     <Project Path="samples/Jetchat/Jetchat.csproj" />
     <Project Path="samples/JetNews/JetNews.csproj" />
+    <Project Path="samples/Reply/Reply.csproj" />
     <Project Path="src/Microsoft.AndroidX.Compose.Gallery/Microsoft.AndroidX.Compose.Gallery.csproj" />
     <Project Path="src/Microsoft.AndroidX.Compose.Maui.Sample/Microsoft.AndroidX.Compose.Maui.Sample.csproj" />
   </Folder>
