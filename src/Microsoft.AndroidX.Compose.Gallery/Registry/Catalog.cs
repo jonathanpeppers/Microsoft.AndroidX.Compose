@@ -98,6 +98,7 @@ public static class Catalog
         D.Containers.CustomLayoutDemo.Demo,
 
         // ---- Drawing ----
+        D.Drawing.AdvancedDrawingDemo.Demo,
         D.Drawing.DrawingPrimitivesDemo.Demo,
 
         // ---- Lists & grids ----
