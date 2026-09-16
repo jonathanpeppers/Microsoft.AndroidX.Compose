@@ -50,19 +50,23 @@ internal sealed class SaveableKeySnapshot
         }
 
         owns = true;
+#pragma warning disable CA1422
         Java.Lang.Object? boxed = kind switch
         {
             String => new Java.Lang.String((string)value),
-            Boolean => Java.Lang.Boolean.ValueOf((bool)value),
-            Character => Java.Lang.Character.ValueOf((char)value),
-            Byte => Java.Lang.Byte.ValueOf((sbyte)value),
-            Short => Java.Lang.Short.ValueOf((short)value),
-            Integer => Java.Lang.Integer.ValueOf((int)value),
-            Long => Java.Lang.Long.ValueOf((long)value),
-            Float => Java.Lang.Float.ValueOf((float)value),
-            Double => Java.Lang.Double.ValueOf((double)value),
+            // ValueOf can return a managed wrapper already held by a caller.
+            // Distinct peers make deterministic disposal ownership-safe.
+            Boolean => new Java.Lang.Boolean((bool)value),
+            Character => new Java.Lang.Character((char)value),
+            Byte => new Java.Lang.Byte((sbyte)value),
+            Short => new Java.Lang.Short((short)value),
+            Integer => new Java.Lang.Integer((int)value),
+            Long => new Java.Lang.Long((long)value),
+            Float => new Java.Lang.Float((float)value),
+            Double => new Java.Lang.Double((double)value),
             _ => throw new InvalidOperationException($"Unknown saveable key kind '{kind}'."),
         };
+#pragma warning restore CA1422
         return boxed ?? throw new InvalidOperationException(
             $"Could not box saveable key kind '{kind}'.");
     }

@@ -237,6 +237,17 @@ public class RememberSaveableTests
     }
 
     [TestMethod]
+    public void BoxedJavaPeerKey_CrossesClrRepresentationWithoutDisposal()
+    {
+        using var peer = Java.Lang.Integer.ValueOf(1)
+            ?? throw new InvalidOperationException("Could not box the Java integer key.");
+        VerifyKeyPair(peer, 1, equal: true);
+        Assert.AreNotEqual(IntPtr.Zero, peer.Handle);
+        VerifyKeyPair(1, peer, equal: true);
+        Assert.AreNotEqual(IntPtr.Zero, peer.Handle);
+    }
+
+    [TestMethod]
     public void NullKeyArray_IsRejectedBeforeFactoryRuns()
     {
         using var applier = new IdentityTestApplier();
