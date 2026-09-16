@@ -110,25 +110,30 @@ public class FlowOverflowTests
             $"Indicator did not draw generation {generation} ({(expand ? "expand" : "collapse")}).");
         Runner.WaitForIdleSync();
         FlowOverflowSnapshot? snapshot = null;
-        FlowTestAdmission.OnUi(() =>
+        string trace = "FLOW snapshot unavailable.";
+        try
         {
-            activity.Admission.RequireLive(activity);
-            snapshot = activity.Last ?? throw new InvalidOperationException("No flow draw snapshot.");
-            Assert.AreEqual(activity.Admission.InstanceId, snapshot.InstanceId, "Snapshot belongs to a different fixture.");
-            Assert.AreEqual(activity.Admission.NativePid, snapshot.NativePid, "Snapshot belongs to a different native process.");
-            Console.WriteLine($"FLOW pid={(global::Android.OS.Process.MyPid())} direction={(horizontal ? "row" : "column")} " +
-                $"instance={snapshot.InstanceId} window={activity.Admission.WindowId} " +
-                $"generation={generation} actual={snapshot.Total}/{snapshot.Shown} expected={total}/{shown} expand={snapshot.Expand}");
-            Assert.AreEqual(total, snapshot.Total, "Total count is stale.");
-            Assert.AreEqual(shown, snapshot.Shown, "Shown count is stale.");
-            Assert.AreEqual(horizontal ? ScopeKind.Row : ScopeKind.Column, snapshot.Kind);
-            Assert.IsTrue(activity.OuterRestored);
-            string key = expand ? "expand" : "collapse";
-            Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-before"]);
-            Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-after"]);
-            Assert.AreEqual((4, 1), activity.NestedCounts[key], "Nested flow inherited the outer counts.");
-            Assert.AreEqual(shown, activity.DrawnItems[generation].Count, "Drawn items disagree with the native shown count.");
-        });
+            FlowTestAdmission.OnUi(() =>
+            {
+                activity.Admission.RequireLive(activity);
+                snapshot = activity.Last ?? throw new InvalidOperationException("No flow draw snapshot.");
+                trace = $"FLOW pid={snapshot.NativePid} direction={(horizontal ? "row" : "column")} " +
+                    $"instance={snapshot.InstanceId} window={activity.Admission.WindowId} " +
+                    $"generation={generation} actual={snapshot.Total}/{snapshot.Shown} expected={total}/{shown} expand={snapshot.Expand}";
+                Assert.AreEqual(activity.Admission.InstanceId, snapshot.InstanceId, "Snapshot belongs to a different fixture.");
+                Assert.AreEqual(activity.Admission.NativePid, snapshot.NativePid, "Snapshot belongs to a different native process.");
+                Assert.AreEqual(total, snapshot.Total, "Total count is stale.");
+                Assert.AreEqual(shown, snapshot.Shown, "Shown count is stale.");
+                Assert.AreEqual(horizontal ? ScopeKind.Row : ScopeKind.Column, snapshot.Kind);
+                Assert.IsTrue(activity.OuterRestored);
+                string key = expand ? "expand" : "collapse";
+                Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-before"]);
+                Assert.AreEqual(ScopeKind.Box, activity.ScopeChecks[key + "-after"]);
+                Assert.AreEqual((4, 1), activity.NestedCounts[key], "Nested flow inherited the outer counts.");
+                Assert.AreEqual(shown, activity.DrawnItems[generation].Count, "Drawn items disagree with the native shown count.");
+            });
+        }
+        finally { Console.WriteLine(trace); }
         return snapshot ?? throw new InvalidOperationException("Flow snapshot was not captured.");
     }
 
@@ -186,6 +191,12 @@ public class FlowOverflowTests
             try
             {
                 FindTargets(root, description, matches);
+                if (matches.Count > 1 || (matches.Count == 0 && attempt == 29))
+                {
+                    Console.WriteLine($"FLOW_LOOKUP_FAILURE target={description} matches={matches.Count}");
+                    try { Console.WriteLine(FlowTestEvidence.Describe(activity, root, description)); }
+                    catch (Exception error) { Console.WriteLine("FLOW_DIAGNOSTIC_CAPTURE_ERROR " + error); }
+                }
                 Assert.IsTrue(matches.Count <= 1, "Overflow click target is ambiguous.");
                 if (matches.Count == 1)
                 {
