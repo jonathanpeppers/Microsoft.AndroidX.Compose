@@ -255,6 +255,11 @@ that AAR.
    `GetStaticObjectField` *does* return a real local ref — wrap it in
    `JniHandleOwnership.TransferLocalRef` when handing to
    `Java.Lang.Object.GetObject<T>`.
+   Do not confuse this with `Java.Lang.Class.FromType(...).Handle`:
+   that handle belongs to a collectible Class peer, not the raw cache.
+   The six Constraints accessors now use generated primitive-return
+   bridges with owned class globals. See the ownership evidence and
+   measurement/GC regression in [Constraints JNI lifetime](constraints-jni-lifetime.md).
 
 9. **Compose `@Composable` functions don't get `$default` overloads.**
    Plain Kotlin functions with default args get a synthetic `foo$default`
