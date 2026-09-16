@@ -110,6 +110,13 @@ for that behavior, not an absent product feature or a successful comparison.
 | J12 activity recreation | Verified difference in both themes: C# loses unsent `Retain349` and closes the emoji selector; Kotlin preserves both. This is activity recreation, not process-death proof. |
 | J13 video | C# has no corresponding attachment/player surface. Kotlin's platform-picker ownership mismatch stopped capture before foreign UI inspection. Selection, preview, playback and sending are **not established**; no media was accessed. |
 
+These rows retain the frozen-build observations identified above. Current C#
+source now integrates #384's bounded selector, recording geometry, message
+baseline, drawer, jump-control, and profile presentation changes. A successful
+host build is not matched-device proof; the J01/J02/J04/J05/J07/J08/J09
+light/dark and compact/short/larger-window matrix must be rerun with exact
+source and APK identities before replacing the historical outcomes.
+
 ### Reply
 
 | ID | Initial state / action | Result |

@@ -1,5 +1,6 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Samples.Jetchat.Theme;
+using Baselines = AndroidX.Compose.UI.Layout.AlignmentLineKt;
 using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -106,7 +107,7 @@ public static class Profile
                 .HeightIn(max: heroMax)
                 .FillMaxWidth()
                 .Padding(start: 16, top: parallaxOffset, end: 16)
-                .Clip(120),
+                .Clip(Shape.Circle()),
             ContentScale = ContentScale.Crop,
         };
     }
@@ -140,13 +141,15 @@ public static class Profile
             {
                 FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
-                Modifier   = Modifier.Padding(top: 8),
+                Modifier   = Modifier.PaddingFrom(Baselines.FirstBaseline, before: 32),
             }.WithTypography(Typography.HeadlineSmall),
             new Text(state.Position)
             {
                 FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(top: 4, bottom: 20),
+                Modifier = Modifier
+                    .PaddingFrom(Baselines.FirstBaseline, before: 24)
+                    .Padding(bottom: 20),
             }.WithTypography(Typography.BodyLarge),
         };
 
@@ -159,14 +162,14 @@ public static class Profile
             {
                 FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(top: 8),
+                Modifier = Modifier.PaddingFrom(Baselines.FirstBaseline, before: 24),
             }.WithTypography(Typography.BodySmall),
             new Text(value)
             {
                 FontFamily = JetchatFonts.Karla,
                 Color = Color.FromPacked(
                     isLink ? scheme.Primary : scheme.OnSurface),
-                Modifier = Modifier.Padding(top: 4),
+                Modifier = Modifier.PaddingFrom(Baselines.FirstBaseline, before: 24),
             }.WithTypography(Typography.BodyLarge),
         };
 
@@ -174,28 +177,51 @@ public static class Profile
         ProfileScreenState  state,
         ScrollState         scrollState,
         MutableState<bool>  popupOpen,
-        ColorScheme         scheme)
-    {
-        bool isMe    = state.IsMe();
-        bool expanded = scrollState.Value == 0;
-        string label  = isMe ? "Edit profile" : "Message";
-        int iconRes   = isMe ? Resource.Drawable.ic_create : Resource.Drawable.ic_chat;
-
-        return new ExtendedFloatingActionButton(
-            onClick:  () => popupOpen.Value = true,
-            expanded: expanded)
+        ColorScheme         scheme) =>
+        new Composed(c =>
         {
-            Modifier = Modifier
-                .Align(Alignment.BottomEnd)
-                .Padding(16)
-                .NavigationBarsPadding()
-                .Height(48)
-                .WidthIn(min: 48),
-            ContainerColor = Color.FromPacked(scheme.TertiaryContainer),
-            Icon = new Icon(iconRes, label),
-            Text = new Text(label),
-        };
-    }
+            bool isMe      = state.IsMe();
+            bool expanded  = scrollState.Value == 0;
+            string label   = isMe ? "Edit profile" : "Message";
+            int iconRes    = isMe ? Resource.Drawable.ic_create : Resource.Drawable.ic_chat;
+            var fadeInSpec = c.Remember(() => AnimationSpecs.Tween(83, 67));
+            var fadeOutSpec = c.Remember(() => AnimationSpecs.Tween(83));
+
+            var fab = new FloatingActionButton(onClick: () => popupOpen.Value = true)
+            {
+                Modifier = Modifier
+                    .Align(Alignment.BottomEnd)
+                    .Padding(16)
+                    .NavigationBarsPadding()
+                    .Height(48)
+                    .WidthIn(min: 48),
+                ContainerColor = Color.FromPacked(scheme.TertiaryContainer),
+            };
+            fab.Add(new Row(
+                horizontalArrangement: Arrangement.Center,
+                verticalAlignment: Alignment.Vertical.CenterVertically)
+            {
+                new Icon(iconRes, label)
+                {
+                    Modifier = Modifier.Size(24),
+                },
+                new AnimatedVisibility(
+                    expanded,
+                    enter: Transitions.FadeIn(animationSpec: fadeInSpec),
+                    exit: Transitions.FadeOut(animationSpec: fadeOutSpec))
+                {
+                    new Text(label)
+                    {
+                        Modifier = Modifier
+                            .AnimateEnterExit(
+                                enter: Transitions.SlideInHorizontally(width => -width),
+                                exit: Transitions.SlideOutHorizontally(width => -width))
+                            .Padding(start: 12, end: 16),
+                    },
+                },
+            });
+            return fab;
+        });
 
     static AlertDialog BuildFunctionalityPopup(MutableState<bool> popupOpen) =>
         new(onDismissRequest: () => popupOpen.Value = false)
