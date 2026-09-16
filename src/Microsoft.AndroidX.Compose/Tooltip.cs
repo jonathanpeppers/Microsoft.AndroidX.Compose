@@ -65,13 +65,10 @@ public sealed class Tooltip : ComposableNode
                 JniHandleOwnership.DoNotTransfer)
                 ?? throw new InvalidOperationException(
                     "rememberTooltipState did not return a TooltipState peer.");
-            _state.Jvm = state;
             var holder = _state;
-            composer.DisposableEffect(holder, () => () =>
-            {
-                if (ReferenceEquals(holder.Jvm, state))
-                    holder.Jvm = null;
-            });
+            var binding = composer.Remember(() => new TooltipStateBinding());
+            composer.SideEffect(() => binding.Publish(holder, state));
+            composer.DisposableEffect(state, binding.CreateCleanup);
         }
 
         var tooltip = ComposableLambdas.Wrap3(composer, c => Tip.Render(c));
