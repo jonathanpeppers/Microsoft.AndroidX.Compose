@@ -46,6 +46,10 @@
                                    BackgroundColor="#1565C0"
                                    IconImageSource="dotnet_bot.png"
                                    Invoked="OnItemInvoked" />
+                        <SwipeItem Text="Disabled"
+                                   IsEnabled="False"
+                                   BackgroundColor="#757575"
+                                   Invoked="OnDisabledItemInvoked" />
                         <SwipeItemView WidthRequest="180"
                                        Invoked="OnCustomItemInvoked">
                             <Border BackgroundColor="#00897B"
@@ -56,10 +60,6 @@
                                        VerticalOptions="Center" />
                             </Border>
                         </SwipeItemView>
-                        <SwipeItem Text="Disabled"
-                                   IsEnabled="False"
-                                   BackgroundColor="#757575"
-                                   Invoked="OnDisabledItemInvoked" />
                     </SwipeItems>
                 </SwipeView.LeftItems>
                 <SwipeView.RightItems>
