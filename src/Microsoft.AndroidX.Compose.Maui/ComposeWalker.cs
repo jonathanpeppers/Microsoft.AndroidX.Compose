@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Platform;
 
 namespace Microsoft.AndroidX.Compose.Maui;
@@ -53,7 +54,7 @@ internal static class ComposeWalker
         // resolved one yet for this child. ToHandler() forces resolution
         // and creates the handler on demand. For the IComposeHandler
         // path we need a handler before BuildNode; for the AndroidView
-        // fallback the factory lambda calls ToPlatform() which does the
+        // fallback the update lambda calls ToPlatform() which does the
         // same thing.
         var handler = view.Handler;
         if (handler is null)
@@ -92,7 +93,12 @@ internal static class ComposeWalker
             };
         }
 
-        return new AndroidView(factory: _ => view.ToPlatform(mauiContext))
+        // AndroidView retains its factory result at a composition slot.
+        // Keep that result as a stable host and replace its native child
+        // from update when the MAUI logical view changes.
+        return new AndroidView(
+            factory: context => new FallbackViewHost(context),
+            update: host => ((FallbackViewHost)host).Update(view, mauiContext))
         {
             Modifier = modifier,
         };
