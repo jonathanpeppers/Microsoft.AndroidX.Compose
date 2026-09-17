@@ -184,6 +184,36 @@ public class JetchatRestorationTests
         finally { await Finish(activity); }
     }
 
+    /// <summary>A picker result completed on Profile is buffered until a new Home consumer commits.</summary>
+    [TestMethod]
+    public async Task VideoPicker_DestinationLeaveBuffersUntilHomeReentry()
+    {
+        var activity = await Start("light");
+        try
+        {
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            Assert.IsTrue(picker.Begin());
+            await Click(activity, node => node.ContentDescription == "Profile photo", "profile photo");
+            using (var homeEditor = Find(activity, node => node.Editable))
+                Assert.IsNull(homeEditor, "Conversation must leave composition while Profile is active.");
+
+            picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            using (var stalePreview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview"))
+                Assert.IsNull(stalePreview, "Profile must not receive the detached Home consumer's result.");
+
+            Runner.SendKeyDownUpSync(Keycode.Back);
+            await Settle(activity);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(preview, "Re-entered Home must consume the buffered picker result once.");
+        }
+        finally { await Finish(activity); }
+    }
+
     static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
         _ = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
