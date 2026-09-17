@@ -205,6 +205,8 @@ public class LongPressDragTests
         bool finished = false;
         try
         {
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                async () => await new TooltipState().ShowAsync());
             float density = (global::Android.Content.Res.Resources.System?.DisplayMetrics
                 ?? throw new InvalidOperationException("No density for recording acceptance.")).Density;
             down = Touch(activity, MotionEventActions.Down);
@@ -215,6 +217,16 @@ public class LongPressDragTests
             Assert.AreEqual(0, activity.StartCount);
             Assert.IsTrue(activity.RecordingTooltip.IsVisible,
                 "A short tap must show the recording tooltip.");
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
+            await Frames(activity);
+            Assert.IsFalse(activity.RecordingTooltip.IsVisible,
+                "A nonpersistent tooltip must complete normally after native timed dismissal.");
+            down = Touch(activity, MotionEventActions.Down);
+            Touch(activity, MotionEventActions.Up, down);
+            down = 0;
+            await Frames(activity);
+            Assert.IsTrue(activity.RecordingTooltip.IsVisible);
             activity.RecordingTooltip.Dismiss();
             await Frames(activity);
             Assert.IsFalse(activity.RecordingTooltip.IsVisible);
@@ -229,9 +241,24 @@ public class LongPressDragTests
             down = 0;
             await Frames(activity);
             Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
+            await Task.Delay(1700);
+            await Frames(activity);
+            Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible,
+                "A persistent tooltip must not use the native 1500ms timeout.");
             activity.AlternateRecordingTooltip.Dismiss();
             await (activity.TooltipShowTask
                 ?? throw new InvalidOperationException("Replacement Tooltip state did not receive the short tap."));
+            using (var cts = new CancellationTokenSource())
+            {
+                var cancelledShow = activity.AlternateRecordingTooltip.ShowAsync(cts.Token);
+                await Frames(activity);
+                Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
+                cts.Cancel();
+                await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+                    async () => await cancelledShow);
+                await Frames(activity);
+                Assert.IsFalse(activity.AlternateRecordingTooltip.IsVisible);
+            }
             await Finish(activity);
             finished = true;
             Assert.ThrowsExactly<InvalidOperationException>(activity.AlternateRecordingTooltip.Dismiss,
