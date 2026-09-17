@@ -34,7 +34,6 @@
             <Label Text="Reveal: all four directions"
                    FontAttributes="Bold" />
             <SwipeView x:Name="FourDirectionSwipe"
-                       HeightRequest="120"
                        BackgroundColor="#FFF59D"
                        Threshold="100"
                        SwipeStarted="OnSwipeStarted"

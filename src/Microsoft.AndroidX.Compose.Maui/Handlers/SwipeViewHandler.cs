@@ -289,7 +289,11 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
         var content = measurables[SwipePanelPlacement.Content].Measure(constraints);
         var dismissOverlay = measurables[SwipePanelPlacement.DismissOverlay]
-            .Measure(constraints);
+            .Measure(Constraints.Create(
+                content.Width,
+                content.Width,
+                content.Height,
+                content.Height));
         int width = content.Width;
         int height = content.Height;
         var horizontalConstraints = Constraints.Create(0, width, height, height);
