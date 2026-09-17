@@ -1,3 +1,4 @@
+using AndroidX.Compose.Animation.Core;
 using AndroidX.Compose.Material3;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -10,8 +11,6 @@ namespace AndroidX.Compose.Samples.Jetchat;
 public static class RecordButton
 {
     const int SwipeToCancelThresholdDp = 200;
-    const int PulseFrameDelayMs        = 64;
-    const int PulseDurationMs          = 2000;
 
     static float SwipeToCancelThresholdPx
     {
@@ -97,10 +96,19 @@ public static class RecordButton
     public static ComposableNode BuildRecordingIndicator(
         MutableNumberState<float> swipeOffset,
         ColorScheme               scheme) =>
+        BuildRecordingIndicator(swipeOffset, scheme, null);
+
+    internal static ComposableNode BuildRecordingIndicator(
+        MutableNumberState<float> swipeOffset,
+        ColorScheme               scheme,
+        Action<float>?            pulseObserver) =>
         new Composed(c =>
         {
-            var pulse   = c.MutableStateOf(1f);
             var seconds = c.MutableStateOf(0);
+            var pulseTransition = c.RememberInfiniteTransition("recording-pulse");
+            var pulseSpec = c.Remember(() => AnimationSpecs.InfiniteRepeatable(
+                AnimationSpecs.Tween(2000), RepeatMode.Reverse));
+            var pulse = pulseTransition.AnimateFloat(c, 1f, 0.2f, pulseSpec, "recording-pulse-scale");
 
             var resources = Android.Content.Res.Resources.System
                 ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
@@ -114,6 +122,8 @@ public static class RecordButton
             int   secs      = seconds.Value % 60;
             string timer    = $"{mins:D2}:{secs:D2}";
             float pulseValue = pulse.Value;
+            if (pulseObserver is not null)
+                c.SideEffect(() => pulseObserver(pulseValue));
 
             return new Row(
                 horizontalArrangement: null,
@@ -129,23 +139,6 @@ public static class RecordButton
                         {
                             await Task.Delay(1000, ct);
                             seconds.Value++;
-                        }
-                    }
-                    catch (OperationCanceledException) { }
-                }),
-
-                new LaunchedEffect(key1: "recording-pulse", async ct =>
-                {
-                    try
-                    {
-                        long startMs = Environment.TickCount64;
-                        while (!ct.IsCancellationRequested)
-                        {
-                            long ms = Environment.TickCount64 - startMs;
-                            float phase = (ms % PulseDurationMs) / (float)PulseDurationMs;
-                            float tri = phase < 0.5f ? (1f - phase * 2f) : ((phase - 0.5f) * 2f);
-                            pulse.Value = 0.2f + tri * 0.8f;
-                            await Task.Delay(PulseFrameDelayMs, ct);
                         }
                     }
                     catch (OperationCanceledException) { }

@@ -136,6 +136,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#7E57C2"),
                 "collections"),
             new DemoEntry(
+                "Swipe views",
+                "Four directions, Reveal/Drag/Execute, custom actions, and nested CollectionView rows.",
+                Color.FromArgb("#1565C0"),
+                "swipe-views"),
+            new DemoEntry(
                 "Semantics",
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
@@ -150,6 +155,11 @@ public partial class HomePage : ContentPage
                 "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
                 Color.FromArgb("#1565C0"),
                 "navigation"),
+            new DemoEntry(
+                "Tabbed pages",
+                "Top TabRow and bottom NavigationBar, pager gestures, two-way selection, and dynamic tabs.",
+                Color.FromArgb("#6750A4"),
+                "tabbed-pages"),
             new DemoEntry(
                 "FlyoutPage",
                 "Modal and permanent Material 3 drawers, adaptive layout, gestures, and nested detail navigation.",

@@ -59,6 +59,7 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
     // bumping a version slot recomposes BuildNode which re-walks the
     // new PresentedContent.
     readonly MutableState<int> _contentVersion = new(0);
+    readonly CollectionViewportObserver _viewportObserver = new();
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ScrollViewHandler() : base(Mapper, CommandMapper) { }
@@ -135,6 +136,7 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             // re-runs the walker. Live PresentedContent is read below.
             _ = _contentVersion.Value;
             var state = composer.Remember(() => new ScrollState());
+            ObserveScroll(composer, state);
 
             var fillMain = orientation switch
             {
@@ -156,8 +158,45 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             var box = new Box { Modifier = modifier };
             var content = _scroll.PresentedContent;
             if (content is not null)
-                box.Add(ComposeWalker.Render(content, composer, _context));
-            box.Render(composer);
+            {
+                box.Add(CollectionViewportContext.BuildItem(
+                    _owner._viewportObserver,
+                    () => ComposeWalker.Render(content, composer, _context)));
+            }
+            CollectionViewportContext.RenderItem(
+                _owner._viewportObserver,
+                () => box.Render(composer));
+        }
+
+        void ObserveScroll(IComposer composer, ScrollState state)
+        {
+            float density =
+                _context.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
+            var dispatcher =
+                (_scroll as Microsoft.Maui.Controls.Element)?.Dispatcher
+                ?? throw new InvalidOperationException(
+                    "Dispatcher not set on ScrollView.");
+            composer.LaunchedEffect(
+                "ScrollViewViewportObserver",
+                (int)_orientation.Value,
+                async cancellationToken =>
+                {
+                    _owner._viewportObserver.ResetTracking();
+                    await foreach (int offset in ComposeExtensions
+                        .SnapshotFlow(() => state.Value)
+                        .WithCancellation(cancellationToken))
+                    {
+                        if (!_owner._viewportObserver
+                            .HasSignificantOffsetChange(offset, density))
+                        {
+                            continue;
+                        }
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await dispatcher.DispatchAsync(
+                            _owner._viewportObserver.NotifySignificantChange)
+                            .ConfigureAwait(false);
+                    }
+                });
         }
     }
 }

@@ -2957,7 +2957,9 @@ internal static partial class ComposeBridges
     // reverseDirection. The C# wrapper always supplies state /
     // orientation / enabled (bits 0/1/2 cleared); the other five slots
     // (interactionSource + the two suspend Function3s + the two
-    // booleans) stay defaulted in v1.
+    // booleans) stay defaulted. Internal consumers may supply
+    // onDragStopped so release-time state can settle without replacing
+    // Compose's axis-aware draggable gesture arbitration.
     [ComposeBridge(
         Class     = "androidx/compose/foundation/gestures/DraggableKt",
         JvmName   = "draggable$default",
@@ -2969,7 +2971,8 @@ internal static partial class ComposeBridges
                     "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierDraggableDefault))]
     internal static partial IntPtr ModifierDraggable(
-        IntPtr modifier, IntPtr state, IntPtr orientation, bool enabled);
+        IntPtr modifier, IntPtr state, IntPtr orientation, bool enabled,
+        IFunction3? onDragStopped);
 
     // androidx.compose.ui.semantics.SemanticsModifierKt.semantics$default —
     // 2 Kotlin params after the receiver: mergeDescendants (Bool),

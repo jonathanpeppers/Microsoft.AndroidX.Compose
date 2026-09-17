@@ -1,0 +1,42 @@
+namespace Microsoft.AndroidX.Compose.Maui.Handlers;
+
+internal static class CollectionViewportContext
+{
+    static readonly System.Threading.AsyncLocal<CollectionViewportObserver?>
+        s_current = new();
+
+    public static CollectionViewportObserver? Current => s_current.Value;
+
+    public static T BuildItem<T>(
+        CollectionViewportObserver observer,
+        System.Func<T> factory)
+    {
+        System.ArgumentNullException.ThrowIfNull(observer);
+        System.ArgumentNullException.ThrowIfNull(factory);
+        var previous = s_current.Value;
+        s_current.Value = observer;
+        try
+        {
+            return factory();
+        }
+        finally
+        {
+            s_current.Value = previous;
+        }
+    }
+
+    public static void RenderItem(
+        CollectionViewportObserver observer,
+        System.Action render)
+    {
+        System.ArgumentNullException.ThrowIfNull(observer);
+        System.ArgumentNullException.ThrowIfNull(render);
+        BuildItem(
+            observer,
+            () =>
+            {
+                render();
+                return true;
+            });
+    }
+}

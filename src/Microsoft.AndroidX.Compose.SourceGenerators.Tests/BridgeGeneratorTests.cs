@@ -1066,8 +1066,8 @@ public class BridgeGeneratorTests
     {
         // Mirrors androidx.compose.foundation.gestures.DraggableKt.draggable$default —
         // Modifier extension with 8 Kotlin params. The C# wrapper supplies
-        // only the first 3 (state, orientation, enabled); the remaining 5
-        // slots stay defaulted in v1 (omitted from the C# signature).
+        // state, orientation, enabled, and optionally onDragStopped;
+        // the remaining slots stay defaulted.
         var code = """
             using AndroidX.Compose;
 
@@ -1087,7 +1087,8 @@ public class BridgeGeneratorTests
                         Defaults = typeof(ModifierDraggableDefault))]
                     internal static partial System.IntPtr ModifierDraggable(
                         System.IntPtr modifier, System.IntPtr state,
-                        System.IntPtr orientation, bool enabled);
+                        System.IntPtr orientation, bool enabled,
+                        Kotlin.Jvm.Functions.IFunction3? onDragStopped);
                 }
             }
             """;
@@ -1107,9 +1108,11 @@ public class BridgeGeneratorTests
         Assert.Contains("args[2] = new global::Android.Runtime.JValue(orientation)", emitted);
         Assert.Contains("args[3] = new global::Android.Runtime.JValue(enabled)", emitted);
 
-        // Defaulted-only slots 4..8 fill with IntPtr.Zero / false.
+        // Defaulted-only slots 4..6 and 8 fill with IntPtr.Zero / false.
         Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
         Assert.Contains("args[8] = new global::Android.Runtime.JValue(false)", emitted);
+        Assert.Contains("args[7] = new global::Android.Runtime.JValue(", emitted);
+        Assert.Contains("((global::Java.Lang.Object)onDragStopped).Handle", emitted);
 
         // $default at slot 9, synthetic marker at slot 10.
         Assert.Contains("args[9] = new global::Android.Runtime.JValue(defaults)", emitted);
@@ -1124,6 +1127,7 @@ public class BridgeGeneratorTests
         Assert.DoesNotContain("ModifierDraggableDefault.State", emitted);
         Assert.DoesNotContain("ModifierDraggableDefault.Orientation", emitted);
         Assert.DoesNotContain("ModifierDraggableDefault.Enabled", emitted);
+        Assert.Contains("ModifierDraggableDefault.OnDragStopped", emitted);
 
         // No Composer slot anywhere — non-@Composable extension.
         Assert.DoesNotContain("Composer", emitted);

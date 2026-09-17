@@ -1,6 +1,7 @@
 using Android.Content;
 using Android.Views;
 using Android.Views.Accessibility;
+using AndroidX.Compose.Samples.Jetchat;
 using NativeAction = Android.Views.Accessibility.Action;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
@@ -154,6 +155,178 @@ public class JetchatRestorationTests
         finally { await Finish(activity); }
     }
 
+    /// <summary>An in-flight picker result reconnects to the recreated activity's retained owner.</summary>
+    [TestMethod]
+    public async Task VideoPicker_InFlightResultReconnectsAfterRecreation()
+    {
+        var activity = await Start("light");
+        try
+        {
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            Assert.IsTrue(picker.Begin());
+            long oldConnection = picker.Connect(_ => { });
+            picker.Disconnect(oldConnection);
+            picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            using (var stalePreview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview"))
+                Assert.IsNull(stalePreview, "The disconnected old composition must not consume the result.");
+            activity = await Recreate(activity);
+            Assert.AreSame(picker, activity.VideoPickerState);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(
+                preview,
+                "The replacement composition must consume the buffered picker result.");
+        }
+        finally { await Finish(activity); }
+    }
+
+    /// <summary>A picker result completed on Profile is buffered until a new Home consumer commits.</summary>
+    [TestMethod]
+    public async Task VideoPicker_DestinationLeaveBuffersUntilHomeReentry()
+    {
+        var activity = await Start("light");
+        try
+        {
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            Assert.IsTrue(picker.Begin());
+            await Click(activity, node => node.ContentDescription == "Profile photo", "profile photo");
+            using (var homeEditor = Find(activity, node => node.Editable))
+                Assert.IsNull(homeEditor, "Conversation must leave composition while Profile is active.");
+
+            picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            using (var stalePreview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview"))
+                Assert.IsNull(stalePreview, "Profile must not receive the detached Home consumer's result.");
+
+            Runner.SendKeyDownUpSync(Keycode.Back);
+            await Settle(activity);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(preview, "Re-entered Home must consume the buffered picker result once.");
+        }
+        finally { await Finish(activity); }
+    }
+
+    /// <summary>Attachment/error insertion preserves editor state and preview interaction.</summary>
+    [TestMethod]
+    public async Task VideoAttachment_ChangesPreserveFocusedEditorIdentity()
+    {
+        var activity = await Start("light");
+        try
+        {
+            await Click(activity, node => node.Editable, "editor");
+            await SetText(activity, "caption");
+            await SetSelection(activity, 3, 3);
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            await activity.OnUi(() =>
+            {
+                Assert.IsTrue(picker.Begin());
+                picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            });
+            await Settle(activity);
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+            await Click(
+                activity,
+                node => node.ContentDescription == "Attached video preview",
+                "attached video preview");
+            await Click(activity, node => node.ContentDescription == "Close video", "close video");
+            await Click(
+                activity,
+                node => node.ContentDescription == "Remove attached video",
+                "remove attached video");
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+
+            await activity.OnUi(() =>
+            {
+                Assert.IsTrue(picker.Begin());
+                picker.Complete(VideoPickResult.Failed("Controlled picker error."));
+            });
+            await Settle(activity);
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+            using var error = Find(activity, node => node.Text == "Controlled picker error.");
+            Assert.IsNotNull(error);
+        }
+        finally { await Finish(activity); }
+    }
+
+    /// <summary>The merged presentation row routes video to the picker and preserves Send state.</summary>
+    [TestMethod]
+    public async Task VideoSelector_MergedPresentationRoutesPickerAndAttachmentSend()
+    {
+        var activity = await Start("light", ownerSwitch: true);
+        try
+        {
+            await Click(activity, node => node.Editable, "editor");
+            await SetText(activity, "caption");
+            await SetSelection(activity, 3, 3);
+            using var mood = Find(
+                activity,
+                node => node.ContentDescription == "Show Emoji selector")
+                ?? throw new InvalidOperationException("Emoji selector is unavailable.");
+            using var attach = Find(
+                activity,
+                node => node.ContentDescription == "Attach video")
+                ?? throw new InvalidOperationException("Video selector is unavailable.");
+            using var send = Find(
+                activity,
+                node => node.Text == "Send")
+                ?? throw new InvalidOperationException("Send action is unavailable.");
+            var density = activity.Resources?.DisplayMetrics?.Density
+                ?? throw new InvalidOperationException("Display density is unavailable.");
+            using var moodBounds = new global::Android.Graphics.Rect();
+            using var attachBounds = new global::Android.Graphics.Rect();
+            using var sendBounds = new global::Android.Graphics.Rect();
+            mood.GetBoundsInScreen(moodBounds);
+            attach.GetBoundsInScreen(attachBounds);
+            send.GetBoundsInScreen(sendBounds);
+            int edgeError = Math.Abs(moodBounds.Left - (int)Math.Round(16 * density));
+            int weightedGap = sendBounds.Left - attachBounds.Right;
+            int minimumGap = (int)Math.Round(40 * density);
+            Report(
+                activity,
+                $"selectorGeometry=edgeError:{edgeError}px; gap:{weightedGap}px; " +
+                $"minimum:{minimumGap}px; density:{density}");
+            Assert.IsLessThanOrEqualTo(
+                2,
+                edgeError,
+                "Selector content must retain the pinned 16 dp start edge.");
+            Assert.IsGreaterThanOrEqualTo(
+                minimumGap,
+                weightedGap,
+                "Weighted spacing must keep at least 40 dp between Send and the selector icons.");
+
+            await Click(activity, node => node.ContentDescription == "Attach video", "video selector");
+            Assert.AreEqual(1, activity.VideoPickerRequestCount);
+            Assert.IsFalse(IsEnabled(activity, node => node.ContentDescription == "Attach video"));
+            Assert.IsFalse(IsEnabled(activity, node => node.Text == "Send"));
+            using (var unavailable = Find(
+                activity,
+                node => node.Text?.Contains("Functionality", StringComparison.Ordinal) == true))
+                Assert.IsNull(unavailable, "Video must route to the picker, not an unavailable panel.");
+
+            var picker = activity.TestVideoPicker
+                ?? throw new InvalidOperationException("Test video picker is unavailable.");
+            await activity.OnUi(() =>
+                picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity))));
+            await Settle(activity);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(preview);
+            Assert.IsTrue(IsEnabled(activity, node => node.Text == "Send"));
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+        }
+        finally { await Finish(activity); }
+    }
+
     static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
         _ = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
@@ -219,10 +392,20 @@ public class JetchatRestorationTests
                 if (!ReferenceEquals(target, node)) target.Dispose();
                 target = parent;
             }
+
             Assert.IsTrue(target.PerformAction(NativeAction.Click), $"Native {name} click failed.");
         }
         finally { if (!ReferenceEquals(target, node)) target.Dispose(); }
         await Settle(activity);
+    }
+
+    static bool IsEnabled(
+        JetchatRestorationTestActivity activity,
+        Func<AccessibilityNodeInfo, bool> predicate)
+    {
+        using var node = Find(activity, predicate)
+            ?? throw new InvalidOperationException("Expected accessibility node is missing.");
+        return node.Enabled;
     }
 
     static async Task SetText(JetchatRestorationTestActivity activity, string text)

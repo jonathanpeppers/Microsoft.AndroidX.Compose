@@ -24,6 +24,30 @@ public static partial class Composables
         PagerState? state = null,
         PaddingValues? contentPadding = null,
         Func<T, object>? key = null)
+        => HorizontalPager(
+            items,
+            itemContent,
+            modifier,
+            state,
+            contentPadding,
+            key,
+            userScrollEnabled: true,
+            beyondViewportPageCount: null);
+
+    /// <summary>Renders a configurable typed horizontal pager in the implicit composition.</summary>
+    /// <param name="key">Optional stable string/int/long identity; see <see cref="HorizontalPager{T}.Key"/>.</param>
+    /// <param name="userScrollEnabled">Whether touch gestures may scroll the pager.</param>
+    /// <param name="beyondViewportPageCount">Optional number of pages composed before and after the viewport.</param>
+    [Composable]
+    public static void HorizontalPager<T>(
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        PagerState? state,
+        PaddingValues? contentPadding,
+        Func<T, object>? key,
+        bool userScrollEnabled,
+        int? beyondViewportPageCount = null)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemContent);
@@ -36,6 +60,8 @@ public static partial class Composables
             State = state,
             ContentPadding = contentPadding,
             Key = key,
+            UserScrollEnabled = userScrollEnabled,
+            BeyondViewportPageCount = beyondViewportPageCount,
         }.Render();
     }
 
@@ -50,6 +76,29 @@ public static partial class Composables
         PagerState? state = null,
         PaddingValues? contentPadding = null,
         Func<T, object>? key = null)
+        => HorizontalPager(
+            composer,
+            items,
+            itemContent,
+            modifier,
+            state,
+            contentPadding,
+            key,
+            userScrollEnabled: true,
+            beyondViewportPageCount: null);
+
+    /// <summary>Renders a configurable typed horizontal pager with an explicit composer.</summary>
+    [Composable]
+    internal static void HorizontalPager<T>(
+        IComposer composer,
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T, IComposer> itemContent,
+        Modifier? modifier,
+        PagerState? state,
+        PaddingValues? contentPadding,
+        Func<T, object>? key,
+        bool userScrollEnabled,
+        int? beyondViewportPageCount = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(items);
@@ -63,6 +112,8 @@ public static partial class Composables
             State = state,
             ContentPadding = contentPadding,
             Key = key,
+            UserScrollEnabled = userScrollEnabled,
+            BeyondViewportPageCount = beyondViewportPageCount,
         }.Render(composer);
     }
 

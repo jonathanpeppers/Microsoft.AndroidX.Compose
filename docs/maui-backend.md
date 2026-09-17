@@ -1965,7 +1965,7 @@ theme + snapshot state directly.
   affordances (checkmark, ripple emphasis). The handler already
   wires the data path for Single + Multiple selection, but the
   visual state is a follow-up.
-- `ScrollTo(int)` / `ScrollTo(item)` / `Scrolled` event
+- `ScrollTo(int)` / `ScrollTo(item)` / public `Scrolled` event
   (`LazyListState.AnimateScrollToItemAsync` already exists; wiring
   MAUI's `ScrollToRequested` is mechanical).
 - `ItemsUpdatingScrollMode` (`KeepItemsInView` /
@@ -1979,8 +1979,70 @@ theme + snapshot state directly.
 - `CarouselView` two-way `Position` ↔ `IndicatorView.Position`
   (separate slice — needs `PagerState` Phase-4b state-holder with a
   parameterised `pageCount` Remember).
-- `SwipeView` (`SwipeToDismissBox` doesn't match SwipeView's
-  left/right action panels; needs more bridge work).
+
+#### Phase 3 Slice 2 — `SwipeViewHandler` ✅ shipped
+
+`SwipeView`, `SwipeItemView`, and `SwipeItem` now stay inside the page
+composition instead of falling back to MAUI's AppCompat
+`MauiSwipeView`/button surfaces:
+
+- `SwipeViewHandler` measures four action panels and the resting content
+  with Compose's low-level `Layout` facade. Left/right/top/bottom
+  collections are selected from the sign and axis of the drag.
+- Two axis-specific `Modifier.draggable` instances preserve Compose's
+  touch-slop arbitration. Horizontal SwipeViews inside a vertical
+  `CollectionView` do not consume vertical list motion.
+- `SwipeTransitionMode.Reveal` keeps the selected panel fixed behind the
+  translated content. `SwipeTransitionMode.Drag` translates that panel
+  in from the corresponding edge.
+- `SwipeItems.Mode=Reveal` exposes independently clickable actions.
+  `Mode=Execute` invokes every visible enabled action after the configured
+  `SwipeView.Threshold` distance (or 60% of the measured panel when unset).
+  The threshold controls only release recognition; the full measured panel
+  remains the open target. `SwipeBehaviorOnInvoked.Auto` closes Reveal mode
+  and remains open in Execute mode, matching MAUI's mode-dependent contract.
+  Horizontal menu-only Execute panels measure to the same 80%-content extent
+  used by drag/release logic, with actions sharing that width.
+- `SwipeItemMenuItemHandler` maps text, icon source, background, text
+  contrast, font, spacing, enabled state, and visibility into a Compose
+  action tile. `SwipeItemViewHandler` walks arbitrary custom content
+  through `ComposeWalker`. Disabled actions omit clickable semantics,
+  custom horizontal content keeps its intrinsic width above the 100dp
+  minimum, and right-side actions reverse source order so the first item
+  sits at the trailing edge like stock MAUI. Solid `SwipeView` and custom
+  `SwipeItemView` backgrounds are painted on their folded Compose roots;
+  non-solid paints remain unsupported. Custom top/bottom items preserve
+  their requested or intrinsic height instead of expanding to the full
+  SwipeView height; custom horizontal items honor root `WidthRequest`.
+- User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
+  in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
+  the requested side and animation flag without synthesizing user events.
+  An always-present sibling hit layer stays above the content at the same
+  translated coordinates. While settled open it consumes a content tap and
+  closes the row; while closed it has no pointer modifier, so content keeps
+  normal interaction and its composition parent/index never changes.
+- Item and visibility changes remeasure the active panel. An empty active
+  side closes immediately; a changed non-empty side snaps a settled open
+  offset to its new measured extent so content cannot remain translated
+  beyond its actions. Partial drags and in-flight animations retain their
+  current offset until they settle.
+- Linear `CollectionViewHandler` paths observe `LazyListLayoutInfo`
+  internally. SwipeViews materialized under an item template register a
+  weak close callback with that viewport observer. A shared item's
+  cumulative displacement from the last acknowledged viewport position
+  moving more than 10dp closes the row; a viewport discontinuity with no
+  shared visible item also closes it. Viewport-triggered close snaps to
+  the resting offset before an item can leave composition; it does not
+  depend on an offscreen animation completing. No approximate public
+  `ItemsView.Scrolled` offsets or deltas are emitted.
+- Compose-backed `ScrollViewHandler` publishes the same weak viewport
+  observer while rendering its content and closes nested SwipeViews after
+  cumulative movement exceeds 10dp.
+
+`SwipeViewsPage` exercises every direction, both transition modes,
+execute mode, icon/text and custom-content items, runtime collection and
+property changes, programmatic open/close, lifecycle events, and nested
+CollectionView rows.
 
 **Lessons learned.**
 
@@ -2024,12 +2086,23 @@ theme + snapshot state directly.
   selectors that branch on the host (e.g. "different template under a
   CarouselView vs a list") see the same `BindableObject` stock MAUI's
   adapter passes.
-- **Per-item handler allocation cost is real, but acceptable for v1.**
-  Each `template.CreateContent()` allocates a fresh `BindableObject`
-  per render of `BuildNode`. Compose's slot table memoises the
-  *rendered* output but not the View / Handler. Memoising keyed on
-  item identity + template type is straightforward follow-up; defer
-  until profiling shows it matters.
+- **Stateful item handlers require reference-stable template nodes.**
+  Lazy item content re-executes during child recomposition. Re-running
+  `template.CreateContent()` there resets handler-owned drag/state slots
+  mid-gesture. `CollectionViewHandler` therefore caches the materialized
+  node by persistent occurrence token + selected template identity, disconnecting
+  cache ownership from each node's `DisposableEffect` when Compose releases
+  that occurrence. The effect key includes the materialized-node generation,
+  so a selector changing templates installs cleanup ownership for the
+  replacement node. Eviction does not eagerly disconnect an outgoing
+  composition-owned node; afterward normal GC collects the view/handler
+  cycle, and the viewport observer's weak callback cannot retain it.
+  Equal-but-distinct row objects and duplicate occurrences of the same
+  reference never share state. Collection change indices move the persistent
+  occurrence tokens, including edits before duplicate references, and boxed
+  value items match by value between snapshots. Each occurrence also receives
+  a stable, Bundle-saveable `long` key in the Compose lazy facade so inserts
+  and moves preserve the correct remembered/saveable subtree.
 - **Investigation discipline matters more than ever at Phase 3 scope.**
   Three of the original Phase 3 candidates (`ListView`, `TableView`,
   `SwipeView`) are deferred outright, and one (`CarouselView`) is its
@@ -2065,8 +2138,7 @@ theme + snapshot state directly.
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`
 chosen by `ItemsLayout`. `ListView` → same. `CarouselView` →
 `HorizontalPager` (+ PagerState). `TableView` → grouped `LazyColumn`.
-`SwipeView` → `Modifier.Swipeable` (or `SwipeToDismissBox` if/when
-wrapped).
+`SwipeView` → custom `Layout` + axis-specific `Modifier.draggable`.
 
 This phase is also where lazy-list scaling lands. With the Phase 2
 single-ComposeView-per-page model in place, `CollectionViewHandler`
@@ -2117,21 +2189,46 @@ hosting `NavStackPage` (in-code, no XAML per depth level) so the
 gallery can verify push / pop / hardware-back / top-bar back
 arrow without converting the Shell host itself.
 
-#### Slices 2-5 — deferred follow-ups
+#### Slice 2 — `TabbedViewHandler` ✅ shipped
 
-All three remaining navigation surfaces work **functionally** via
-stock today (each registers against its concrete type, so our
-`PageHandler` doesn't accidentally intercept them). The pages they
-host already get our converted leaves. The remaining gap is purely
-visual chrome:
+`Microsoft.Maui.Controls.TabbedPage` now replaces MAUI's AppCompat
+`TabLayout` / `BottomNavigationView` host with a Material 3
+`TabRow` or `NavigationBar` around Foundation `HorizontalPager`:
 
-- **Slice 2 — `TabbedPageHandler`** (`TabbedPage` →
-  `NavigationBar` for `BarPosition.Bottom`, `TabRow` for
-  `BarPosition.Top`). Stock = AppCompat `BottomNavigationView`.
-  Compose-side facades (`NavigationBar`, `NavigationBarItem`,
-  `TabRow`) already shipped. Two-way `CurrentPage` binding +
-  per-tab content swap via the same `AndroidView` host pattern
-  Slice 1 uses.
+- Android `ToolbarPlacement.Top` renders `TabRow` + `Tab`; bottom placement
+  renders `NavigationBar` + `NavigationBarItem`.
+- The handler snapshots `TabbedPage.Children` whenever MAUI raises its
+  `ItemsSource` mapper key, assigns stable integer pager keys per `Page`, and
+  subscribes to title, icon, and enabled changes. Insert/remove/reorder updates
+  recompose the chrome without disconnecting surviving page handlers.
+- Each pager item owns an `AndroidView` `FrameLayout` that hosts the child's
+  normal `PageHandler` platform view. A `DisposableEffect` detaches the child
+  when that pager slot leaves composition; the MAUI handler remains attached
+  so re-adding or revisiting a page preserves its state.
+- MAUI `CurrentPage` writes drive `PagerState.RequestScrollToPage` or
+  `AnimateScrollToPageAsync` according to Android's smooth-scroll setting.
+  Pager gestures publish the settled index back through
+  `TabbedPage.CurrentPage` from a Compose `SideEffect`, so bindings and
+  `CurrentPageChanged` observe user swipes without a feedback loop.
+- `IsSwipePagingEnabled` maps to `HorizontalPager.UserScrollEnabled`;
+  obsolete `OffscreenPageLimit` maps to
+  `HorizontalPager.BeyondViewportPageCount`.
+- Tab icons use the shared `ImageSourceLoader`, preserving packaged drawable
+  resources and MAUI's URI/stream/font image-source pipeline. Bar background
+  and selected/unselected text colors are projected into a nested M3 color
+  scheme for the tab chrome.
+- MAUI's stock bottom host moves tabs beyond its five-item capacity into a
+  "More" sheet. The Compose handler does not truncate or silently switch
+  placement: it keeps every child directly selectable in the bottom
+  `NavigationBar`. Apps should still follow Material 3's three-to-five item
+  guidance to avoid compressed labels.
+
+The sample's "Tabbed pages" demo launches both placements and exercises tab
+taps, swipes, programmatic `CurrentPage`, disabled tabs, icon/title updates,
+and dynamic child insertion/removal.
+
+#### Slice 3 — `FlyoutViewHandler` ✅ shipped; Slices 4-5 deferred
+
 - **Slice 3 — `FlyoutViewHandler`** (`FlyoutPage` → Material 3
   navigation drawers) is implemented. MAUI resolves
   `FlyoutLayoutBehavior` plus device idiom/orientation into the

@@ -85,6 +85,24 @@ public class CollectionApiCompatibilityTests
                 }
             }
             """, currentReference);
+        if (name == "HorizontalPager")
+        {
+            using var configured = Compile("ConfiguredPagerConsumer", Usings + """
+                public static class ConfiguredPagerConsumer {
+                    public static void Run() {
+                        Composables.HorizontalPager<int>(
+                            new int[] { 1 },
+                            _ => {},
+                            modifier: null,
+                            state: null,
+                            contentPadding: null,
+                            key: item => item,
+                            userScrollEnabled: false,
+                            beyondViewportPageCount: 2);
+                    }
+                }
+                """, currentReference);
+        }
 
         var context = new AssemblyLoadContext(contractName, isCollectible: true);
         try

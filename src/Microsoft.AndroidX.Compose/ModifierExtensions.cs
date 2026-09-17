@@ -719,19 +719,46 @@ public static class ModifierExtensions
     /// <param name="enabled">When <c>false</c>, the modifier ignores
     /// touch input. Defaults to <c>true</c>.</param>
     public static Modifier Draggable(this Modifier modifier, DraggableState state, Orientation orientation, bool enabled = true)
+        => DraggableCore(modifier, state, orientation, enabled, onDragStopped: null);
+
+    internal static Modifier DraggableWithStop(
+        this Modifier modifier,
+        DraggableState state,
+        Orientation orientation,
+        bool enabled,
+        Action onDragStopped)
+    {
+        ArgumentNullException.ThrowIfNull(onDragStopped);
+        return DraggableCore(
+            modifier,
+            state,
+            orientation,
+            enabled,
+            new DraggableStoppedCallback(onDragStopped));
+    }
+
+    static Modifier DraggableCore(
+        Modifier modifier,
+        DraggableState state,
+        Orientation orientation,
+        bool enabled,
+        DraggableStoppedCallback? onDragStopped)
     {
         ArgumentNullException.ThrowIfNull(state);
         var jvm = state.Jvm;
         var jvmOrientation = orientation == Orientation.Horizontal
-            ? AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal!
-            : AndroidX.Compose.Foundation.Gestures.Orientation.Vertical!;
+            ? AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal
+                ?? throw new InvalidOperationException("Compose horizontal orientation singleton was unavailable.")
+            : AndroidX.Compose.Foundation.Gestures.Orientation.Vertical
+                ?? throw new InvalidOperationException("Compose vertical orientation singleton was unavailable.");
         return modifier.Append(curr =>
             ComposeBridges.ModifierDraggable(
                 curr,
                 ((Java.Lang.Object)jvm).Handle,
                 ((Java.Lang.Object)jvmOrientation).Handle,
-                enabled),
-            new ModifierOpKey(nameof(Draggable), ((object)state, orientation, enabled)));
+                enabled,
+                onDragStopped),
+            new ModifierOpKey(nameof(Draggable), ((object)state, orientation, enabled, onDragStopped)));
     }
 
     /// <summary>

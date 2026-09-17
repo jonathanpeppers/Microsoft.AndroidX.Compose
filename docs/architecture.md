@@ -219,6 +219,25 @@ remove/re-add ownership. The Gallery route `transition-values` demonstrates the
 same spring scale and two tweens used by the pinned Jetchat record button.
 Gesture triggers remain separate from the visual derivations.
 
+## Infinite float animation
+
+`composer.RememberInfiniteTransition()` and
+`Composables.RememberInfiniteTransition()` wrap Compose's bound native
+`rememberInfiniteTransition`. Each `AnimateFloat` call registers one bound
+`InfiniteTransition.animateFloat` state at a stable composition location.
+Native Compose owns its frame loop, duration-scale policy, cancellation when the
+call leaves composition, and fresh state when it re-enters; there is no managed
+timer or frame cadence. Generated `RememberInfiniteTransitionDefault` and
+`InfiniteFloatAnimationDefault` enums carry the bound composables' label defaults.
+
+`AnimationSpecs.InfiniteRepeatable` wraps the bound `infiniteRepeatable` factory
+and accepts a bound duration-based spec plus `RepeatMode.Restart` or
+`RepeatMode.Reverse`. Jetchat's recording indicator uses a 2000 ms tween in
+reverse mode, matching the pinned sample's 2000 ms in each direction. Its
+elapsed recording timer remains separate snapshot state and is not derived from
+animation progress. The Gallery route `infinite-float-animation` makes native
+removal and re-entry observable.
+
 ### Combined recording-input acceptance
 
 Source `530450602798776cde304ed02a0b7239e73a2992` passed **20 distinct native
