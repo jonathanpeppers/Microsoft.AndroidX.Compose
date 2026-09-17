@@ -1,5 +1,4 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
-using System.Collections.Generic;
 using Xunit;
 
 namespace AndroidX.Compose.SourceGenerators.Tests;
@@ -52,7 +51,6 @@ public sealed class ReferenceItemCacheTests
         var item = new object();
         var firstTemplate = new object();
         var secondTemplate = new object();
-        CachedValue? removed = null;
         var first = cache.GetOrReplace(
             item,
             value => ReferenceEquals(value.Template, firstTemplate),
@@ -61,10 +59,8 @@ public sealed class ReferenceItemCacheTests
         var second = cache.GetOrReplace(
             item,
             value => ReferenceEquals(value.Template, secondTemplate),
-            () => new CachedValue(secondTemplate),
-            value => removed = value);
+            () => new CachedValue(secondTemplate));
 
-        Assert.Same(first, removed);
         Assert.NotSame(first, second);
     }
 
@@ -83,15 +79,18 @@ public sealed class ReferenceItemCacheTests
             remove,
             _ => true,
             () => new CachedValue(template));
-        var removed = new List<CachedValue>();
+        cache.Prune([keep]);
 
-        cache.Prune([keep], removed.Add);
-
-        Assert.Equal([removedValue], removed);
         Assert.Same(
             keptValue,
             cache.GetOrReplace(
                 keep,
+                _ => true,
+                () => new CachedValue(template)));
+        Assert.NotSame(
+            removedValue,
+            cache.GetOrReplace(
+                remove,
                 _ => true,
                 () => new CachedValue(template)));
     }

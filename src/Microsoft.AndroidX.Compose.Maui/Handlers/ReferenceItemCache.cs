@@ -9,8 +9,7 @@ internal sealed class ReferenceItemCache<TValue>
     public TValue GetOrReplace(
         object key,
         System.Func<TValue, bool> matches,
-        System.Func<TValue> factory,
-        System.Action<TValue>? onRemoved = null)
+        System.Func<TValue> factory)
     {
         System.ArgumentNullException.ThrowIfNull(key);
         System.ArgumentNullException.ThrowIfNull(matches);
@@ -21,7 +20,6 @@ internal sealed class ReferenceItemCache<TValue>
             if (matches(existing))
                 return existing;
             _values.Remove(key);
-            onRemoved?.Invoke(existing);
         }
 
         var value = factory();
@@ -30,8 +28,7 @@ internal sealed class ReferenceItemCache<TValue>
     }
 
     public void Prune(
-        System.Collections.Generic.IReadOnlyList<object> liveKeys,
-        System.Action<TValue>? onRemoved = null)
+        System.Collections.Generic.IReadOnlyList<object> liveKeys)
     {
         System.ArgumentNullException.ThrowIfNull(liveKeys);
         var live = new System.Collections.Generic.HashSet<object>(
@@ -41,16 +38,9 @@ internal sealed class ReferenceItemCache<TValue>
         {
             if (live.Contains(key))
                 continue;
-            var value = _values[key];
             _values.Remove(key);
-            onRemoved?.Invoke(value);
         }
     }
 
-    public void Clear(System.Action<TValue>? onRemoved = null)
-    {
-        foreach (var value in _values.Values)
-            onRemoved?.Invoke(value);
-        _values.Clear();
-    }
+    public void Clear() => _values.Clear();
 }
