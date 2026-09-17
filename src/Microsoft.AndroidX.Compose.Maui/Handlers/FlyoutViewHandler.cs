@@ -269,6 +269,11 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
         }
 
         var target = _drawerState.TargetValue;
+#if DEBUG
+        Log.Debug(
+            LogTag,
+            $"Presentation request: requested={isPresented}, current={_drawerState.CurrentValue}, target={target}.");
+#endif
         if ((isPresented && target == DrawerValue.Open) ||
             (!isPresented && target == DrawerValue.Closed))
         {
@@ -289,6 +294,10 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
         }
         catch (OperationCanceledException)
         {
+            // DrawerState cancels an in-flight animateTo when a competing
+            // request or user drag takes ownership. The settled observer
+            // publishes the actual result; non-cancellation failures below
+            // remain visible.
         }
         catch (Exception ex)
         {
