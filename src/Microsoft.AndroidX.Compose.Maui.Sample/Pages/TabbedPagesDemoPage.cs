@@ -57,7 +57,27 @@ public sealed class TabbedPagesDemoPage : ContentPage
             tabs,
             bottom ? AndroidSpecific.ToolbarPlacement.Bottom : AndroidSpecific.ToolbarPlacement.Top);
 
+        ContentPage? dynamicPage = null;
         var status = new Label { Text = "Selected: Home" };
+        var settings = new ContentPage
+        {
+            Title = "Settings",
+            IconImageSource = "dotnet_bot.png",
+            Content = new VerticalStackLayout
+            {
+                Padding = new Thickness(24),
+                Spacing = 12,
+                Children =
+                {
+                    new Label { Text = "Swipe or tap Home to return." },
+                    new Button
+                    {
+                        Text = "Select Home programmatically",
+                        Command = new Command(() => tabs.CurrentPage = tabs.Children[0]),
+                    },
+                },
+            },
+        };
         var home = new ContentPage
         {
             Title = "Home",
@@ -78,31 +98,18 @@ public sealed class TabbedPagesDemoPage : ContentPage
                     new Button
                     {
                         Text = "Add dynamic tab",
-                        Command = new Command(() => AddDynamicTab(tabs)),
+                        Command = new Command(ToggleDynamicTab),
+                    },
+                    new Button
+                    {
+                        Text = "Rename Settings tab",
+                        Command = new Command(() =>
+                            settings.Title = settings.Title == "Settings" ? "Preferences" : "Settings"),
                     },
                     new Button
                     {
                         Text = "Close",
                         Command = new Command(async () => await tabs.Navigation.PopModalAsync()),
-                    },
-                },
-            },
-        };
-        var settings = new ContentPage
-        {
-            Title = "Settings",
-            IconImageSource = "dotnet_bot.png",
-            Content = new VerticalStackLayout
-            {
-                Padding = new Thickness(24),
-                Spacing = 12,
-                Children =
-                {
-                    new Label { Text = "Swipe or tap Home to return." },
-                    new Button
-                    {
-                        Text = "Select Home programmatically",
-                        Command = new Command(() => tabs.CurrentPage = tabs.Children[0]),
                     },
                 },
             },
@@ -124,21 +131,24 @@ public sealed class TabbedPagesDemoPage : ContentPage
         tabs.CurrentPageChanged += (_, _) =>
             status.Text = $"Selected: {tabs.CurrentPage?.Title ?? "(none)"}";
         return tabs;
-    }
 
-    static void AddDynamicTab(TabbedPage tabs)
-    {
-        var existing = tabs.Children.FirstOrDefault(page => page.Title is "Dynamic" or "Renamed");
-        if (existing is not null)
+        void ToggleDynamicTab()
         {
-            tabs.Children.Remove(existing);
-            return;
+            if (dynamicPage is not null && tabs.Children.Contains(dynamicPage))
+            {
+                tabs.Children.Remove(dynamicPage);
+                dynamicPage = null;
+                return;
+            }
+
+            dynamicPage = CreateDynamicTab();
+            tabs.Children.Add(dynamicPage);
         }
 
-        tabs.Children.Add(new ContentPage
+        ContentPage CreateDynamicTab()
         {
-            Title = "Dynamic",
-            Content = new VerticalStackLayout
+            var page = new ContentPage { Title = "Dynamic" };
+            page.Content = new VerticalStackLayout
             {
                 Padding = new Thickness(24),
                 Children =
@@ -148,13 +158,11 @@ public sealed class TabbedPagesDemoPage : ContentPage
                     {
                         Text = "Rename tab",
                         Command = new Command(() =>
-                        {
-                            var dynamicPage = tabs.Children.First(page => page.Title is "Dynamic" or "Renamed");
-                            dynamicPage.Title = dynamicPage.Title == "Dynamic" ? "Renamed" : "Dynamic";
-                        }),
+                            page.Title = page.Title == "Dynamic" ? "Renamed" : "Dynamic"),
                     },
                 },
-            },
-        });
+            };
+            return page;
+        }
     }
 }
