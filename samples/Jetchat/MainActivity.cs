@@ -3,6 +3,7 @@ using AndroidX.Activity;
 using AndroidX.Activity.Result;
 using AndroidX.Activity.Result.Contract;
 using AndroidX.Compose.Material3;
+using AndroidX.Lifecycle;
 using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -33,6 +34,12 @@ public class MainActivity : ComponentActivity
         };
 #endif
         base.OnCreate(savedInstanceState);
+        using (var provider = new ViewModelProvider(this))
+        using (var modelClass = Java.Lang.Class.FromType(typeof(VideoPickerViewModel)))
+        {
+            _videoPickerState = provider.Get(modelClass) as VideoPickerViewModel
+                ?? throw new InvalidOperationException("Video picker ViewModel could not be created.");
+        }
         _videoPickerCallback = new VideoActivityResultCallback(OnVideoPicked);
         _videoPicker = RegisterForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -52,8 +59,8 @@ public class MainActivity : ComponentActivity
             var swipeOffset      = MutableStateOf(0f);
             var nav              = Remember(() => new NavController());
             var profileViewModel = Remember(() => new ProfileViewModel());
-            var videoPickerState = ViewModel(() => new VideoPickerViewModel());
-            _videoPickerState = videoPickerState;
+            var videoPickerState = _videoPickerState
+                ?? throw new InvalidOperationException("Video picker ViewModel is unavailable.");
             JetchatApp.Content(
                 nav:              nav,
                 ui:               ui,
@@ -85,6 +92,7 @@ public class MainActivity : ComponentActivity
 
     protected override void OnDestroy()
     {
+        _videoPickerState?.Disconnect();
         _videoPicker?.Unregister();
         _videoPicker?.Dispose();
         _videoPicker = null;

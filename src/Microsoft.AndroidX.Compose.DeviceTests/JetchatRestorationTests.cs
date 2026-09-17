@@ -165,12 +165,13 @@ public class JetchatRestorationTests
             var picker = activity.VideoPickerState
                 ?? throw new InvalidOperationException("Video picker view model is unavailable.");
             Assert.IsTrue(picker.Begin());
+            picker.Disconnect();
+            picker.Complete(VideoPickResult.Selected("file:///video.mp4"));
             activity = await Recreate(activity);
             Assert.AreSame(picker, activity.VideoPickerState);
 
             VideoPickResult? delivered = null;
             picker.Connect(result => delivered = result);
-            picker.Complete(VideoPickResult.Selected("file:///video.mp4"));
             Assert.AreEqual("file:///video.mp4", delivered?.VideoUri);
         }
         finally { await Finish(activity); }

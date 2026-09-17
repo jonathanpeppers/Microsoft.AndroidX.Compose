@@ -1,6 +1,7 @@
 namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>Retains an in-flight video picker result across activity recreation.</summary>
+[Android.Runtime.Register("net/compose/samples/jetchat/VideoPickerViewModel")]
 public sealed class VideoPickerViewModel : ViewModel
 {
     Action<VideoPickResult>? _consumer;
@@ -35,6 +36,8 @@ public sealed class VideoPickerViewModel : ViewModel
         else
             consumer(result);
     }
+
+    internal void Disconnect() => _consumer = null;
 
     protected override void OnClearedCore()
     {

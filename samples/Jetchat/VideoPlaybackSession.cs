@@ -30,27 +30,42 @@ internal sealed class VideoPlaybackSession
         using var builder = new ExoPlayerBuilder(context);
         var player = builder.Build()
             ?? throw new InvalidOperationException("Media3 could not create an ExoPlayer.");
-        using var itemBuilder = new MediaItem.Builder();
-        using var item = itemBuilder.SetUri(_videoUri)?.Build()
-            ?? throw new InvalidOperationException("Media3 could not create the selected media item.");
-
-        player.SetMediaItem(item);
-        player.PlayWhenReady = true;
-        player.Prepare();
-
-        var view = new PlayerView(context)
+        PlayerView? view = null;
+        try
         {
-            ControllerAutoShow = true,
-            Player = player,
-            UseController = true,
-        };
-        view.SetErrorMessageProvider(_errorMessageProvider);
-        view.SetShowBuffering(PlayerView.ShowBufferingAlways);
-        view.ContentDescription = "Video player";
+            using var itemBuilder = new MediaItem.Builder();
+            using var item = itemBuilder.SetUri(_videoUri)?.Build()
+                ?? throw new InvalidOperationException("Media3 could not create the selected media item.");
 
-        _player = player;
-        _view = view;
-        return view;
+            player.SetMediaItem(item);
+            player.PlayWhenReady = true;
+            player.Prepare();
+
+            view = new PlayerView(context)
+            {
+                ControllerAutoShow = true,
+                Player = player,
+                UseController = true,
+            };
+            view.SetErrorMessageProvider(_errorMessageProvider);
+            view.SetShowBuffering(PlayerView.ShowBufferingAlways);
+            view.ContentDescription = "Video player";
+
+            _player = player;
+            _view = view;
+            return view;
+        }
+        catch
+        {
+            if (view is not null)
+            {
+                view.Player = null;
+                view.Dispose();
+            }
+            player.Release();
+            player.Dispose();
+            throw;
+        }
     }
 
     internal void Pause() => _player?.Pause();
