@@ -169,10 +169,12 @@ public class JetchatRestorationTests
             picker.Complete(VideoPickResult.Selected("file:///video.mp4"));
             activity = await Recreate(activity);
             Assert.AreSame(picker, activity.VideoPickerState);
-
-            VideoPickResult? delivered = null;
-            picker.Connect(result => delivered = result);
-            Assert.AreEqual("file:///video.mp4", delivered?.VideoUri);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(
+                preview,
+                "The replacement composition must consume the buffered picker result.");
         }
         finally { await Finish(activity); }
     }
