@@ -31,17 +31,16 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// MAUI's <see cref="IFlyoutView.FlyoutWidth"/> is also already adaptive:
 /// phones report the platform default sentinel while larger displays report a
 /// bounded width. Positive values are applied to the Compose drawer sheet;
-/// the sentinel leaves Material 3's default sheet width in control.
+/// the <c>-1</c> sentinel fills the available width to preserve MAUI's
+/// <c>MatchParent</c> contract.
 /// </para>
 /// </remarks>
 public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>, IFlyoutViewHandler
 {
     const string LogTag = "ComposeFlyout";
 
-    /// <summary>
-    /// Property mapper for the two child pages, effective layout behavior,
-    /// presentation, adaptive width, gestures, and inherited view properties.
-    /// </summary>
+    // MAUI applies this mapper before the normal mapper so Flyout and Detail
+    // exist before dependent mappings such as Toolbar run.
     static readonly IPropertyMapper<IFlyoutView, FlyoutViewHandler> FlyoutLayoutMapper =
         new PropertyMapper<IFlyoutView, FlyoutViewHandler>
         {
@@ -49,6 +48,10 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
             [nameof(IFlyoutView.Detail)]          = MapDetail,
         };
 
+    /// <summary>
+    /// Property mapper for effective layout behavior, presentation, adaptive
+    /// width, gestures, toolbar integration, and inherited view properties.
+    /// </summary>
     public static IPropertyMapper<IFlyoutView, FlyoutViewHandler> Mapper =
         new PropertyMapper<IFlyoutView, FlyoutViewHandler>(
             ViewHandler.ViewMapper,
