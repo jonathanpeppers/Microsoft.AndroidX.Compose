@@ -116,7 +116,7 @@ public sealed class TabbedPagesDemoPage : ContentPage
         };
         var disabled = new ContentPage
         {
-            Title = "Events: 0",
+            Title = "Events: 000",
             IsEnabled = false,
             Content = new Label
             {
@@ -133,7 +133,7 @@ public sealed class TabbedPagesDemoPage : ContentPage
         {
             selectionChangeCount++;
             status.Text = $"Selected: {tabs.CurrentPage?.Title ?? "(none)"}";
-            disabled.Title = $"Events: {selectionChangeCount}";
+            disabled.Title = $"Events: {selectionChangeCount:D3}";
         };
         return tabs;
 
