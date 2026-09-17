@@ -5,6 +5,7 @@ using AndroidX.Compose.UI.Platform;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
+using ComposeColor = AndroidX.Compose.Color;
 using ComposeLayout = AndroidX.Compose.Layout;
 using MauiCollectionView = Microsoft.Maui.Controls.CollectionView;
 using MauiSwipeDirection = Microsoft.Maui.SwipeDirection;
@@ -61,6 +62,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     readonly MutableState<float> _offsetX = new(0f);
     readonly MutableState<float> _offsetY = new(0f);
     readonly MutableState<int> _activeDirectionState = new(0);
+    readonly MutableState<long?> _background = new((long?)null);
     readonly DraggableState _horizontalDrag;
     readonly DraggableState _verticalDrag;
     readonly HashSet<Element> _observedItems = [];
@@ -69,8 +71,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     ValueAnimator? _animator;
     int _animationGeneration;
     MauiSwipeDirection? _activeDirection;
-    OpenSwipeItem? _pendingOpen;
+    (OpenSwipeItem Item, bool Animated)? _pendingOpen;
     bool _isDragging;
+    bool _isSettledOpen;
     float _density = 1f;
     float _leftExtent;
     float _rightExtent;
@@ -150,8 +153,10 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         layout.Add(content);
 
         bool enabled = _enabled.Value;
-        Modifier modifier = Modifier.Companion
-            .ApplyViewProperties(view)
+        Modifier modifier = Modifier.Companion.ApplyViewProperties(view);
+        if (_background.Value is long background)
+            modifier = modifier.Background(ComposeColor.FromPacked(background));
+        modifier = modifier
             .ApplyGestures(view, context)
             .ApplySemantics(view)
             .ClipToBounds()
@@ -330,14 +335,22 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
     void ReconcileOpenExtent(ISwipeView view)
     {
-        if (!view.IsOpen || _activeDirection is not { } direction)
+        if (_activeDirection is not { } direction)
             return;
         float extent = ExtentFor(direction);
-        if (extent <= 0f)
+        var action = SwipeExtentReconciliationPolicy.Resolve(
+            view.IsOpen,
+            _isSettledOpen,
+            _isDragging,
+            _animator is not null,
+            extent);
+        if (action == SwipeExtentReconciliation.Close)
         {
             Close(animated: false);
             return;
         }
+        if (action != SwipeExtentReconciliation.SnapOpen)
+            return;
         if (IsHorizontal(direction))
         {
             _offsetX.Value = SignedExtent(direction);
@@ -394,6 +407,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (!_isDragging)
         {
             _isDragging = true;
+            _isSettledOpen = false;
             view.SwipeStarted(new SwipeViewSwipeStarted(direction));
         }
 
@@ -475,6 +489,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     void SetOpen(MauiSwipeDirection direction, bool open, bool animated)
     {
         float target = open ? SignedExtent(direction) : 0f;
+        _isSettledOpen = false;
         var view = VirtualView;
         if (view is not null)
             view.IsOpen = open;
@@ -485,10 +500,15 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             animated,
             () =>
             {
+                _isSettledOpen = open;
                 if (!open)
                 {
                     _activeDirection = null;
                     _activeDirectionState.Value = 0;
+                }
+                else if (VirtualView is { } currentView)
+                {
+                    ReconcileOpenExtent(currentView);
                 }
             });
     }
@@ -515,6 +535,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (_activeDirection is { } previous && previous != direction)
         {
             CancelAnimation();
+            _isSettledOpen = false;
             _offsetX.Value = 0f;
             _offsetY.Value = 0f;
             view.IsOpen = false;
@@ -523,7 +544,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         _activeDirectionState.Value = (int)direction;
         if (ExtentFor(direction) <= 0f)
         {
-            _pendingOpen = item;
+            _pendingOpen = (item, animated);
             return;
         }
         SetOpen(direction, open: true, animated);
@@ -534,7 +555,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (_pendingOpen is not { } pending)
             return;
         _pendingOpen = null;
-        Open(pending, animated: false);
+        Open(pending.Item, pending.Animated);
     }
 
     void Close(bool animated)
@@ -544,6 +565,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             SetOpen(direction, open: false, animated);
         else
         {
+            _isSettledOpen = false;
             _offsetX.Value = 0f;
             _offsetY.Value = 0f;
             if (VirtualView is { } view)
@@ -596,10 +618,10 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
                 _offsetX.Value = target;
             else
                 _offsetY.Value = target;
-            completed();
-            animator.Dispose();
             if (ReferenceEquals(_animator, animator))
                 _animator = null;
+            animator.Dispose();
+            completed();
         };
         _animator = animator;
         animator.Start();
@@ -750,7 +772,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (handler.VirtualView?.IsOpen == true &&
             handler._activeDirection is { } direction)
         {
-            handler._pendingOpen = direction switch
+            OpenSwipeItem? item = direction switch
             {
                 MauiSwipeDirection.Right => OpenSwipeItem.LeftItems,
                 MauiSwipeDirection.Left => OpenSwipeItem.RightItems,
@@ -758,7 +780,11 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
                 MauiSwipeDirection.Up => OpenSwipeItem.BottomItems,
                 _ => null,
             };
+            handler._pendingOpen = item is { } pending
+                ? (pending, false)
+                : null;
             handler.CancelAnimation();
+            handler._isSettledOpen = false;
             handler._offsetX.Value = 0f;
             handler._offsetY.Value = 0f;
         }
@@ -777,10 +803,13 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
     /// <summary>
     /// Recompose the root modifier when background changes.
-    /// <see cref="ModifierBridge.ApplyViewProperties"/> paints it.
     /// </summary>
-    public static void MapBackground(SwipeViewHandler handler, ISwipeView _) =>
-        handler._contentVersion.Value++;
+    public static void MapBackground(SwipeViewHandler handler, ISwipeView view)
+    {
+        handler._background.Value = view.Background is SolidPaint solid
+            ? ColorMapping.ToPackedLong(solid.Color)
+            : null;
+    }
 
     /// <summary>Handle a programmatic open request.</summary>
     public static void MapRequestOpen(

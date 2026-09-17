@@ -141,6 +141,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     readonly CollectionViewportObserver _viewportObserver = new();
     readonly ReferenceItemCache<CachedTemplate> _templateCache = new();
     readonly ReferenceOccurrenceKeys _occurrenceKeys = new();
+    long _nextTemplateGeneration;
 
     // Tracks the currently-subscribed INotifyCollectionChanged source so
     // we can unsubscribe before swapping to a new source or disposing
@@ -472,12 +473,14 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             cached => ReferenceEquals(cached.Template, resolved),
             () =>
             {
+                long generation = ++_nextTemplateGeneration;
                 var content = MaterialiseTemplate(resolved, item);
                 if (content is not IView contentView)
                 {
                     return new CachedTemplate(
                         resolved,
-                        new ComposeText(item?.ToString() ?? string.Empty));
+                        new ComposeText(item?.ToString() ?? string.Empty),
+                        generation);
                 }
 
                 var observer = CollectionViewportContext.Current
@@ -490,9 +493,13 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
                         context,
                         observer,
                         cacheKey.Value,
+                        generation,
                         node => _templateCache.Remove(
                             cacheKey,
-                            cached => ReferenceEquals(cached.Node, node))));
+                            cached =>
+                                cached.Generation == generation &&
+                                ReferenceEquals(cached.Node, node))),
+                    generation);
             }).Node;
     }
 
@@ -510,6 +517,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         readonly IMauiContext _context;
         readonly CollectionViewportObserver? _observer;
         readonly long? _cacheKey;
+        readonly long _generation;
         readonly Action<ComposableNode>? _onReleased;
 
         public DeferredViewNode(
@@ -517,12 +525,14 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             IMauiContext context,
             CollectionViewportObserver? observer = null,
             long? cacheKey = null,
+            long generation = 0,
             Action<ComposableNode>? onReleased = null)
         {
             _view    = view;
             _context = context;
             _observer = observer;
             _cacheKey = cacheKey;
+            _generation = generation;
             _onReleased = onReleased;
         }
 
@@ -532,6 +542,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             {
                 composer.DisposableEffect(
                     cacheKey,
+                    _generation,
                     () => () => onReleased(this));
             }
             if (_observer is null)
@@ -549,7 +560,8 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
 
     sealed record CachedTemplate(
         MauiDataTemplate Template,
-        ComposableNode Node);
+        ComposableNode Node,
+        long Generation);
 
     sealed record ItemEntry(object Item, ReferenceOccurrenceKey CacheKey);
 
@@ -606,9 +618,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
 
     void OnSourceCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // Add / Remove / Move / Reset / Replace all collapse to "re-snapshot
-        // and rebuild" for this slice. ItemsUpdatingScrollMode is a
-        // follow-up that distinguishes between these.
+        _occurrenceKeys.ApplyCollectionChanged(e);
         _itemsVersion.Value++;
     }
 
@@ -619,6 +629,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     /// </summary>
     public static void MapItemsSource(CollectionViewHandler handler, MauiCollectionView view)
     {
+        handler._occurrenceKeys.Clear();
         handler.SubscribeToSource(view);
         handler._itemsVersion.Value++;
     }

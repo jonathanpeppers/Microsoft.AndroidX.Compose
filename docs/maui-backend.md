@@ -2007,14 +2007,17 @@ composition instead of falling back to MAUI's AppCompat
   through `ComposeWalker`. Disabled actions omit clickable semantics,
   custom horizontal content keeps its intrinsic width above the 100dp
   minimum, and right-side actions reverse source order so the first item
-  sits at the trailing edge like stock MAUI.
+  sits at the trailing edge like stock MAUI. Solid `SwipeView` and custom
+  `SwipeItemView` backgrounds are painted on their folded Compose roots;
+  non-solid paints remain unsupported.
 - User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
   in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
   the requested side and animation flag without synthesizing user events.
 - Item and visibility changes remeasure the active panel. An empty active
-  side closes immediately; a changed non-empty side snaps the open offset
-  to its new measured extent so content cannot remain translated beyond
-  its actions.
+  side closes immediately; a changed non-empty side snaps a settled open
+  offset to its new measured extent so content cannot remain translated
+  beyond its actions. Partial drags and in-flight animations retain their
+  current offset until they settle.
 - Linear `CollectionViewHandler` paths observe `LazyListLayoutInfo`
   internally. SwipeViews materialized under an item template register a
   weak close callback with that viewport observer. A shared item's
@@ -2076,15 +2079,19 @@ CollectionView rows.
   Lazy item content re-executes during child recomposition. Re-running
   `template.CreateContent()` there resets handler-owned drag/state slots
   mid-gesture. `CollectionViewHandler` therefore caches the materialized
-  node by item reference + selected template identity, disconnecting
+  node by persistent occurrence token + selected template identity, disconnecting
   cache ownership from each node's `DisposableEffect` when Compose releases
-  that occurrence. Eviction does not eagerly disconnect an outgoing
+  that occurrence. The effect key includes the materialized-node generation,
+  so a selector changing templates installs cleanup ownership for the
+  replacement node. Eviction does not eagerly disconnect an outgoing
   composition-owned node; afterward normal GC collects the view/handler
   cycle, and the viewport observer's weak callback cannot retain it.
   Equal-but-distinct row objects and duplicate occurrences of the same
-  reference never share state. Each occurrence also receives a stable,
-  Bundle-saveable `long` key in the Compose lazy facade so inserts and moves
-  preserve the correct remembered/saveable subtree.
+  reference never share state. Collection change indices move the persistent
+  occurrence tokens, including edits before duplicate references, and boxed
+  value items match by value between snapshots. Each occurrence also receives
+  a stable, Bundle-saveable `long` key in the Compose lazy facade so inserts
+  and moves preserve the correct remembered/saveable subtree.
 - **Investigation discipline matters more than ever at Phase 3 scope.**
   Three of the original Phase 3 candidates (`ListView`, `TableView`,
   `SwipeView`) are deferred outright, and one (`CarouselView`) is its

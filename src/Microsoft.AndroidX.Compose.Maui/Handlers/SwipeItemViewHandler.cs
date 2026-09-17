@@ -2,6 +2,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using ComposeColor = AndroidX.Compose.Color;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -18,6 +19,7 @@ public partial class SwipeItemViewHandler : ComposeElementHandler<ISwipeItemView
         {
             ["Content"]    = MapContent,
             ["Visibility"] = MapVisibility,
+            ["Background"] = MapBackground,
         };
 
     /// <summary>Command mapper inheriting the standard view commands.</summary>
@@ -25,6 +27,7 @@ public partial class SwipeItemViewHandler : ComposeElementHandler<ISwipeItemView
         new(ViewCommandMapper);
 
     readonly MutableState<int> _contentVersion = new(0);
+    readonly MutableState<long?> _background = new((long?)null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public SwipeItemViewHandler() : base(Mapper, CommandMapper) { }
@@ -44,11 +47,12 @@ public partial class SwipeItemViewHandler : ComposeElementHandler<ISwipeItemView
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on SwipeItemViewHandler.");
 
+        Modifier modifier = Modifier.Companion.ApplyViewProperties(view);
+        if (_background.Value is long background)
+            modifier = modifier.Background(ComposeColor.FromPacked(background));
         var box = new Box
         {
-            Modifier = Modifier.Companion
-                .ApplyViewProperties(view)
-                .ApplySemantics(view),
+            Modifier = modifier.ApplySemantics(view),
         };
         if (view.PresentedContent is { } content)
             box.Add(c => ComposeWalker.Render(content, c, context));
@@ -62,4 +66,14 @@ public partial class SwipeItemViewHandler : ComposeElementHandler<ISwipeItemView
     /// <summary>Recompose when item visibility changes.</summary>
     public static void MapVisibility(SwipeItemViewHandler handler, ISwipeItemView _) =>
         handler._contentVersion.Value++;
+
+    /// <summary>Paint a solid item background in the folded Compose tree.</summary>
+    public static void MapBackground(
+        SwipeItemViewHandler handler,
+        ISwipeItemView view)
+    {
+        handler._background.Value = view.Background is SolidPaint solid
+            ? ColorMapping.ToPackedLong(solid.Color)
+            : null;
+    }
 }
