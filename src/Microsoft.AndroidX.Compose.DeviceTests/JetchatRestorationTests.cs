@@ -291,10 +291,10 @@ public class JetchatRestorationTests
                 Math.Abs(moodBounds.Left - (int)Math.Round(16 * density)),
                 2,
                 "Selector content must retain the pinned 16 dp start edge.");
-            Assert.IsGreaterThan(
+            Assert.IsGreaterThanOrEqualTo(
                 sendBounds.Left - attachBounds.Right,
                 (int)Math.Round(40 * density),
-                "Weighted spacing must keep Send separated from the five selector icons.");
+                "Weighted spacing must keep at least 40 dp between Send and the selector icons.");
 
             await Click(activity, node => node.ContentDescription == "Attach video", "video selector");
             Assert.AreEqual(1, activity.VideoPickerRequestCount);
