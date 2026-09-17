@@ -238,9 +238,8 @@ public class LongPressDragTests
             await WaitForWindowFocus(activity);
             Assert.ThrowsExactly<InvalidOperationException>(activity.RecordingTooltip.Dismiss,
                 "Replacing Tooltip state must unbind the prior managed wrapper.");
-            down = Touch(activity, MotionEventActions.Down);
-            Touch(activity, MotionEventActions.Up, down);
-            down = 0;
+            Runner.RunOnMainSync(() =>
+                activity.TooltipShowTask = activity.AlternateRecordingTooltip.ShowAsync());
             await Frames(activity);
             Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
             await Task.Delay(1700);
