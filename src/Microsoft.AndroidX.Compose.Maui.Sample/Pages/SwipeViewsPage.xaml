@@ -24,6 +24,7 @@
             <HorizontalStackLayout Spacing="8">
                 <Button Text="Add left item" Clicked="OnAddLeftItem" />
                 <Button Text="Toggle item" Clicked="OnToggleItem" />
+                <Button Text="Toggle SwipeView" Clicked="OnToggleSwipeView" />
             </HorizontalStackLayout>
             <HorizontalStackLayout Spacing="8">
                 <Button Text="Remove last" Clicked="OnRemoveLeftItem" />

@@ -61,6 +61,14 @@ public partial class SwipeViewsPage : ContentPage
             : "Archive item hidden";
     }
 
+    void OnToggleSwipeView(object? sender, EventArgs e)
+    {
+        FourDirectionSwipe.IsEnabled = !FourDirectionSwipe.IsEnabled;
+        StatusLabel.Text = FourDirectionSwipe.IsEnabled
+            ? "SwipeView enabled"
+            : "SwipeView disabled";
+    }
+
     void OnRemoveLeftItem(object? sender, EventArgs e)
     {
         if (FourDirectionSwipe.LeftItems.Count > 0)
