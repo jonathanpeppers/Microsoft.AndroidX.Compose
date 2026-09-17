@@ -425,6 +425,9 @@ public class ReplyNavigationTests
         using var list = ScrollableRoot(activity);
         using var viewportBounds = new Rect();
         list.GetBoundsInScreen(viewportBounds);
+        Console.WriteLine(
+            $"Reply email {id} semantics target: subject={labelBounds}, viewport={viewportBounds}");
+        LogSelectionNodes(root);
         int candidateCount = Count(root, node =>
             IsCheckedEmailNode(node, labelBounds, viewportBounds));
         if (expected)
@@ -435,6 +438,25 @@ public class ReplyNavigationTests
         }
         Assert.AreEqual(0, candidateCount,
             $"Reply email {id} unexpectedly publishes checked accessibility state.");
+    }
+
+    static void LogSelectionNodes(AccessibilityNodeInfo root)
+    {
+        if (root.VisibleToUser && (root.Selected || root.Checkable))
+        {
+            using var bounds = new Rect();
+            root.GetBoundsInScreen(bounds);
+            Console.WriteLine(
+                $"Reply selection node: bounds={bounds}, selected={root.Selected}, " +
+                $"checkable={root.Checkable}, checked={IsChecked(root)}, " +
+                $"class={root.ClassName}, text={root.Text}, description={root.ContentDescription}");
+        }
+        for (int i = 0; i < root.ChildCount; i++)
+        {
+            using var child = root.GetChild(i);
+            if (child is not null)
+                LogSelectionNodes(child);
+        }
     }
 
     static bool IsCheckedEmailNode(
