@@ -35,11 +35,21 @@ public sealed class TooltipState
     /// <param name="cancellationToken">
     /// Cancels the returned task and the underlying Kotlin show operation.
     /// </param>
-    public Task ShowAsync(CancellationToken cancellationToken = default) =>
-        SuspendBridge.Invoke(
-            cont => ComposeBridges.TooltipStateShow(
-                RequireJvm().Handle, mutatePriority: null, cont),
-            cancellationToken);
+    public async Task ShowAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await SuspendBridge.Invoke(
+                cont => ComposeBridges.TooltipStateShow(
+                    RequireJvm().Handle, mutatePriority: null, cont),
+                cancellationToken);
+        }
+        catch (Xamarin.KotlinX.Coroutines.TimeoutCancellationException)
+            when (!IsPersistent && !cancellationToken.IsCancellationRequested)
+        {
+            // Compose uses an internal timeout to dismiss nonpersistent tooltips.
+        }
+    }
 
     /// <summary>Dismisses the tooltip immediately.</summary>
     public void Dismiss() => RequireJvm().Dismiss();
