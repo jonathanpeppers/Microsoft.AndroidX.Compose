@@ -7,6 +7,8 @@ public sealed class VideoPickerViewModel : ViewModel
     Action<VideoPickResult>? _consumer;
     VideoPickResult? _undelivered;
     bool _pickerOpen;
+    long _nextConnection;
+    long _activeConnection;
 
     internal bool Begin()
     {
@@ -16,14 +18,17 @@ public sealed class VideoPickerViewModel : ViewModel
         return true;
     }
 
-    internal void Connect(Action<VideoPickResult> consumer)
+    internal long Connect(Action<VideoPickResult> consumer)
     {
         ArgumentNullException.ThrowIfNull(consumer);
+        long connection = ++_nextConnection;
+        _activeConnection = connection;
         _consumer = consumer;
         if (_undelivered is not VideoPickResult result)
-            return;
+            return connection;
         _undelivered = null;
         consumer(result);
+        return connection;
     }
 
     internal void Complete(VideoPickResult result)
@@ -37,11 +42,18 @@ public sealed class VideoPickerViewModel : ViewModel
             consumer(result);
     }
 
-    internal void Disconnect() => _consumer = null;
+    internal void Disconnect(long connection)
+    {
+        if (_activeConnection != connection)
+            return;
+        _activeConnection = 0;
+        _consumer = null;
+    }
 
     protected override void OnClearedCore()
     {
         _consumer = null;
         _undelivered = null;
+        _activeConnection = 0;
     }
 }

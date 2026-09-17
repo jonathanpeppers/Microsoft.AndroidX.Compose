@@ -468,17 +468,6 @@ public static class Conversation
             var videoError = c.MutableStateOf<string?>(null);
             var importingVideo = c.MutableStateOf(false);
             var context = LocalContext.Current(c);
-            c.SideEffect(() => videoPickerState.Connect(result =>
-            {
-                importingVideo.Value = false;
-                if (result.VideoUri is string selectedVideo)
-                {
-                    VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
-                    attachedVideoUri.Value = selectedVideo;
-                }
-                if (result.Error is string pickError)
-                    videoError.Value = pickError;
-            }));
             long cursorColor = scheme.Secondary;
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
@@ -504,6 +493,21 @@ public static class Conversation
             {
                 // Keep the Surface behind the bars; its content owns these insets once.
                 Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                new DisposableEffect(videoPickerState, ui.ChannelName, () =>
+                {
+                    long connection = videoPickerState.Connect(result =>
+                    {
+                        importingVideo.Value = false;
+                        if (result.VideoUri is string selectedVideo)
+                        {
+                            VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
+                            attachedVideoUri.Value = selectedVideo;
+                        }
+                        if (result.Error is string pickError)
+                            videoError.Value = pickError;
+                    });
+                    return () => videoPickerState.Disconnect(connection);
+                }),
                 attachedVideoUri.Value is string videoUri
                     ? BuildAttachedVideoPreview(
                         videoUri,

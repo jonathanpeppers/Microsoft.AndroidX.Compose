@@ -66,13 +66,15 @@ public class BasicTextFieldTests
         var state = new VideoPickerViewModel();
         VideoPickResult? oldResult = null;
         VideoPickResult? newResult = null;
-        state.Connect(result => oldResult = result);
+        long oldConnection = state.Connect(result => oldResult = result);
         Assert.IsTrue(state.Begin());
-        state.Connect(result => newResult = result);
+        long newConnection = state.Connect(result => newResult = result);
+        state.Disconnect(oldConnection);
         state.Complete(VideoPickResult.Selected("file:///video.mp4"));
 
         Assert.IsNull(oldResult);
         Assert.AreEqual("file:///video.mp4", newResult?.VideoUri);
+        state.Disconnect(newConnection);
     }
 
     /// <summary>Diagnoses native admission independently of the editing assertions.</summary>

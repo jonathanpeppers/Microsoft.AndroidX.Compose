@@ -92,7 +92,6 @@ public class MainActivity : ComponentActivity
 
     protected override void OnDestroy()
     {
-        _videoPickerState?.Disconnect();
         _videoPicker?.Unregister();
         _videoPicker?.Dispose();
         _videoPicker = null;

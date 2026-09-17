@@ -165,7 +165,8 @@ public class JetchatRestorationTests
             var picker = activity.VideoPickerState
                 ?? throw new InvalidOperationException("Video picker view model is unavailable.");
             Assert.IsTrue(picker.Begin());
-            picker.Disconnect();
+            long oldConnection = picker.Connect(_ => { });
+            picker.Disconnect(oldConnection);
             picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
             using (var stalePreview = Find(
                 activity,
