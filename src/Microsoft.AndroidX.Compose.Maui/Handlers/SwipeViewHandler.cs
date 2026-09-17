@@ -109,7 +109,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             ?? throw new InvalidOperationException("VirtualView not set on SwipeViewHandler.");
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on SwipeViewHandler.");
-        BindViewportObserver(CollectionViewportContext.Current);
+        BindViewportObserver(ViewportObserverBinding.Resolve(
+            CollectionViewportContext.Current,
+            _viewportObserver));
         int activeDirection = _activeDirectionState.Value;
 
         var left = BuildPanel(

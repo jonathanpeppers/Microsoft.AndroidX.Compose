@@ -34,6 +34,7 @@
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeInvocationPolicy.cs" Link="Maui\SwipeInvocationPolicy.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeExtentReconciliation.cs" Link="Maui\SwipeExtentReconciliation.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeDragLifecycle.cs" Link="Maui\SwipeDragLifecycle.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ViewportObserverBinding.cs" Link="Maui\ViewportObserverBinding.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelOrder.cs" Link="Maui\SwipePanelOrder.cs" />
   </ItemGroup>
 </Project>
