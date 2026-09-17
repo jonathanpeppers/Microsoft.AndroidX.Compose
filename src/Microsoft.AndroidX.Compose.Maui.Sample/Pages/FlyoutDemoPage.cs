@@ -103,13 +103,6 @@ public sealed class FlyoutDemoPage : ContentPage
             host.IsPresented = false;
         };
 
-        var reverseAgain = new Button { Text = "Close then open immediately" };
-        reverseAgain.Clicked += (_, _) =>
-        {
-            host.IsPresented = false;
-            host.IsPresented = true;
-        };
-
         var gestures = new Switch { IsToggled = true };
         gestures.Toggled += (_, e) => host.IsGestureEnabled = e.Value;
 
@@ -175,7 +168,6 @@ public sealed class FlyoutDemoPage : ContentPage
                         open,
                         close,
                         reverse,
-                        reverseAgain,
                         new HorizontalStackLayout
                         {
                             Spacing = 12,
@@ -226,6 +218,13 @@ public sealed class FlyoutDemoPage : ContentPage
                 host.IsPresented = false;
         };
 
+        var reverse = new Button { Text = "Close then open immediately" };
+        reverse.Clicked += (_, _) =>
+        {
+            host.IsPresented = false;
+            host.IsPresented = true;
+        };
+
         return new ContentPage
         {
             Title = title,
@@ -243,6 +242,7 @@ public sealed class FlyoutDemoPage : ContentPage
                     },
                     new Label { Text = "The handler applies MAUI's computed phone/tablet flyout width to this Material 3 sheet." },
                     select,
+                    reverse,
                     replace,
                 },
             },
