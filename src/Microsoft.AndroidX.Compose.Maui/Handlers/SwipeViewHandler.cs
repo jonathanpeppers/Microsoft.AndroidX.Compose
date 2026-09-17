@@ -61,6 +61,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     readonly MutableState<bool> _enabled = new(true);
     readonly MutableState<float> _offsetX = new(0f);
     readonly MutableState<float> _offsetY = new(0f);
+    readonly MutableState<int> _activeDirectionState = new(0);
     readonly DraggableState _horizontalDrag;
     readonly DraggableState _verticalDrag;
     readonly HashSet<Element> _observedItems = [];
@@ -104,11 +105,32 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on SwipeViewHandler.");
         BindViewportObserver(CollectionViewportContext.Current);
+        int activeDirection = _activeDirectionState.Value;
 
-        var left = BuildPanel(view.LeftItems, MauiSwipeDirection.Right, composer, context);
-        var right = BuildPanel(view.RightItems, MauiSwipeDirection.Left, composer, context);
-        var top = BuildPanel(view.TopItems, MauiSwipeDirection.Down, composer, context);
-        var bottom = BuildPanel(view.BottomItems, MauiSwipeDirection.Up, composer, context);
+        var left = BuildPanel(
+            view.LeftItems,
+            MauiSwipeDirection.Right,
+            activeDirection == (int)MauiSwipeDirection.Right,
+            composer,
+            context);
+        var right = BuildPanel(
+            view.RightItems,
+            MauiSwipeDirection.Left,
+            activeDirection == (int)MauiSwipeDirection.Left,
+            composer,
+            context);
+        var top = BuildPanel(
+            view.TopItems,
+            MauiSwipeDirection.Down,
+            activeDirection == (int)MauiSwipeDirection.Down,
+            composer,
+            context);
+        var bottom = BuildPanel(
+            view.BottomItems,
+            MauiSwipeDirection.Up,
+            activeDirection == (int)MauiSwipeDirection.Up,
+            composer,
+            context);
         var content = view.PresentedContent is { } presented
             ? ComposeWalker.Render(presented, composer, context)
             : new Box();
@@ -144,6 +166,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     ComposableNode BuildPanel(
         ISwipeItems items,
         MauiSwipeDirection direction,
+        bool isActive,
         IComposer composer,
         IMauiContext context)
     {
@@ -198,7 +221,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
             var clickable = new Box
             {
-                Modifier = itemModifier.Clickable(() => InvokeItem(item, items)),
+                Modifier = isActive
+                    ? itemModifier.Clickable(() => InvokeItem(item, items))
+                    : itemModifier,
             };
             clickable.Add(itemNode);
             row.Add(clickable);
@@ -325,6 +350,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             if (!HasVisibleItems(ItemsFor(view, candidate)))
                 return;
             _activeDirection = candidate;
+            _activeDirectionState.Value = (int)candidate;
         }
 
         var direction = _activeDirection.Value;
@@ -413,7 +439,10 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             () =>
             {
                 if (!open)
+                {
                     _activeDirection = null;
+                    _activeDirectionState.Value = 0;
+                }
             });
     }
 
@@ -444,6 +473,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             view.IsOpen = false;
         }
         _activeDirection = direction;
+        _activeDirectionState.Value = (int)direction;
         if (ExtentFor(direction) <= 0f)
         {
             _pendingOpen = item;
@@ -471,6 +501,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             _offsetY.Value = 0f;
             if (VirtualView is { } view)
                 view.IsOpen = false;
+            _activeDirectionState.Value = 0;
         }
     }
 
