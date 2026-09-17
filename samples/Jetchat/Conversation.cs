@@ -23,7 +23,6 @@ public static class Conversation
     const int SelDm      = 2;
     const int SelPicture = 3;
     const int SelMap     = 4;
-    const int SelPhone   = 5;
     static readonly Func<DragAndDropEvent, bool> ShouldAcceptDrag = e =>
     {
         foreach (var mimeType in e.MimeTypes)
@@ -40,6 +39,8 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
         Action                       onOpenDrawer,
         Action<string>               onAuthorClicked) =>
         new Composed(c =>
@@ -49,24 +50,35 @@ public static class Conversation
                 key1: ui.ChannelName);
             var selectedSelector = c.RememberSaveable(
                 () => new MutableState<int>(0), key1: ui.ChannelName);
+            var activeVideoUri = c.RememberSaveable(
+                () => new MutableState<string?>((string?)null), key1: ui.ChannelName);
             var scheme          = c.ColorScheme();
             var topBarState     = c.RememberTopAppBarState();
             var scrollBehavior  = c.PinnedScrollBehavior(topBarState);
-            var root = new Column
+            var root = new Box
             {
                 Modifier.FillMaxSize(),
-                new Scaffold
+                new Column
                 {
-                    Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
-                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
-                        .Exclude(c.NavigationBarsInsets())
-                        .Exclude(c.ImeInsets()),
-                    TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
-                    Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
+                    Modifier.FillMaxSize(),
+                    new Scaffold
+                    {
+                        Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                        ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                            .Exclude(c.NavigationBarsInsets())
+                            .Exclude(c.ImeInsets()),
+                        TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
+                        Body   = BuildBody(
+                            ui, input, scheme, selectedSelector, messagesScroll,
+                            onAuthorClicked, isRecording, swipeOffset,
+                            videoPickerState, requestVideo, activeVideoUri),
+                    },
                 },
             };
             if (popupOpen.Value)
                 root.Add(BuildFunctionalityPopup(popupOpen));
+            if (activeVideoUri.Value is string videoUri)
+                root.Add(VideoPlayer.Build(videoUri, () => activeVideoUri.Value = null));
             return root;
         });
 
@@ -136,7 +148,10 @@ public static class Conversation
         LazyListState                messagesScroll,
         Action<string>               onAuthorClicked,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset) =>
+        MutableNumberState<float>    swipeOffset,
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
+        MutableState<string?>        activeVideoUri) =>
         new Composed(c =>
         {
             var dragBackground = c.MutableStateOf(Color.Transparent.ToPacked());
@@ -178,8 +193,13 @@ public static class Conversation
                 new BackHandler(
                     onBack:  () => selectedSelector.Value = 0,
                     enabled: selectedSelector.Value != 0),
-                BuildMessages(ui, scheme, messagesScroll, onAuthorClicked),
-                BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll, isRecording, swipeOffset),
+                BuildMessages(
+                    ui, scheme, messagesScroll, onAuthorClicked,
+                    videoUri => activeVideoUri.Value = videoUri),
+                BuildInputArea(
+                    ui, input, scheme, selectedSelector, messagesScroll,
+                    isRecording, swipeOffset, videoPickerState, requestVideo,
+                    activeVideoUri),
             };
         });
 
@@ -194,7 +214,8 @@ public static class Conversation
         ConversationUiState ui,
         ColorScheme         scheme,
         LazyListState       messagesScroll,
-        Action<string>      onAuthorClicked)
+        Action<string>      onAuthorClicked,
+        Action<string>      onVideoClick)
     {
         var msgs = ui.Messages;
         var rows = new List<ChatRow>(msgs.Count + 2);
@@ -222,7 +243,9 @@ public static class Conversation
                 items:       rows,
                 itemContent: row => row switch
                 {
-                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme, onAuthorClicked),
+                    MessageRow mr => BuildMessageRow(
+                        mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor,
+                        scheme, onAuthorClicked, onVideoClick),
                     HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
                     _             => Spacer.Width(0),
                 })
@@ -306,7 +329,8 @@ public static class Conversation
         bool           isFirstByAuthor,
         bool           isLastByAuthor,
         ColorScheme    scheme,
-        Action<string> onAuthorClicked)
+        Action<string> onAuthorClicked,
+        Action<string> onVideoClick)
     {
         var row = new Row
         {
@@ -318,7 +342,8 @@ public static class Conversation
         else
             row.Add(Spacer.Width(74));
 
-        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme, onAuthorClicked));
+        row.Add(BuildAuthorAndTextMessage(
+            m, isFirstByAuthor, isLastByAuthor, scheme, onAuthorClicked, onVideoClick));
         return row;
     }
 
@@ -344,7 +369,8 @@ public static class Conversation
         bool           isFirstByAuthor,
         bool           isLastByAuthor,
         ColorScheme    scheme,
-        Action<string> onAuthorClicked)
+        Action<string> onAuthorClicked,
+        Action<string> onVideoClick)
     {
         var col = new Column
         {
@@ -352,7 +378,7 @@ public static class Conversation
         };
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
-        col.Add(BuildChatItemBubble(m, scheme, onAuthorClicked));
+        col.Add(BuildChatItemBubble(m, scheme, onAuthorClicked, onVideoClick));
         col.Add(Spacer.Height(isFirstByAuthor ? 8 : 4));
         return col;
     }
@@ -381,7 +407,8 @@ public static class Conversation
     static ComposableNode BuildChatItemBubble(
         Message        m,
         ColorScheme    scheme,
-        Action<string> onAuthorClicked)
+        Action<string> onAuthorClicked,
+        Action<string> onVideoClick)
     {
         bool isMe = m.Author == MyName;
         var bg = Color.FromPacked(isMe ? scheme.Primary : scheme.SurfaceVariant);
@@ -391,20 +418,24 @@ public static class Conversation
             isMe,
             scheme,
             handle => onAuthorClicked(Profiles.GetById(handle).UserId));
-        var content = new Column
+        bool hasText = !string.IsNullOrWhiteSpace(m.Content)
+            || (m.Image is null && m.VideoUri is null);
+        var content = new Column();
+        if (hasText)
         {
-            new AnnotatedText(formatted)
+            content.Add(new AnnotatedText(formatted)
             {
                 FontFamily = JetchatFonts.Karla,
                 Color    = fg,
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Padding(horizontal: 16, vertical: 16),
-            }.WithTypography(Typography.BodyLarge),
-        };
+            }.WithTypography(Typography.BodyLarge));
+        }
         if (m.Image is int image)
         {
-            content.Add(Spacer.Height(4));
+            if (hasText)
+                content.Add(Spacer.Height(4));
             content.Add(new Image(image, "Attached image")
             {
                 Modifier = Modifier
@@ -412,6 +443,17 @@ public static class Conversation
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Clip(new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp())),
             });
+        }
+        if (m.VideoUri is string videoUri)
+        {
+            if (hasText || m.Image is not null)
+                content.Add(Spacer.Height(4));
+            var thumbnail = VideoThumbnail.Build(
+                videoUri,
+                () => onVideoClick(videoUri),
+                "Play attached video",
+                Modifier.FillMaxWidth().Height(200));
+            content.Add(thumbnail);
         }
         return content;
     }
@@ -423,15 +465,24 @@ public static class Conversation
         MutableState<int>            selectedSelector,
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset) =>
+        MutableNumberState<float>    swipeOffset,
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
+        MutableState<string?>        activeVideoUri) =>
         new Composed(c =>
         {
             var focused = c.MutableStateOf(false);
+            var attachedVideoUri = c.RememberSaveable(
+                () => new MutableState<string?>((string?)null), key1: ui.ChannelName);
+            var videoError = c.MutableStateOf<string?>(null);
+            var importingVideo = c.MutableStateOf(false);
+            var context = LocalContext.Current(c);
             long cursorColor = scheme.Secondary;
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
             var keyboardActions = c.Remember(() => KeyboardActionsHelper.Create(
-                onSend: () => Send(ui, input, selectedSelector, messagesScroll)),
+                onSend: () => Send(
+                    ui, input, attachedVideoUri, selectedSelector, messagesScroll)),
                 key1: input, key2: selectedSelector, key3: ui);
             var selectorFocus = c.Remember(() => new FocusRequester());
             int selector = selectedSelector.Value;
@@ -451,6 +502,27 @@ public static class Conversation
             {
                 // Keep the Surface behind the bars; its content owns these insets once.
                 Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                new DisposableEffect(videoPickerState, ui.ChannelName, () =>
+                {
+                    long connection = videoPickerState.Connect(result =>
+                    {
+                        importingVideo.Value = false;
+                        if (result.VideoUri is string selectedVideo)
+                        {
+                            VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
+                            attachedVideoUri.Value = selectedVideo;
+                        }
+                        if (result.Error is string pickError)
+                            videoError.Value = pickError;
+                    });
+                    return () => videoPickerState.Disconnect(connection);
+                }),
+                BuildAttachmentArea(
+                    attachedVideoUri,
+                    videoError,
+                    scheme,
+                    activeVideoUri,
+                    context),
                 BuildTextFieldRow(input, scheme, isRecording, swipeOffset, cursorBrush, keyboardActions, focus =>
                 {
                     if (focused.Value == focus.IsFocused)
@@ -462,11 +534,50 @@ public static class Conversation
                         _ = messagesScroll.AnimateScrollToItemAsync(0);
                     }
                 }, focused.Value),
-                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                BuildSelectorRow(
+                    ui, input, attachedVideoUri, scheme, selectedSelector,
+                    messagesScroll, importingVideo, () =>
+                    {
+                        importingVideo.Value = true;
+                        videoError.Value = null;
+                        selectedSelector.Value = 0;
+                        requestVideo();
+                    }),
                 BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
             });
             return surface;
         });
+
+    static Column BuildAttachmentArea(
+        MutableState<string?> attachedVideoUri,
+        MutableState<string?> videoError,
+        ColorScheme scheme,
+        MutableState<string?> activeVideoUri,
+        Android.Content.Context context)
+    {
+        var area = new Column();
+        if (attachedVideoUri.Value is string videoUri)
+        {
+            area.Add(BuildAttachedVideoPreview(
+                videoUri,
+                () => activeVideoUri.Value = videoUri,
+                () =>
+                {
+                    VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
+                    attachedVideoUri.Value = null;
+                    videoError.Value = null;
+                }));
+        }
+        if (videoError.Value is string error)
+        {
+            area.Add(new Text(error)
+            {
+                Modifier = Modifier.Padding(horizontal: 16, vertical: 4),
+                Color = Color.FromPacked(scheme.Error),
+            }.WithTypography(Typography.BodySmall));
+        }
+        return area;
+    }
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
@@ -556,9 +667,12 @@ public static class Conversation
     static Row BuildSelectorRow(
         ConversationUiState  ui,
         MutableState<TextFieldValue> input,
+        MutableState<string?> attachedVideoUri,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
-        LazyListState        messagesScroll)
+        LazyListState        messagesScroll,
+        MutableState<bool>   importingVideo,
+        Action               onPickVideo)
     {
         var row = new Row(
             horizontalArrangement: null,
@@ -572,13 +686,16 @@ public static class Conversation
             InputSelectorButton(Resource.Drawable.ic_alternate_email, "Direct Message",      SelDm,      selectedSelector, scheme),
             InputSelectorButton(Resource.Drawable.ic_insert_photo,    "Attach Photo",        SelPicture, selectedSelector, scheme),
             InputSelectorButton(Resource.Drawable.ic_place,           "Location selector",   SelMap,     selectedSelector, scheme),
-            InputSelectorButton(Resource.Drawable.ic_duo,             "Start videochat",     SelPhone,   selectedSelector, scheme),
+            BuildVideoPickerButton(
+                scheme, onPickVideo, enabled: !importingVideo.Value),
             new Spacer
             {
                 Modifier = Modifier.Weight(1f),
             },
         };
-        bool enabled = !string.IsNullOrWhiteSpace(input.Value.Text);
+        bool enabled = !importingVideo.Value
+            && (!string.IsNullOrWhiteSpace(input.Value.Text)
+                || attachedVideoUri.Value is not null);
         var sendModifier = Modifier.Height(36);
         if (!enabled)
         {
@@ -588,7 +705,8 @@ public static class Conversation
                 new RoundedCornerShape(18.Dp()));
         }
         var sendButton = new Button(
-            onClick: () => Send(ui, input, selectedSelector, messagesScroll),
+            onClick: () => Send(
+                ui, input, attachedVideoUri, selectedSelector, messagesScroll),
             enabled: enabled)
         {
             Modifier = sendModifier,
@@ -620,6 +738,22 @@ public static class Conversation
             defaults.PlatformImeOptions,
             defaults.ShowKeyboardOnFocus,
             defaults.HintLocales);
+    }
+
+    static IconButton BuildVideoPickerButton(
+        ColorScheme scheme,
+        Action onPickVideo,
+        bool enabled)
+    {
+        var button = new IconButton(onPickVideo, enabled)
+        {
+            Modifier = Modifier.Size(40),
+        };
+        button.Add(new Icon(Resource.Drawable.ic_duo, "Attach video")
+        {
+            Tint = Color.FromPacked(scheme.Secondary),
+        });
+        return button;
     }
 
     static IconButton InputSelectorButton(
@@ -685,7 +819,7 @@ public static class Conversation
             };
         }
 
-        bool showUnavailable = sel is SelPicture or SelMap or SelPhone;
+        bool showUnavailable = sel is SelPicture or SelMap;
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         surface.Add(new AnimatedVisibility(
@@ -719,17 +853,59 @@ public static class Conversation
         return surface;
     }
 
+    static ComposableNode BuildAttachedVideoPreview(
+        string videoUri,
+        Action onPlay,
+        Action onRemove)
+    {
+        var preview = VideoThumbnail.Build(
+            videoUri,
+            onPlay,
+            "Attached video preview",
+            Modifier.FillMaxWidth().Height(180));
+        return new Box
+        {
+            Modifier.FillMaxWidth().Padding(start: 16, top: 8, end: 16, bottom: 4),
+            preview,
+            BuildRemoveVideoButton(onRemove),
+        };
+    }
+
+    static IconButton BuildRemoveVideoButton(Action onRemove)
+    {
+        var button = new IconButton(onRemove)
+        {
+            Modifier = Modifier
+                .Align(Alignment.TopEnd)
+                .Padding(8)
+                .Size(32)
+                .Background(Color.Black.WithAlpha(166), Shape.Circle()),
+        };
+        button.Add(new Icon(Resource.Drawable.ic_close, "Remove attached video")
+        {
+            Tint = Color.White,
+            Modifier = Modifier.Size(18),
+        });
+        return button;
+    }
+
 
     static void Send(
         ConversationUiState  ui,
         MutableState<TextFieldValue> input,
+        MutableState<string?> attachedVideoUri,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll)
     {
-        MessageInput.Send(input,
+        if (MessageInput.Send(
+            input,
+            attachedVideoUri.Value,
             text => ui.AddMessage(new Message(MyName, text, "8:30 PM")),
+            (videoUri, caption) => ui.AddMessage(
+                new Message(MyName, caption, "8:30 PM", VideoUri: videoUri)),
             () => _ = messagesScroll.AnimateScrollToItemAsync(0),
-            () => selectedSelector.Value = 0);
+            () => selectedSelector.Value = 0))
+            attachedVideoUri.Value = null;
     }
 
 }

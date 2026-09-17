@@ -4,7 +4,7 @@ namespace AndroidX.Compose.Samples.Jetchat;
 /// A single chat message. Mirrors upstream's
 /// <c>com.example.compose.jetchat.conversation.Message</c> data class:
 /// <c>author</c>, <c>content</c>, <c>timestamp</c>, optional inline
-/// attachment <c>image</c>, and a derived <see cref="AuthorImage"/>
+/// attachments <c>image</c> / <c>videoUri</c>, and a derived <see cref="AuthorImage"/>
 /// that resolves to <c>avatar_ali</c> for the local user and a shared
 /// <c>avatar_someone_else</c> for every other author (same convention
 /// upstream uses).
@@ -13,7 +13,8 @@ public sealed record Message(
     string Author,
     string Content,
     string Timestamp,
-    int? Image = null)
+    int? Image = null,
+    string? VideoUri = null)
 {
     /// <summary>
     /// Drawable resource id of the author's portrait. Computed from

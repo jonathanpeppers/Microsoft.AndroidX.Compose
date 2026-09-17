@@ -21,5 +21,7 @@
          on the decor view, which Compose's AbstractComposeView requires when it
          attaches and tries to create a window recomposer. -->
     <PackageReference Include="Xamarin.AndroidX.Activity" />
+    <PackageReference Include="Xamarin.AndroidX.Media3.ExoPlayer" />
+    <PackageReference Include="Xamarin.AndroidX.Media3.UI" />
   </ItemGroup>
 </Project>
