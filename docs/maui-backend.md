@@ -2008,9 +2008,10 @@ composition instead of falling back to MAUI's AppCompat
   the requested side and animation flag without synthesizing user events.
 - Linear `CollectionViewHandler` paths observe `LazyListLayoutInfo`
   internally. SwipeViews materialized under an item template register a
-  weak close callback with that viewport observer. A shared item's real
-  offset moving more than 10dp closes the row; a viewport discontinuity
-  with no shared visible item also closes it. No approximate public
+  weak close callback with that viewport observer. A shared item's
+  cumulative displacement from the last acknowledged viewport position
+  moving more than 10dp closes the row; a viewport discontinuity with no
+  shared visible item also closes it. No approximate public
   `ItemsView.Scrolled` offsets or deltas are emitted.
 
 `SwipeViewsPage` exercises every direction, both transition modes,

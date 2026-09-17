@@ -74,16 +74,19 @@ public sealed class CollectionViewportObserverTests
     }
 
     [Fact]
-    public void RepeatedSubthresholdMovement_DoesNotAccumulate()
+    public void RepeatedSubthresholdMovement_AccumulatesFromLastAcknowledgedPosition()
     {
         var observer = new CollectionViewportObserver();
         observer.HasSignificantChange(Snapshot((0, 0), (1, 100)), 1f);
 
-        for (int offset = -4; offset >= -40; offset -= 4)
-        {
-            Assert.False(observer.HasSignificantChange(
-                Snapshot((0, offset), (1, 100 + offset)), 1f));
-        }
+        Assert.False(observer.HasSignificantChange(
+            Snapshot((0, -4), (1, 96)), 1f));
+        Assert.False(observer.HasSignificantChange(
+            Snapshot((0, -8), (1, 92)), 1f));
+        Assert.True(observer.HasSignificantChange(
+            Snapshot((0, -12), (1, 88)), 1f));
+        Assert.False(observer.HasSignificantChange(
+            Snapshot((0, -16), (1, 84)), 1f));
     }
 
     [Fact]

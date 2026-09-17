@@ -36,10 +36,10 @@ internal sealed class CollectionViewportObserver
                 nameof(density), density, "Density must be positive.");
 
         var previous = _previous;
-        _previous = current;
         if (previous is null || previous.VisibleItems.Length == 0 ||
             current.VisibleItems.Length == 0)
         {
+            _previous = current;
             return false;
         }
 
@@ -49,11 +49,17 @@ internal sealed class CollectionViewportObserver
             {
                 if (oldItem.Index != newItem.Index)
                     continue;
-                return System.Math.Abs(oldItem.Offset - newItem.Offset) / density > 10f;
+                if (System.Math.Abs(oldItem.Offset - newItem.Offset) / density <= 10f)
+                    return false;
+                _previous = current;
+                return true;
             }
         }
 
-        return !SameViewport(previous, current);
+        if (SameViewport(previous, current))
+            return false;
+        _previous = current;
+        return true;
     }
 
     public void NotifySignificantChange()
