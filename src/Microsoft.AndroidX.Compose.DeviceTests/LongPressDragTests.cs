@@ -222,6 +222,7 @@ public class LongPressDragTests
             await Frames(activity);
             Assert.IsFalse(activity.RecordingTooltip.IsVisible,
                 "A nonpersistent tooltip must complete normally after native timed dismissal.");
+            await WaitForWindowFocus(activity);
             down = Touch(activity, MotionEventActions.Down);
             Touch(activity, MotionEventActions.Up, down);
             down = 0;
@@ -234,6 +235,7 @@ public class LongPressDragTests
                 ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
             Runner.RunOnMainSync(() => activity.UseAlternateRecordingTooltip.Value = true);
             await Frames(activity);
+            await WaitForWindowFocus(activity);
             Assert.ThrowsExactly<InvalidOperationException>(activity.RecordingTooltip.Dismiss,
                 "Replacing Tooltip state must unbind the prior managed wrapper.");
             down = Touch(activity, MotionEventActions.Down);
@@ -363,6 +365,15 @@ public class LongPressDragTests
         Runner.RunOnMainSync(() => decor.PostOnAnimation(first));
         await complete.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Runner.WaitForIdleSync();
+    }
+
+    static async Task WaitForWindowFocus(LongPressDragTestActivity activity)
+    {
+        var timeout = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (!activity.HasWindowFocus && DateTime.UtcNow < timeout)
+            await Frames(activity);
+        Assert.IsTrue(activity.HasWindowFocus,
+            "The activity did not regain input focus after the tooltip popup dismissed.");
     }
 
     static T Require<T>(T? value) where T : class =>
