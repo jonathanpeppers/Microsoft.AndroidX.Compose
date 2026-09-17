@@ -40,6 +40,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("semantics",      typeof(SemanticsPage));
         Routing.RegisterRoute("vertical-align", typeof(VerticalAlignmentPage));
         Routing.RegisterRoute("navigation",     typeof(NavigationDemoPage));
+        Routing.RegisterRoute("tabbed-pages",   typeof(TabbedPagesDemoPage));
         Routing.RegisterRoute("flyout",         typeof(FlyoutDemoPage));
 
         // Phase 5 — pages that exercise self-drawing AndroidView-hosted

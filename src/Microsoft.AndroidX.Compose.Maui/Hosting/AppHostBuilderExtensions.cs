@@ -32,6 +32,7 @@ using MauiSwipeItem = Microsoft.Maui.Controls.SwipeItem;
 using MauiSwipeItemView = Microsoft.Maui.Controls.SwipeItemView;
 using MauiSwipeView = Microsoft.Maui.Controls.SwipeView;
 using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
+using MauiTabbedPage = Microsoft.Maui.Controls.TabbedPage;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 using MauiWebView = Microsoft.Maui.Controls.WebView;
 
@@ -108,12 +109,14 @@ public static class AppHostBuilderExtensions
     ///     through Material 3 <see cref="Scaffold"/> +
     ///     <see cref="TopAppBar"/> chrome, with hardware-back
     ///     and back-arrow pop.</description></item>
+    ///   <item><description><see cref="MauiTabbedPage"/> →
+    ///     <see cref="TabbedViewHandler"/> renders Material 3 top or
+    ///     bottom tab chrome around a swipeable Compose pager with
+    ///     two-way current-page selection.</description></item>
     ///   <item><description><see cref="MauiFlyoutPage"/> →
     ///     <see cref="FlyoutViewHandler"/> renders MAUI's effective
     ///     modal or locked-open layout with Material 3 navigation
-    ///     drawers while preserving the child page handlers.
-    ///     <c>TabbedPage</c> and <c>Shell</c> remain on stock until
-    ///     later Phase 4 slices.</description></item>
+    ///     drawers while preserving the child page handlers.</description></item>
     /// </list>
     ///
     /// <para>Layout types not in the list above (Grid, AbsoluteLayout,
@@ -219,6 +222,7 @@ public static class AppHostBuilderExtensions
             // toolbar) with a Scaffold + TopAppBar shell whose body
             // hosts the current page via AndroidView.
             handlers.AddHandler<MauiNavigationPage,         NavigationPageHandler>();
+            handlers.AddHandler<MauiTabbedPage,             TabbedViewHandler>();
 
             // Phase 4 Slice 3 — two-pane FlyoutPage. MAUI resolves
             // FlyoutLayoutBehavior into an effective modal or locked
