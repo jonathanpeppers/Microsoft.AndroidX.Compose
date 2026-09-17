@@ -27,5 +27,6 @@
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListScrollSnapshot.cs" Link="Maui\LazyListScrollSnapshot.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListVisibleItemSnapshot.cs" Link="Maui\LazyListVisibleItemSnapshot.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelPlacement.cs" Link="Maui\SwipePanelPlacement.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ReferenceItemCache.cs" Link="Maui\ReferenceItemCache.cs" />
   </ItemGroup>
 </Project>

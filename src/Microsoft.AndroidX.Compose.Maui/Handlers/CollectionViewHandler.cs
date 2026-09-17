@@ -60,8 +60,9 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// a fresh <see cref="BindableObject"/> with its
 /// <see cref="BindableObject.BindingContext"/> assigned to the item, then
 /// walked through <see cref="ComposeWalker.Render(IView, IComposer, IMauiContext)"/>.
-/// Per-item handler allocation cost is accepted for this slice;
-/// memoization is a follow-up.</para>
+/// Materialized template nodes are cached by item reference and template
+/// identity so stateful handlers survive lazy-item recomposition. Removed
+/// rows and template changes disconnect their cached handlers.</para>
 ///
 /// <para><b>Reactive sources.</b> Any
 /// <see cref="MauiCollectionView.ItemsSource"/> implementing
@@ -101,8 +102,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.Header"/> /
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.Footer"/> /
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.ItemSizingStrategy"/>;
-/// grouping;
-/// item-handler caching.</para>
+/// grouping.</para>
 /// </remarks>
 public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectionView>
 {
@@ -136,6 +136,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     readonly MutableState<int> _virtualViewVersion = new(0);
     readonly LazyListState _linearListState = new();
     readonly CollectionViewportObserver _viewportObserver = new();
+    readonly ReferenceItemCache<CachedTemplate> _templateCache = new();
 
     // Tracks the currently-subscribed INotifyCollectionChanged source so
     // we can unsubscribe before swapping to a new source or disposing
@@ -162,6 +163,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     protected override void DisconnectHandler(ComposeView platformView)
     {
         UnsubscribeFromSource();
+        _templateCache.Clear(DisconnectCachedTemplate);
         base.DisconnectHandler(platformView);
     }
 
@@ -178,6 +180,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             ?? throw new InvalidOperationException("MauiContext not set on CollectionViewHandler.");
 
         var items    = Snapshot(view.ItemsSource);
+        _templateCache.Prune(items, DisconnectCachedTemplate);
         var template = view.ItemTemplate;
         var clickable = view.SelectionMode != Microsoft.Maui.Controls.SelectionMode.None;
 
@@ -431,7 +434,11 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return column;
     }
 
-    static ComposableNode BuildFromTemplate(MauiDataTemplate template, object item, MauiCollectionView view, IMauiContext context)
+    ComposableNode BuildFromTemplate(
+        MauiDataTemplate template,
+        object item,
+        MauiCollectionView view,
+        IMauiContext context)
     {
         // Pass `view` (the source CollectionView) as the container so
         // DataTemplateSelector subclasses that branch on the host
@@ -441,22 +448,29 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             ? selector.SelectTemplate(item, container: view)
             : template;
 
-        var content = MaterialiseTemplate(resolved, item);
-        if (content is not IView contentView)
-        {
-            // Template materialised to a non-View (e.g. a Cell only). We
-            // fall back to ToString so the list keeps rendering.
-            return new ComposeText(item?.ToString() ?? string.Empty);
-        }
+        return _templateCache.GetOrReplace(
+            item,
+            cached => ReferenceEquals(cached.Template, resolved),
+            () =>
+            {
+                var content = MaterialiseTemplate(resolved, item);
+                if (content is not IView contentView)
+                {
+                    return new CachedTemplate(
+                        resolved,
+                        new ComposeText(item?.ToString() ?? string.Empty),
+                        View: null);
+                }
 
-        // ComposeWalker.Render needs a live IComposer, but the lazy
-        // facade defers item rendering until the Lazy* scope's measure
-        // pass actually pulls the index. We materialise the template up
-        // front so its BindingContext is set on the UI thread before any
-        // composer reads, then wrap the resolved IView in a deferred
-        // node whose own Render(IComposer) runs ComposeWalker.Render at
-        // the correct moment inside Instantiate4's composition.
-        return new DeferredViewNode(contentView, context);
+                var observer = CollectionViewportContext.Current
+                    ?? throw new InvalidOperationException(
+                        "Collection viewport context not set while materializing an item.");
+                return new CachedTemplate(
+                    resolved,
+                    new DeferredViewNode(contentView, context, observer),
+                    contentView);
+            },
+            DisconnectCachedTemplate).Node;
     }
 
     /// <summary>
@@ -471,16 +485,40 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     {
         readonly IView _view;
         readonly IMauiContext _context;
+        readonly CollectionViewportObserver? _observer;
 
-        public DeferredViewNode(IView view, IMauiContext context)
+        public DeferredViewNode(
+            IView view,
+            IMauiContext context,
+            CollectionViewportObserver? observer = null)
         {
             _view    = view;
             _context = context;
+            _observer = observer;
         }
 
-        public override void Render(IComposer composer) =>
-            ComposeWalker.Render(_view, composer, _context).Render(composer);
+        public override void Render(IComposer composer)
+        {
+            if (_observer is null)
+            {
+                ComposeWalker.Render(_view, composer, _context).Render(composer);
+                return;
+            }
+            CollectionViewportContext.RenderItem(
+                _observer,
+                () => ComposeWalker
+                    .Render(_view, composer, _context)
+                    .Render(composer));
+        }
     }
+
+    sealed record CachedTemplate(
+        MauiDataTemplate Template,
+        ComposableNode Node,
+        IView? View);
+
+    static void DisconnectCachedTemplate(CachedTemplate cached) =>
+        cached.View?.Handler?.DisconnectHandler();
 
     static object? MaterialiseTemplate(MauiDataTemplate template, object item)
     {

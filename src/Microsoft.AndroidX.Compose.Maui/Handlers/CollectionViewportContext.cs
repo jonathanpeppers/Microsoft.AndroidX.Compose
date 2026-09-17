@@ -24,4 +24,19 @@ internal static class CollectionViewportContext
             s_current.Value = previous;
         }
     }
+
+    public static void RenderItem(
+        CollectionViewportObserver observer,
+        Action render)
+    {
+        ArgumentNullException.ThrowIfNull(observer);
+        ArgumentNullException.ThrowIfNull(render);
+        BuildItem(
+            observer,
+            () =>
+            {
+                render();
+                return true;
+            });
+    }
 }

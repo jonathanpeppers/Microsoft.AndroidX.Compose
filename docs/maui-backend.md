@@ -2060,12 +2060,13 @@ CollectionView rows.
   selectors that branch on the host (e.g. "different template under a
   CarouselView vs a list") see the same `BindableObject` stock MAUI's
   adapter passes.
-- **Per-item handler allocation cost is real, but acceptable for v1.**
-  Each `template.CreateContent()` allocates a fresh `BindableObject`
-  per render of `BuildNode`. Compose's slot table memoises the
-  *rendered* output but not the View / Handler. Memoising keyed on
-  item identity + template type is straightforward follow-up; defer
-  until profiling shows it matters.
+- **Stateful item handlers require reference-stable template nodes.**
+  Lazy item content re-executes during child recomposition. Re-running
+  `template.CreateContent()` there resets handler-owned drag/state slots
+  mid-gesture. `CollectionViewHandler` therefore caches the materialized
+  node by item reference + selected template identity, disconnecting
+  entries when rows leave the source or the selector changes templates.
+  Equal-but-distinct row objects never share state.
 - **Investigation discipline matters more than ever at Phase 3 scope.**
   Three of the original Phase 3 candidates (`ListView`, `TableView`,
   `SwipeView`) are deferred outright, and one (`CarouselView`) is its
