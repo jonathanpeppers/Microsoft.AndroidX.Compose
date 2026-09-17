@@ -126,8 +126,9 @@ public class ReplyNavigationTests
                     : NavigationSuiteType.NavigationBar;
             Assert.AreEqual(expected, actual, $"Reply width was {widthDp:F1}dp ({width}px at {density:F2}x).");
             using var root = Root(activity);
+            string inboxLabel = Label(TopLevelDestinations.All[0]);
             using var inbox = Find(root, n => n.VisibleToUser &&
-                n.ContentDescription == Label(TopLevelDestinations.All[0]))
+                (n.ContentDescription == inboxLabel || n.Text == inboxLabel))
                 ?? throw new InvalidOperationException("Reply Inbox navigation item is missing.");
             using var itemBounds = new Rect();
             using var windowBounds = new Rect();
