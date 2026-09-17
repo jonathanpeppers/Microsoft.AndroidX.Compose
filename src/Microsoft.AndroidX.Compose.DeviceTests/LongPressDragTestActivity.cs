@@ -28,6 +28,10 @@ public class LongPressDragTestActivity : ComponentActivity
     internal readonly MutableState<float> Y = new(0);
     internal readonly MutableState<bool> Recording = new(false);
     internal readonly MutableNumberState<float> Swipe = new(0);
+    internal readonly TooltipState RecordingTooltip = new();
+    internal readonly TooltipState AlternateRecordingTooltip = new(isPersistent: true);
+    internal readonly MutableState<bool> UseAlternateRecordingTooltip = new(false);
+    internal Task? TooltipShowTask;
     internal readonly List<string> Events = [];
     internal readonly List<PointerCancellationObservation> Cancellations = [];
     internal LongPressDragGestureBlock? Handler;
@@ -184,6 +188,9 @@ public class LongPressDragTestActivity : ComponentActivity
         var scheme = global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0);
         bool recording = Recording.Value;
         float swipe = Swipe.Value;
+        var recordingTooltip = UseAlternateRecordingTooltip.Value
+            ? AlternateRecordingTooltip
+            : RecordingTooltip;
         composer.SideEffect(() =>
         {
             Passes++;
@@ -216,13 +223,14 @@ public class LongPressDragTestActivity : ComponentActivity
                     {
                         Modifier.Size(56).AppendBound(current =>
                             OnGloballyPositionedModifierKt.OnGloballyPositioned(current, bounds), ModifierOpKey.Opaque),
-                        new Tooltip
+                        new Tooltip(recordingTooltip)
                         {
                             Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                             EnableUserInput = false,
                             Tip = new Text("Touch and hold to record"),
                             Anchor = global::AndroidX.Compose.Samples.Jetchat.RecordButton.BuildButton(
                                 Recording, Swipe,
+                                onClick: () => TooltipShowTask = recordingTooltip.ShowAsync(),
                                 onCommit: () =>
                                 {
                                     EndCount++;

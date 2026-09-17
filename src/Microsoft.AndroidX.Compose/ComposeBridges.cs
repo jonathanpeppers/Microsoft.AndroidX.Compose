@@ -1657,7 +1657,23 @@ internal static partial class ComposeBridges
         JvmName   = "rememberTooltipState",
         Signature = "(ZZLandroidx/compose/foundation/MutatorMutex;Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TooltipState;",
         Defaults  = typeof(RememberTooltipStateDefault))]
-    public static partial IntPtr RememberTooltipState(bool isPersistent, IComposer composer);
+    internal static partial IntPtr RememberTooltipStateJvm(bool isPersistent, IComposer composer);
+
+    public static ITooltipState RememberTooltipState(bool isPersistent, IComposer composer)
+    {
+        var local = RememberTooltipStateJvm(isPersistent, composer);
+        try
+        {
+            return Java.Lang.Object.GetObject<ITooltipState>(
+                local, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException(
+                    "rememberTooltipState returned no peer.");
+        }
+        finally
+        {
+            JNIEnv.DeleteLocalRef(local);
+        }
+    }
 
     // androidx.compose.material3.TooltipDefaults.INSTANCE.rememberPlainTooltipPositionProvider-kHDZbjc
     // Instance method on a Kotlin object singleton.

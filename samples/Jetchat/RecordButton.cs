@@ -29,14 +29,22 @@ public static class RecordButton
     public static ComposableNode BuildButton(
         MutableState<bool>          isRecording,
         MutableNumberState<float>   swipeOffset,
+        Action                      onClick,
         Action                      onCommit,
         Action                      onCancel,
-        ColorScheme                 scheme) =>
-        new Composed(c =>
+        ColorScheme                 scheme)
+    {
+        ArgumentNullException.ThrowIfNull(onClick);
+        ArgumentNullException.ThrowIfNull(onCommit);
+        ArgumentNullException.ThrowIfNull(onCancel);
+
+        return new Composed(c =>
         {
             bool recording = isRecording.Value;
             float density = SwipeToCancelThresholdPx / SwipeToCancelThresholdDp;
             var gesture = c.Remember(() => new RecordingGestureState());
+            var click = c.Remember(() => new RecordButtonClickState(onClick));
+            c.SideEffect(() => click.Update(onClick));
 
             var visuals = RecordButtonVisuals.Read(c, recording);
             var innerModifier = Modifier.FillMaxSize().Padding(18);
@@ -45,6 +53,8 @@ public static class RecordButton
             {
                 Modifier
                     .Size(56)
+                    .Clickable(click.Invoke)
+                    .DetectTapGestures(onTap: _ => click.Invoke())
                     .DetectDragGesturesAfterLongPress(
                         onDragStart: _ =>
                         {
@@ -79,6 +89,7 @@ public static class RecordButton
                 },
             };
         });
+    }
 
     /// <summary>Build the recording overlay row that replaces the
     /// <see cref="TextField"/> while recording is active.</summary>

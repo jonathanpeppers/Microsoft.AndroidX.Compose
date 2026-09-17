@@ -205,6 +205,8 @@ public class LongPressDragTests
         bool finished = false;
         try
         {
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                async () => await new TooltipState().ShowAsync());
             float density = (global::Android.Content.Res.Resources.System?.DisplayMetrics
                 ?? throw new InvalidOperationException("No density for recording acceptance.")).Density;
             down = Touch(activity, MotionEventActions.Down);
@@ -213,8 +215,56 @@ public class LongPressDragTests
             await Frames(activity);
             Assert.IsFalse(activity.Recording.Value);
             Assert.AreEqual(0, activity.StartCount);
+            Assert.IsTrue(activity.RecordingTooltip.IsVisible,
+                "A short tap must show the recording tooltip.");
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
+            await Frames(activity);
+            Assert.IsFalse(activity.RecordingTooltip.IsVisible,
+                "A nonpersistent tooltip must complete normally after native timed dismissal.");
+            await WaitForWindowFocus(activity);
+            down = Touch(activity, MotionEventActions.Down);
+            Touch(activity, MotionEventActions.Up, down);
+            down = 0;
+            await Frames(activity);
+            Assert.IsTrue(activity.RecordingTooltip.IsVisible);
+            activity.RecordingTooltip.Dismiss();
+            await Frames(activity);
+            Assert.IsFalse(activity.RecordingTooltip.IsVisible);
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
+            Runner.RunOnMainSync(() => activity.UseAlternateRecordingTooltip.Value = true);
+            await Frames(activity);
+            await WaitForWindowFocus(activity);
+            Assert.ThrowsExactly<InvalidOperationException>(activity.RecordingTooltip.Dismiss,
+                "Replacing Tooltip state must unbind the prior managed wrapper.");
+            down = Touch(activity, MotionEventActions.Down);
+            Touch(activity, MotionEventActions.Up, down);
+            down = 0;
+            await Frames(activity);
+            Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
+            await Task.Delay(1700);
+            await Frames(activity);
+            Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible,
+                "A persistent tooltip must not use the native 1500ms timeout.");
+            activity.AlternateRecordingTooltip.Dismiss();
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Replacement Tooltip state did not receive the short tap."));
+            using (var cts = new CancellationTokenSource())
+            {
+                var cancelledShow = activity.AlternateRecordingTooltip.ShowAsync(cts.Token);
+                await Frames(activity);
+                Assert.IsTrue(activity.AlternateRecordingTooltip.IsVisible);
+                cts.Cancel();
+                await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+                    async () => await cancelledShow);
+                await Frames(activity);
+                Assert.IsFalse(activity.AlternateRecordingTooltip.IsVisible);
+            }
             await Finish(activity);
             finished = true;
+            Assert.ThrowsExactly<InvalidOperationException>(activity.AlternateRecordingTooltip.Dismiss,
+                "Removing Tooltip from composition must unbind its managed wrapper.");
             Assert.AreEqual(0, activity.CancelCount, "Disposing an idle detector must not cancel a recording that never started.");
 
             activity = await Start(recording: true);
@@ -315,6 +365,15 @@ public class LongPressDragTests
         Runner.RunOnMainSync(() => decor.PostOnAnimation(first));
         await complete.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Runner.WaitForIdleSync();
+    }
+
+    static async Task WaitForWindowFocus(LongPressDragTestActivity activity)
+    {
+        var timeout = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (!activity.HasWindowFocus && DateTime.UtcNow < timeout)
+            await Frames(activity);
+        Assert.IsTrue(activity.HasWindowFocus,
+            "The activity did not regain input focus after the tooltip popup dismissed.");
     }
 
     static T Require<T>(T? value) where T : class =>

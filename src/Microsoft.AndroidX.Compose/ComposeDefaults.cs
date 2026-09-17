@@ -788,6 +788,11 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("RememberTooltipStateDefault",
     "initialIsVisible", "!isPersistent", "mutatorMutex")]
 
+// androidx.compose.material3.TooltipState.show$default:
+// The TooltipState receiver is excluded; mutatePriority uses its default.
+[assembly: ComposeDefaults("TooltipStateShowDefault",
+    "mutatePriority")]
+
 // androidx.compose.material3.TooltipDefaults.rememberPlainTooltipPositionProvider-kHDZbjc:
 // 1 user param (`spacing`), defaulted by the wrapper.
 [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault",
