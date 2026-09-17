@@ -49,6 +49,11 @@ public class AdvancedDrawingTests
                     activity.Pixel(105, 120),
                     activity.Pixel(235, 179),
                     NativeColor.Green);
+                AssertTranslucentBlend(
+                    bitmap,
+                    activity.Pixel(215, 105),
+                    NativeColor.Rgb(0x12, 0x24, 0x44),
+                    NativeColor.White);
             });
             Console.WriteLine(
                 $"ADVANCED_DRAWING restored={activity.ExceptionRestored} expired={activity.TransformExpired} "
@@ -104,6 +109,21 @@ public class AdvancedDrawingTests
         Assert.Fail(
             $"Expected color {expectedArgb:X8} in region "
             + $"({topLeft.X},{topLeft.Y})-({bottomRight.X},{bottomRight.Y}).");
+    }
+
+    static void AssertTranslucentBlend(
+        Bitmap bitmap,
+        (int X, int Y) point,
+        NativeColor background,
+        NativeColor foreground)
+    {
+        int actual = bitmap.GetPixel(point.X, point.Y);
+        Assert.AreEqual(0xFF, global::Android.Graphics.Color.GetAlphaComponent(actual));
+        Assert.AreNotEqual(background.ToArgb(), actual, "Alpha was treated as fully transparent.");
+        Assert.AreNotEqual(foreground.ToArgb(), actual, "Alpha was ignored and rendered opaque.");
+        Assert.IsTrue(
+            global::Android.Graphics.Color.GetRedComponent(actual)
+                > global::Android.Graphics.Color.GetRedComponent(background.ToArgb()));
     }
 
     static async Task WaitFor(Func<bool> condition)

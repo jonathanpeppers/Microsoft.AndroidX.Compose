@@ -124,6 +124,13 @@ public class AdvancedDrawingTestActivity : ComponentActivity
         scope.DrawPoints(
             points, PointMode.Polygon, Color.Cyan,
             strokeWidth: 5f, cap: StrokeCap.Round, pathEffect: dash);
+        scope.DrawPoints(
+            [new Offset(215f, 105f)],
+            PointMode.Points,
+            Color.White,
+            strokeWidth: 18f,
+            cap: StrokeCap.Round,
+            alpha: 0.5f);
 
         using var native = Bitmap.CreateBitmap(
                 20, 20,
