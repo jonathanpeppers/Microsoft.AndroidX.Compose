@@ -176,8 +176,7 @@ public class ReplyNavigationTests
             Assert.IsTrue(collapsedWidth < expandedWidth,
                 $"Forward scroll did not collapse the FAB: expanded={expandedWidth}, collapsed={collapsedWidth}.");
 
-            long visibleEmailId = CaptureInbox(activity)[0].Id;
-            await ClickEmail(activity, visibleEmailId);
+            long visibleEmailId = await ClickFirstVisibleEmail(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
             Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
                 "Compact detail did not preserve the collapsed inbox FAB state.");
@@ -445,6 +444,22 @@ public class ReplyNavigationTests
             ?? throw new InvalidOperationException($"Reply email {id} was not visible.");
         PerformClick(label, longClick);
         await activity.AtNativeIdle();
+    }
+
+    static async Task<long> ClickFirstVisibleEmail(ReplyNavigationTestActivity activity)
+    {
+        using var root = Root(activity);
+        foreach (var email in LocalEmailsDataProvider.AllEmails)
+        {
+            using var label = Find(root, node => node.VisibleToUser &&
+                node.Text?.Contains(email.Subject, StringComparison.Ordinal) == true);
+            if (label is null)
+                continue;
+            PerformClick(label, longClick: false);
+            await activity.AtNativeIdle();
+            return email.Id;
+        }
+        throw new InvalidOperationException("Reply inbox has no visible email to open.");
     }
 
     static async Task ClickAvatar(ReplyNavigationTestActivity activity, long id)
