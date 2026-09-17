@@ -63,6 +63,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     readonly MutableState<float> _offsetY = new(0f);
     readonly MutableState<int> _activeDirectionState = new(0);
     readonly MutableState<long?> _background = new((long?)null);
+    readonly MutableState<bool> _settledOpen = new(false);
     readonly DraggableState _horizontalDrag;
     readonly DraggableState _verticalDrag;
     readonly HashSet<Element> _observedItems = [];
@@ -73,7 +74,6 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     int _animationGeneration;
     MauiSwipeDirection? _activeDirection;
     (OpenSwipeItem Item, bool Animated)? _pendingOpen;
-    bool _isSettledOpen;
     float _density = 1f;
     float _leftExtent;
     float _rightExtent;
@@ -144,7 +144,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         Modifier dismissModifier = Modifier.Companion.FillMaxSize();
         if (SwipeContentDismissal.ShouldDismiss(
             view.IsOpen,
-            _isSettledOpen,
+            _settledOpen.Value,
             _dragLifecycle.IsDragging))
         {
             dismissModifier = dismissModifier.DetectTapGestures(
@@ -380,7 +380,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         float extent = ExtentFor(direction);
         var action = SwipeExtentReconciliationPolicy.Resolve(
             view.IsOpen,
-            _isSettledOpen,
+            _settledOpen.Value,
             _dragLifecycle.IsDragging,
             _animator is not null,
             extent);
@@ -446,7 +446,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
         if (_dragLifecycle.Begin())
         {
-            _isSettledOpen = false;
+            _settledOpen.Value = false;
             view.SwipeStarted(new SwipeViewSwipeStarted(direction));
         }
 
@@ -529,7 +529,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     void SetOpen(MauiSwipeDirection direction, bool open, bool animated)
     {
         float target = open ? SignedExtent(direction) : 0f;
-        _isSettledOpen = false;
+        _settledOpen.Value = false;
         var view = VirtualView;
         if (view is not null)
             view.IsOpen = open;
@@ -540,7 +540,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             animated,
             () =>
             {
-                _isSettledOpen = open;
+                _settledOpen.Value = open;
                 if (!open)
                 {
                     _activeDirection = null;
@@ -575,7 +575,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (_activeDirection is { } previous && previous != direction)
         {
             CancelAnimation();
-            _isSettledOpen = false;
+            _settledOpen.Value = false;
             _offsetX.Value = 0f;
             _offsetY.Value = 0f;
             view.IsOpen = false;
@@ -606,7 +606,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             SetOpen(direction, open: false, animated);
         else
         {
-            _isSettledOpen = false;
+            _settledOpen.Value = false;
             _offsetX.Value = 0f;
             _offsetY.Value = 0f;
             if (VirtualView is { } view)
@@ -825,7 +825,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
                 ? (pending, false)
                 : null;
             handler.CancelAnimation();
-            handler._isSettledOpen = false;
+            handler._settledOpen.Value = false;
             handler._offsetX.Value = 0f;
             handler._offsetY.Value = 0f;
         }
