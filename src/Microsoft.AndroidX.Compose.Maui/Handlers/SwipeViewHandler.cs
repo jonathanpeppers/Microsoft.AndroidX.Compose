@@ -136,7 +136,11 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             : new Box();
 
         var layout = new ComposeLayout((scope, measurables, constraints) =>
-            MeasureSwipeLayout(scope, measurables, constraints));
+            MeasureSwipeLayout(
+                scope,
+                measurables,
+                constraints,
+                activeDirection));
         layout.Add(left);
         layout.Add(right);
         layout.Add(top);
@@ -243,7 +247,8 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     MeasureResult MeasureSwipeLayout(
         MeasureScope scope,
         IReadOnlyList<Measurable> measurables,
-        Constraints constraints)
+        Constraints constraints,
+        int activeDirection)
     {
         if (measurables.Count != 5)
             throw new InvalidOperationException(
@@ -282,10 +287,21 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
                 ? height - bottom.Height
                 : (int)Math.Round(height + Math.Min(0f, offsetY));
 
-            placement.Place(left, leftX, 0);
-            placement.Place(right, rightX, 0);
-            placement.Place(top, 0, topY);
-            placement.Place(bottom, 0, bottomY);
+            switch (SwipePanelPlacement.ActivePanelIndex(activeDirection))
+            {
+                case SwipePanelPlacement.LeftItems:
+                    placement.Place(left, leftX, 0);
+                    break;
+                case SwipePanelPlacement.RightItems:
+                    placement.Place(right, rightX, 0);
+                    break;
+                case SwipePanelPlacement.TopItems:
+                    placement.Place(top, 0, topY);
+                    break;
+                case SwipePanelPlacement.BottomItems:
+                    placement.Place(bottom, 0, bottomY);
+                    break;
+            }
             placement.Place(
                 content,
                 (int)Math.Round(offsetX),
