@@ -1,5 +1,4 @@
 using AndroidX.Compose.UI.Graphics;
-using AndroidX.Compose.UI.Graphics.Drawscope;
 
 namespace AndroidX.Compose;
 
@@ -49,19 +48,4 @@ internal static class DrawingPaint
                 nameof(destinationSize), "Destination image dimensions cannot be negative.");
     }
 
-    internal static void ApplyStyle(IPaint paint, DrawStyle style)
-    {
-        if (style is Stroke stroke)
-        {
-            paint.Style = 1;
-            paint.StrokeWidth = stroke.Width;
-            paint.StrokeMiterLimit = stroke.Miter;
-            paint.StrokeCap = stroke.Cap;
-            paint.StrokeJoin = stroke.Join;
-            paint.PathEffect = stroke.PathEffect;
-            return;
-        }
-
-        paint.Style = 0;
-    }
 }

@@ -44,6 +44,11 @@ public class AdvancedDrawingTests
                 AssertColor(bitmap, activity.Pixel(120, 10), NativeColor.Magenta);
                 AssertColor(bitmap, activity.Pixel(20, 60), NativeColor.Yellow);
                 AssertColor(bitmap, activity.Pixel(170, 20), NativeColor.Yellow);
+                AssertRegionHasColor(
+                    bitmap,
+                    activity.Pixel(105, 120),
+                    activity.Pixel(235, 179),
+                    NativeColor.Green);
             });
             Console.WriteLine(
                 $"ADVANCED_DRAWING restored={activity.ExceptionRestored} expired={activity.TransformExpired} "
@@ -80,6 +85,26 @@ public class AdvancedDrawingTests
     static void AssertColor(Bitmap bitmap, (int X, int Y) point, NativeColor expected) =>
         Assert.AreEqual(expected.ToArgb(), bitmap.GetPixel(point.X, point.Y),
             $"Unexpected pixel at ({point.X}, {point.Y}).");
+
+    static void AssertRegionHasColor(
+        Bitmap bitmap,
+        (int X, int Y) topLeft,
+        (int X, int Y) bottomRight,
+        NativeColor expected)
+    {
+        int expectedArgb = expected.ToArgb();
+        for (int y = topLeft.Y; y <= bottomRight.Y; y++)
+        {
+            for (int x = topLeft.X; x <= bottomRight.X; x++)
+            {
+                if (bitmap.GetPixel(x, y) == expectedArgb)
+                    return;
+            }
+        }
+        Assert.Fail(
+            $"Expected color {expectedArgb:X8} in region "
+            + $"({topLeft.X},{topLeft.Y})-({bottomRight.X},{bottomRight.Y}).");
+    }
 
     static async Task WaitFor(Func<bool> condition)
     {

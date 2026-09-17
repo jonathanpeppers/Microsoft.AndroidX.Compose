@@ -150,6 +150,8 @@ public class AdvancedDrawingTestActivity : ComponentActivity
         if (textLayout is not null)
         {
             scope.DrawText(textLayout, Color.White, new Offset(10f, 125f));
+            using var textBrush = Brush.SolidColor(Color.Green);
+            scope.DrawText(textLayout, textBrush, new Offset(110f, 125f));
             Interlocked.Increment(ref TextDrawCalls);
         }
 

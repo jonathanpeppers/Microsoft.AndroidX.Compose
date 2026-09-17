@@ -9,7 +9,6 @@ using BoundImageBitmap = AndroidX.Compose.UI.Graphics.IImageBitmap;
 using BoundOutline = AndroidX.Compose.UI.Graphics.Outline;
 using BoundShadow = AndroidX.Compose.UI.Graphics.Shadow;
 using BoundTextLayoutResult = AndroidX.Compose.UI.Text.TextLayoutResult;
-using PaintFactory = AndroidX.Compose.UI.Graphics.AndroidPaint_androidKt;
 using NativeCanvasApi = AndroidX.Compose.UI.Graphics.AndroidCanvas_androidKt;
 
 namespace AndroidX.Compose;
@@ -347,6 +346,7 @@ public class DrawScope
         using var paint = DrawingPaint.CreatePointPaint(
             strokeWidth, cap, pathEffect, colorFilter, alpha);
         paint.Color = color.ToPacked();
+        paint.Alpha = alpha;
         DrawContext().Canvas.DrawRawPoints((int)mode, DrawingPaint.Flatten(points), paint);
     }
 
@@ -556,20 +556,17 @@ public class DrawScope
     {
         ArgumentNullException.ThrowIfNull(image);
         DrawingPaint.ValidateImageRegion(sourceSize, destinationSize);
-        using var paint = PaintFactory.Paint()
-            ?? throw new InvalidOperationException("Compose Paint factory returned null.");
-        paint.Alpha = alpha;
-        paint.ColorFilter = colorFilter;
-        paint.BlendMode = SrcOverBlendMode;
-        paint.FilterQuality = (int)filterQuality;
-        DrawingPaint.ApplyStyle(paint, style ?? DrawingStyle.Fill);
-        DrawContext().Canvas.DrawImageRect(
+        _jvm.DrawImage(
             image,
             sourceOffset.Packed,
             sourceSize.Packed,
             destinationOffset.Packed,
             destinationSize.Packed,
-            paint);
+            alpha,
+            style ?? DrawingStyle.Fill,
+            colorFilter,
+            SrcOverBlendMode,
+            (int)filterQuality);
     }
 
     /// <summary>Draws a Compose outline with a solid color.</summary>
