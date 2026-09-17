@@ -287,13 +287,20 @@ public class JetchatRestorationTests
             mood.GetBoundsInScreen(moodBounds);
             attach.GetBoundsInScreen(attachBounds);
             send.GetBoundsInScreen(sendBounds);
+            int edgeError = Math.Abs(moodBounds.Left - (int)Math.Round(16 * density));
+            int weightedGap = sendBounds.Left - attachBounds.Right;
+            int minimumGap = (int)Math.Round(40 * density);
+            Report(
+                activity,
+                $"selectorGeometry=edgeError:{edgeError}px; gap:{weightedGap}px; " +
+                $"minimum:{minimumGap}px; density:{density}");
             Assert.IsLessThanOrEqualTo(
-                Math.Abs(moodBounds.Left - (int)Math.Round(16 * density)),
                 2,
+                edgeError,
                 "Selector content must retain the pinned 16 dp start edge.");
             Assert.IsGreaterThanOrEqualTo(
-                sendBounds.Left - attachBounds.Right,
-                (int)Math.Round(40 * density),
+                minimumGap,
+                weightedGap,
                 "Weighted spacing must keep at least 40 dp between Send and the selector icons.");
 
             await Click(activity, node => node.ContentDescription == "Attach video", "video selector");
