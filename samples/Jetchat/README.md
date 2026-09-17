@@ -72,7 +72,7 @@ palette extra for a system-theme change.
 | J10 — Profile history | Open one profile; use drawer gesture to choose the other; press Back. | C# normalizes to home before navigating, so Back returns to conversation. Pinned Kotlin directly navigates and can retain the preceding profile. Record the intentional routing difference. |
 | J11 — Links/drop | Scroll to `@aliconors` and URL messages; tap each and return. Drag one plain-text payload over/out/onto the conversation; separately try an image URI. | Mention opens Ali; URL uses the platform handler. Both provide red drag feedback and insert the first text item. C# additionally accepts image MIME types/URI text and animates to item 0; it does not render a dropped URI as an image attachment. |
 | J12 — Recreation | Type an unsent draft, open emoji, recreate the activity without clearing app data. | Both now save editor text/selection and the input selector. The historical #349 baseline observed the earlier C# loss; see the restoration contract below. Process-death, navigation/scroll restoration and TalkBack are not established by activity recreation. |
-| J13 — Video | Fresh launch with the same local playable fixture: open the seeded C# video, use playback controls, Back; choose the fixture from each picker, remove preview, choose again and Send with caption. | Both implementations expose thumbnail/fullscreen playback and attachment removal/send. C# uses native `PlayerView` controls, a packaged offline seed and bounded app-private picker copies; pinned Kotlin's modified reference retains its remote HLS seed, so paired acceptance must select the same local fixture instead. Matched-device behavior remains unestablished until the #387 run. |
+| J13 — Video | Fresh launch with the same local playable fixture: open the seeded C# video, use playback controls, Back; choose the fixture from each picker, remove preview, choose again and Send with caption. | Pixel 10/API 36 acceptance at `60f1800` verified the C# seed thumbnail/frame, fullscreen local playback, Back dismissal, background/resume survival, real-picker preview/remove and empty-caption send. The modified pinned reference selected the same local fixture through its real picker, rendered preview/remove and sent a second video node. The run did not rely on the Kotlin remote HLS seed. See the bounded limitations below. |
 
 ### Completed reusable work versus remaining integration
 
@@ -680,6 +680,16 @@ the C# player does not hide system bars or apply Android 16 `SurfaceView` blur
 regions; it is a black, edge-to-edge in-window overlay with native controls.
 That honest window/blur limitation applies in both themes and is most visible
 on compact screens where the native control bar chooses its own layout.
+
+Pixel 10 acceptance used the original 1080x2424 @ 420 dpi viewport,
+`font_scale=1.0` and system night mode. It found and fixed two native-only
+failures: the hosted thumbnail view consumed parent clicks, so the visible play
+affordance now owns the click; and `DisposableEffect` rejected a managed
+`VideoPlaybackSession` key, so playback cleanup keys on the stable video URI.
+The focused video-send regression enumerated and passed one test. The bounded
+run did not separately assert a trimmed caption through UI (the regression
+covers trimming), expose seek/mute controls through accessibility, or toggle
+the reference between system themes. It makes no timing or performance claim.
 
 | Difference | Classification and precise remaining work |
 |---|---|
