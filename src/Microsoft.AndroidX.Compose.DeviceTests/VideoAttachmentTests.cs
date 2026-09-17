@@ -128,6 +128,8 @@ public class VideoAttachmentTests
     [TestMethod]
     public void ErrorMessageProvider_ReturnsUsableOwnedPair()
     {
+        using var cachedZero = Java.Lang.Integer.ValueOf(0)
+            ?? throw new InvalidOperationException("Cached java.lang.Integer was unavailable.");
         using var provider = new VideoErrorMessageProvider();
         using var pair = provider.GetErrorMessage(null);
         var code = pair.First as Java.Lang.Integer
@@ -136,5 +138,9 @@ public class VideoAttachmentTests
             ?? throw new InvalidOperationException("Error message was not a java.lang.String.");
         Assert.AreEqual(0, code.IntValue());
         Assert.AreEqual("Unable to play this video.", message.ToString());
+        Assert.AreEqual(
+            0,
+            cachedZero.IntValue(),
+            "Provider cleanup must not dispose an existing managed peer for Integer.valueOf(0).");
     }
 }
