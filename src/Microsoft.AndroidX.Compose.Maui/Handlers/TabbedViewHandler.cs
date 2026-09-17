@@ -292,7 +292,7 @@ public partial class TabbedViewHandler : ViewHandler<ITabbedView, ComposeView>, 
 
         var container = new Box { Modifier = Modifier.FillMaxSize() };
         container.Add(host);
-        container.Add(new DisposableEffect(page, () => () =>
+        container.Add(new DisposableEffect(_pageKeys[page], () => () =>
         {
             frame?.RemoveAllViews();
             frame = null;
