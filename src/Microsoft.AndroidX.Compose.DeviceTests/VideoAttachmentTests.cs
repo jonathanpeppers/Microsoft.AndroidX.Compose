@@ -83,4 +83,44 @@ public class VideoAttachmentTests
             Runner.RunOnMainSync(() => view?.Dispose());
         }
     }
+
+    /// <summary>Bounded import rejects invalid streams and removes every partial destination.</summary>
+    [TestMethod]
+    public async Task ImportAsync_RejectsInvalidStreamsAndCleansPartialFiles()
+    {
+        const long maxVideoBytes = 25L * 1024 * 1024;
+        var context = global::Android.App.Application.Context;
+        var cache = context.CacheDir
+            ?? throw new InvalidOperationException("Test cache directory is unavailable.");
+        var importRoot = Path.Combine(cache.AbsolutePath, "jetchat-videos");
+        Directory.CreateDirectory(importRoot);
+        int initialCount = Directory.EnumerateFiles(importRoot).Count();
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            VideoAttachmentStore.ImportAsync(
+                context,
+                () => new ControlledVideoStream(0)));
+        Assert.AreEqual(initialCount, Directory.EnumerateFiles(importRoot).Count());
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            VideoAttachmentStore.ImportAsync(
+                context,
+                () => new ControlledVideoStream(maxVideoBytes + 1)));
+        Assert.AreEqual(initialCount, Directory.EnumerateFiles(importRoot).Count());
+
+        await Assert.ThrowsExactlyAsync<IOException>(() =>
+            VideoAttachmentStore.ImportAsync(
+                context,
+                () => new ControlledVideoStream(1024 * 1024, throwAt: 64 * 1024)));
+        Assert.AreEqual(initialCount, Directory.EnumerateFiles(importRoot).Count());
+
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() =>
+            VideoAttachmentStore.ImportAsync(
+                context,
+                () => new ControlledVideoStream(1024 * 1024),
+                cancellation.Token));
+        Assert.AreEqual(initialCount, Directory.EnumerateFiles(importRoot).Count());
+    }
 }

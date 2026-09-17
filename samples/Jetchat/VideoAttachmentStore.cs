@@ -20,6 +20,19 @@ internal static class VideoAttachmentStore
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(source);
+        return await ImportAsync(
+            context,
+            () => context.ContentResolver?.OpenInputStream(source),
+            cancellationToken);
+    }
+
+    internal static async Task<string> ImportAsync(
+        Context context,
+        Func<Stream?> openSource,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(openSource);
 
         var cache = context.CacheDir
             ?? throw new InvalidOperationException("Jetchat cache directory is unavailable.");
@@ -29,7 +42,9 @@ internal static class VideoAttachmentStore
 
         try
         {
-            await Task.Run(() => CopyBounded(context, source, destination, cancellationToken), cancellationToken);
+            await Task.Run(
+                () => CopyBounded(openSource, destination, cancellationToken),
+                cancellationToken);
             using var file = new Java.IO.File(destination);
             var uri = Android.Net.Uri.FromFile(file)
                 ?? throw new InvalidOperationException("Could not create a URI for the imported video.");
@@ -73,12 +88,11 @@ internal static class VideoAttachmentStore
     }
 
     static void CopyBounded(
-        Context context,
-        Android.Net.Uri source,
+        Func<Stream?> openSource,
         string destination,
         CancellationToken cancellationToken)
     {
-        using var input = context.ContentResolver?.OpenInputStream(source)
+        using var input = openSource()
             ?? throw new InvalidOperationException("The selected video could not be opened.");
         using var output = File.Create(destination);
         var buffer = new byte[64 * 1024];
