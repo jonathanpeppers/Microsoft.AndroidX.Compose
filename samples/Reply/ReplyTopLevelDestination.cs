@@ -11,12 +11,12 @@ public sealed class ReplyTopLevelDestination
         string route,
         int    selectedIcon,
         int    unselectedIcon,
-        string iconTextId)
+        int    labelResourceId)
     {
-        Route          = route;
-        SelectedIcon   = selectedIcon;
-        UnselectedIcon = unselectedIcon;
-        IconTextId     = iconTextId;
+        Route           = route;
+        SelectedIcon    = selectedIcon;
+        UnselectedIcon  = unselectedIcon;
+        LabelResourceId = labelResourceId;
     }
 
     /// <summary>The nav route this destination corresponds to.</summary>
@@ -28,6 +28,6 @@ public sealed class ReplyTopLevelDestination
     /// <summary>Drawable resource for the unselected (outlined) icon variant.</summary>
     public int UnselectedIcon { get; }
 
-    /// <summary>The accessibility label for this destination's icon.</summary>
-    public string IconTextId { get; }
+    /// <summary>Localized label resource for this destination.</summary>
+    public int LabelResourceId { get; }
 }

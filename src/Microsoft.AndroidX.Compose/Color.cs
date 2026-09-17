@@ -140,6 +140,17 @@ public readonly struct Color : IEquatable<Color>
         return WithAlpha((byte)(opacity * 255f + 0.5f));
     }
 
+    internal Color ModulateOpacity(float opacity)
+    {
+        opacity = Math.Clamp(opacity, 0f, 1f);
+        if ((_packedValue & 0x3FUL) == 0UL)
+            return WithOpacity(A / 255f * opacity);
+
+        ulong alpha = (_packedValue >> 6) & 0x3FFUL;
+        ulong modulated = (ulong)(alpha * opacity + 0.5f);
+        return new Color((_packedValue & ~0xFFC0UL) | (modulated << 6));
+    }
+
     /// <summary>
     /// Whether this color carries a real value. Matches Kotlin's
     /// <c>Color.isSpecified</c> &#8212; useful for "fall back to theme"

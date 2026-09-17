@@ -5,6 +5,156 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Flow overflow compatibility
+
+`FlowRow.Overflow` and `FlowColumn.Overflow` accept managed `FlowRowOverflow`
+and `FlowColumnOverflow` configurations. `Clip` is also the omitted Kotlin
+default. `ExpandIndicator` supplies one indicator; `ExpandOrCollapseIndicator`
+supplies both indicators and optional minimum row/column and height/width
+thresholds. There is no separate collapse-only factory in Foundation.
+Content accepts nodes, node factories, or `[ComposableContent]` callbacks.
+Emit one layout root per indicator and update the owning flow's `maxLines`
+from its click handler; overflow does not mutate application expansion state.
+Both indicators can be composed for intrinsic measurement even when only one
+is placed, so composition is not evidence of visibility.
+
+The actual pinned **Foundation Layout 1.11.3** contract matters here. Its
+overflow overloads are deprecated ("FlowLayout overflow is no longer
+maintained"), but are still present and fully bound by the **1.11.3.1
+runtime `.Android.dll`**. The facade intentionally retains this compatibility
+surface; it does not substitute contextual or custom layouts. Factory and
+layout calls use official bindings, including the mangled bound
+`ExpandOrCollapseIndicator__jt2gSs` method. Only the omitted `Companion` field
+requires a cached lookup through bound Java reflection; no new raw JNI
+bridge or private-state reflection is used.
+
+`FlowOverflowScope.TotalItemCount` and `ShownItemCount` forward the native
+scope getters, excluding indicators. **Read counts in drawing/post-layout
+callbacks, not composition.** In particular, shown count throws before
+measurement; total count may not yet be initialized. Kotlin lazily caches
+each scope's first count read, so scopes are invocation-local and must not be
+saved across indicator invocations. No managed eager snapshot, zero fallback,
+or promise of snapshot-observable live state is added.
+Even a new managed callback invocation can receive the same cached native scope.
+Changing regular content from eight items to five at an unchanged line limit can
+therefore retain a native total of eight. Changing `maxLines` recreates the native
+indicator scope and exposes the new total. This is an explicit pinned-native
+compatibility limitation, not a freshness guarantee supplied by the C# facade.
+
+The flow facades remain generated. An explicit managed-reference registry
+allows nullable wrapper-passthrough options without classifying arbitrary
+reference types as JNI peers. `[FacadeAdded]` preserves old catalog CLR arity
+and direct targets while new overloads carry the overflow option. Omitted
+overflow leaves Kotlin bit 6 set; explicitly supplied null in a direct call
+clears that bit and is rejected, rather than silently becoming Clip, including
+public calls that bypass interception. The overflow slots opt into
+`[FacadeAdded(PreserveArgumentPresence = true)]`: a generated overload uses
+`CallerArgumentExpression` to capture whether overflow was supplied. Its
+compiler-only `__overflowArgument` parameter must not be set manually.
+Existing CLR overloads and direct-helper arities remain available; the old
+rich overload's required overflow argument is always considered supplied.
+Unrelated facades retain their existing conservative nullable fallback.
+Tree `Overflow = null` follows the existing tree optional-property convention
+and omits the option. Generated enums describe the eight-slot overflow
+overloads and four-slot indicator factories. Native changed masks remain
+conservative because managed configuration is resolved during composition.
+Tracked indicator lambdas enter their invocation composer and native Row or
+Column receiver, then restore the outer receiver even on exceptions.
+
+The `containers-flow-overflow` and `containers-flow-overflow-direct` Gallery
+routes demonstrate both directions/styles. `FlowOverflowFacadeTests` pins
+legacy signatures and omission/null masks. `FlowOverflowTests` includes direct
+bound-native controls alongside managed exact-count, clipping, interaction
+and nested-layout cases. Its test-only admission gate associates each actual
+activity instance with a resumed, attached, laid-out and focused native window
+and process. Clicks reacquire the package/window-owned accessibility root and
+require one actionable target. Draw snapshots carry the fixture/process identity
+and generation; count assertions are not substituted with host focus polling.
+The native characterization and managed parity cases assert the observed
+`8/2 -> 8/8 -> 8/2 -> 8/2 -> 5/5` scope sequence. At the fourth step they
+separately verify that five regular items actually composed and retained their
+remembered state; the cached total of eight is not described as fresh.
+The earlier strict-freshness failure evidence remains valid for its original
+source/APK and is not relabeled as a passing run.
+`FlowOverflowOptionsTests` separately covers plain-node indicator overloads in
+both directions and authoring styles. It varies the explicit line threshold
+and the height/width threshold independently, then verifies native collapse
+actions and retained node state. Companion-resolution host regressions cover
+same-peer and different-peer success, null conversion, and throwing conversion:
+temporary peers are disposed on every non-retained path.
+
+### Verified native parity
+
+On 2026-09-16, source tree `6f7da91d07a06781b5e13a7c8fdc09b9f57dc091`
+passed both native characterization cases and all 16 managed cases on Pixel 7
+using one immutable target-36, arm64 APK. This verifies the explicitly approved
+native-compatible contract, not a repair of Kotlin's cached scope counts.
+
+| Suite | Passed | Native PID | TRX run ID | Device UTC start / finish |
+| --- | --- | --- | --- | --- |
+| Pinned native characterization | 2 | 5039 | `21160f6d-862a-4646-82ef-e68d45ca6295` | 22:12:00.0599967 / 22:12:03.6251421 |
+| Managed tree/composerless parity, expand-only and clip | 16 | 5230 | `3559e12a-84a8-45fb-a49e-f0959380c1e7` | 22:12:06.2446093 / 22:12:19.7608739 |
+
+Both runs had zero failed, error or skipped cases. All four managed
+direction/style combinations recorded requested item count five with cached
+native scope `8/2`, then `5/5` after changing `maxLines`. They also verified the
+five-item composition, retained item and indicator state, native accessibility
+clicks, nested opposite-direction `4/1` counts, premature-read errors and
+GC/indicator-only recomposition. The eight clip cases and four expand-only
+cases passed without altering their original assertions.
+
+The installed base APK was pulled and reverified before each invocation:
+SHA-256 `28602343DB428CE405A79F6F3A5F8A686B1832CE8AB785343BC12DD159813F7D`.
+Embedded app and runtime DLL payloads matched the build outputs exactly:
+`E15CC3CCAE3B7E3EA8B7B80C858032A55163F919A93939405F03D65A38A49917`
+and `C65D43EB5C3C63B15A472B62E38BB603FF4644F5342AC8208FACC8CEE36E1A50`.
+No assembly overrides were present. Each test process was stopped and its PID
+absence verified; all device commands ended at host time
+`2026-09-16T22:12:22.2866745Z`.
+
+The native and managed TRX SHA-256 values are respectively
+`0EB3A9FEEB9C76A0FCDE1774F67CD02BB36339354791B737F61FA8DDD1923A14`
+and `523EB861948BB513F3A21DB4719AF94594C71507D6A92E5D56F944D322AA6B1E`.
+Raw TRXs, serial-specific command records, installed-payload proofs and scoped
+logs are retained in the session's `flow-parity-native-171131` evidence folder.
+The earlier failed device runs and rejected host-JVM observer prototype remain
+historical evidence under their original source identities.
+
+### Review follow-up verification
+
+Source tree `ee5275c66e28a3bf6bcd916aba1f2f94d254f756` additionally verifies
+the plain `ComposableNode` overloads and explicit collapse thresholds. The
+original 18 cases were rerun alongside eight new node-route cases, without
+changing the approved native-parity contract.
+
+| Suite | Passed | Native PID | TRX run ID | Device UTC start / finish (2026-09-17) |
+| --- | --- | --- | --- | --- |
+| Native characterization | 2 | 16503 | `571ae00e-3950-4dc5-a43e-4742730b427e` | 02:04:29.9556219 / 02:04:33.2879147 |
+| Original 16 managed cases plus 8 node/threshold cases | 24 | 16646 | `59759e3b-232f-4766-9b22-47d9c63c719f` | 02:04:36.3263983 / 02:04:56.6134726 |
+
+All 26 cases passed with zero failures, errors or skips. Both directions and
+authoring styles exercised plain-node expand-only and expand/collapse factories.
+The latter independently suppressed collapse below four lines and below 200dp,
+then displayed it above the two-line/96dp thresholds. Real native actions and
+retained node state were verified. The same source passed 468 host tests,
+including deterministic companion-peer cleanup for same-peer, different-peer,
+null and throwing cast paths.
+
+The installed/pulled APK SHA-256 was
+`CDC1A4CF2B6FF51F12D692968A33AD212AF035221E35A5B9AFAC7C51740A1C92`;
+the embedded app/runtime DLL hashes were
+`D64A98CED5CA9CB3658BA9B91F94AA320298534CDAAE6DFD1CE72310761B8200`
+and `84ECC6C59C1E4808B9AFFF0F8C0EB3F6FF74DF75CCD525C9AED2FCE737BE49EA`.
+Both runs reverified those identities and absence of override files. Both
+processes were stopped and PID absence verified. Host all-commands-ended time
+was `2026-09-17T02:04:55.2593844Z`; TRX times use the device clock, which was
+slightly ahead of the host clock.
+
+The native/managed TRX hashes are
+`7840CFF09A48B5FF24330E9D2473CBA79EE10D9DF412481635BB00FD45E8747F`
+and `60696B03644261715E9A6455821446C8A75C4DA1F6EEE9609AF4D4D905035412`.
+Raw evidence is retained in the session's `flow-review-native-210400` folder.
+
 ## Typed transition values
 
 `composer.UpdateTransition<T>(targetState)` and
@@ -1528,18 +1678,35 @@ class.
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
   For `MutableState<T>` and `MutableNumberState<T>`, the managed wrapper
-  cache also uses keyed `Remember`: equal keys retain the wrapper and its
-  current value without invoking the factory; changed keys run the current
-  factory and return a replacement wrapper. The previous wrapper is not
-  rebound to the replacement's state. Key arrays are shallow-snapshotted,
-  so changing an element in the caller's array invalidates the cache;
-  mutating an object used as an individual key is not a deep-value snapshot.
+  cache also uses keyed `Remember` over the exact values marshalled to
+  Kotlin: equal keys retain the wrapper and its current value without invoking
+  the factory; changed keys run the current factory and return a replacement
+  wrapper. The previous wrapper is not rebound to the replacement's state.
+  Key vectors are shallow-snapshotted, so changing an element in the caller's
+  array invalidates the cache according to that element's key semantics.
   For saveable inputs, keyless and empty-array calls both mean no inputs;
   a single null element is a distinct input vector. The array overload
   rejects a null array container.
-  Use immutable primitive/string keys, null, or Java peers with appropriate
-  equality. Other managed key objects still use the existing `ToString()`
-  JNI marshalling, not arbitrary managed-object equality on the Kotlin side.
+  Null, immutable primitive/string keys, and Java peers retain their natural
+  Kotlin equality. Managed comparison tokens mirror the existing Java boxing:
+  `byte`/`short`, `ushort`/`int`, and `uint`/`long`/`ulong` values compare in
+  their shared Java numeric class; floating-point signed zeroes are distinct
+  and NaN payloads compare equal. Caller-owned Java peers use their virtual
+  Java `equals` and are never disposed by key lowering. Other managed key
+  objects preserve the legacy `ToString()` JNI marshalling, and the resulting
+  string snapshot now also controls the managed wrapper cache. `ToString()` is
+  evaluated once per key per `RememberSaveable` invocation, so mutating a
+  custom key's string between compositions invalidates against the previous
+  frozen snapshot. Their managed `Equals` implementation is not used:
+  distinct objects with the same string are equal saveable inputs, while
+  `Equals`-equal objects with different strings invalidate. This deliberately
+  does not invent deep-array equality. An array supplied as one key falls back
+  to its type-name string; an array supplied to `RememberSaveableKeyed` is the
+  key vector, whose elements are independently snapshotted and compared.
+  This is an intentional behavior correction: compared with versions whose
+  managed cache used `object.Equals`, same-string custom replacements now keep
+  the managed wrapper and do not run its factory, while different-string
+  replacements invalidate even when their managed objects compare equal.
 
   On activity recreation, the factory constructs a fresh managed wrapper
   and the saveable holder rebinds it to the restored JVM state. Numeric

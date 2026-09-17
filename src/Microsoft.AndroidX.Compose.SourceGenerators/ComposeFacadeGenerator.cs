@@ -1901,6 +1901,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         slot.Param.GetAttributes().Any(a =>
             a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.FacadeAddedAttribute");
 
+    static bool PreservesArgumentPresence(FacadeSlot slot) =>
+        slot.Param.GetAttributes().Any(a =>
+            a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.FacadeAddedAttribute" &&
+            a.NamedArguments.Any(argument =>
+                argument.Key == "PreserveArgumentPresence" && argument.Value.Value is true));
+
+    static string ArgumentPresenceParameterName(FacadeSlot slot) => "__" + slot.Param.Name + "Argument";
+
     static void EmitComposableMethodEntryPoint(StringBuilder sb, string className,
         string bridgeMethodName, string? scope, IReadOnlyList<FacadeSlot> slots,
         bool callerProvidesDefaults, bool callerProvidesChanged,
@@ -1953,6 +1961,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             bool[] composerModes = [false, true];
             foreach (bool implicitComposer in composerModes)
             {
+                if (optionalValueSlots.Any(PreservesArgumentPresence))
+                {
+                    sb.AppendLine();
+                    EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
+                        ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
+                        contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
+                        optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
+                        defaults, themeColor, stateConfirmSlots, primaryUserParams,
+                        branchInfo, indexedChildren, secondaryCtorInfo,
+                        ComposableMethodRoute.PrimaryResource, implicitComposer, presenceCompatibilitySignature: true);
+                }
                 sb.AppendLine();
                 EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, legacySlots,
                     ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
@@ -2038,15 +2057,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         SecondaryCtorInfo? secondaryCtorInfo,
         ComposableMethodRoute route,
         bool implicitComposer,
-        bool legacySignature = false)
+        bool legacySignature = false,
+        bool presenceCompatibilitySignature = false)
     {
+        bool capturePresence = !presenceCompatibilitySignature && optionalValueSlots.Any(PreservesArgumentPresence);
         string helperName = className + "_" + route
             + (implicitComposer ? "_Implicit" : "_Explicit")
-            + (optionalValueSlots.Any(IsAddedFacadeSlot) ? "_WithAddedSlots" : "");
+            + (optionalValueSlots.Any(IsAddedFacadeSlot) ? "_WithAddedSlots" : "")
+            + (capturePresence ? "_WithArgumentPresence" : "");
         sb.Append("        /// <summary>")
           .Append(implicitComposer ? "Implicit-composer" : "[Composable]")
           .Append(" entry point for <see cref=\"global::AndroidX.Compose.")
           .Append(className).AppendLine("\"/>.</summary>");
+        if (capturePresence)
+        {
+            foreach (var slot in optionalValueSlots.Where(PreservesArgumentPresence))
+                sb.Append("        /// <param name=\"").Append(ArgumentPresenceParameterName(slot))
+                  .AppendLine("\">Compiler-supplied argument presence; do not supply this parameter manually.</param>");
+        }
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
         sb.Append("        [global::AndroidX.Compose.ComposableDirectTarget(typeof(global::AndroidX.Compose.Composables), nameof(")
           .Append(helperName).AppendLine("))]");
@@ -2063,7 +2091,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         AppendComposableMethodUserParameters(sb, requiredCtorSlots, optionalCtorSlots,
             requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
             hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
-            route, implicitComposer, ref hasParameter, emitDefaults: !legacySignature);
+            route, implicitComposer, ref hasParameter, emitDefaults: !legacySignature && !presenceCompatibilitySignature);
+        if (capturePresence)
+            AppendArgumentPresenceParameters(sb, optionalValueSlots, captureExpressions: true);
         sb.AppendLine(")");
         sb.AppendLine("        {");
         sb.Append("            ").Append(helperName).Append('(')
@@ -2077,10 +2107,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             sb.Append(", ").Append(EscapeIdent(name));
         }
+        if (capturePresence)
+        {
+            foreach (var slot in optionalValueSlots.Where(PreservesArgumentPresence))
+                sb.Append(", ").Append(ArgumentPresenceParameterName(slot));
+        }
         sb.Append(", ").Append(ComposableMethodFallbackOmittedArguments(
             requiredCtorSlots, optionalCtorSlots, requiredNamedSlots,
             contentSlots, optionalNamedSlots, optionalValueSlots,
-            hasModifier, themeColor, stateConfirmSlots, route))
+            hasModifier, themeColor, stateConfirmSlots, route, capturePresence))
           .AppendLine(", 0);");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -2099,6 +2134,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
             hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
             route, implicitComposer, ref hasParameter);
+        if (capturePresence)
+            AppendArgumentPresenceParameters(sb, optionalValueSlots, captureExpressions: false);
         sb.AppendLine(", ulong __omittedArguments = 0, int __directChanged = 0)");
         sb.AppendLine("        {");
         if (route == ComposableMethodRoute.Secondary)
@@ -2137,6 +2174,19 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             primaryUserParams, branchInfo, indexedChildren, secondaryCtorInfo,
             route, implicitComposer, surfacedIndices, suppressChanged: legacySignature);
         sb.AppendLine("        }");
+    }
+
+    static void AppendArgumentPresenceParameters(StringBuilder sb,
+        IReadOnlyList<FacadeSlot> optionalValueSlots, bool captureExpressions)
+    {
+        foreach (var slot in optionalValueSlots.Where(PreservesArgumentPresence))
+        {
+            sb.Append(", ");
+            if (captureExpressions)
+                sb.Append("[global::System.Runtime.CompilerServices.CallerArgumentExpressionAttribute(\"")
+                  .Append(slot.Param.Name).Append("\")] ");
+            sb.Append("string? ").Append(ArgumentPresenceParameterName(slot)).Append(" = null");
+        }
     }
 
     static void AppendComposableMethodUserParameters(
@@ -2254,7 +2304,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasModifier,
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
-        ComposableMethodRoute route)
+        ComposableMethodRoute route,
+        bool capturePresence)
     {
         int index = (route == ComposableMethodRoute.Secondary ? 1 : 0)
             + requiredCtorSlots.Count
@@ -2278,7 +2329,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             terms.Add(OmittedBitTerm(name + " is null", index++));
         }
         foreach (var slot in optionalValueSlots)
-            terms.Add(OmittedBitTerm(EscapeIdent(slot.Param.Name) + " is null", index++));
+        {
+            if (!PreservesArgumentPresence(slot))
+                terms.Add(OmittedBitTerm(EscapeIdent(slot.Param.Name) + " is null", index));
+            else if (capturePresence)
+                terms.Add(OmittedBitTerm(ArgumentPresenceParameterName(slot) + " is null", index));
+            index++;
+        }
         if (themeColor is not null)
             terms.Add(OmittedBitTerm("containerColor.ToPacked() == 0L", index++));
         foreach (var info in stateConfirmSlots)
@@ -4275,7 +4332,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
-        if (ComposeFacadeManagedTypes.IsRecognized(type)) return true;
+        if (ComposeFacadeManagedTypes.IsRecognized(type, annotation)) return true;
         // Nullable<primitive>: bool?, int?, long?, float?, double?.
         if (IsNullablePrimitive(type)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.

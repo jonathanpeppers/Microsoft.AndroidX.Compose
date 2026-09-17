@@ -110,7 +110,93 @@ for that behavior, not an absent product feature or a successful comparison.
 | J12 activity recreation | Verified difference in both themes: C# loses unsent `Retain349` and closes the emoji selector; Kotlin preserves both. This is activity recreation, not process-death proof. |
 | J13 video | C# has no corresponding attachment/player surface. Kotlin's platform-picker ownership mismatch stopped capture before foreign UI inspection. Selection, preview, playback and sending are **not established**; no media was accessed. |
 
+These rows retain the frozen-build observations identified above. Current C#
+source now integrates #384's bounded selector, recording geometry, message
+baseline, drawer, jump-control, and profile presentation changes. A successful
+host build is not matched-device proof; the J01/J02/J04/J05/J07/J08/J09
+light/dark and compact/short/larger-window matrix must be rerun with exact
+source and APK identities before replacing the historical outcomes.
+
+The first Pixel10 acceptance lease for that rerun stopped before installation:
+the existing package-private fast-deployment override contained `Jetchat.dll`
+and `Microsoft.AndroidX.Compose.dll` payloads that differed from the frozen,
+self-contained APK. The installed signing certificate was compatible, but
+`install -r` preserves package data and therefore could not establish which
+managed payload would execute. No override, app data, system setting, or
+unrelated package was changed. Device results remain pending a separately
+authorized package-scoped override-isolation policy.
+
+The replacement Pixel10 lease used the user-authorized stronger isolation:
+uninstall only `net.compose.samples.jetchat` without preserving data, verify
+the package and override directory were absent, then fresh-install the frozen
+self-contained APK. The installed 123,395,580-byte base APK matched SHA-256
+`9BFEAC20A6081DE45FE5206877D5A808601DFA4794DC1E3CF7D091CDEF3118C7`
+and the expected signing certificate; no fast-deployment override existed.
+On the physical API 36 phone at its original 1080 x 2424 / 420 dpi,
+font-scale-1.0 settings, activity-local light/dark runs completed
+J01/J02/J04/J05/J07/J08/J09. They covered the drawer selections, exact
+`ab😀cd` caret insertion and selector focus handoff, @/Stickers dialogs,
+centered photo/location panels, nonblank-input mic, real long-press recording
+indicator, labeled jump action, and both profiles' expanded/collapsed FAB and
+unavailable actions. The scoped log tail contained no targeted fatal runtime
+signature. This is source-matched C# behavior evidence, not a Kotlin
+pixel-equivalence result.
+
+A separate, fully restored Pixel10 lease completed the remaining size matrix.
+The actual activity roots were 1080 x 1920 at 480 dpi / font scale 1.3
+(360 x 640 dp), 1400 x 1800 at 320 dpi / font scale 1.0 (700 x 900 dp), and
+2000 x 1600 at 320 dpi / font scale 1.0 (1000 x 800 dp). Short-window
+J01/J04/J07/J09 and medium/expanded J01/J09 completed in activity-local light
+and dark palettes; the short controlled-caret case again produced exact
+`ab😀cd`. The installed base still matched the frozen APK, override files
+remained absent, and the scoped final log tail contained no targeted fatal
+runtime signature. Size, density, and font scale were restored to the exact
+initial physical 1080 x 2424 / 420 dpi / font-scale-1.0 values before release.
+These are display overrides on a physical phone, not tablet or foldable
+hardware evidence, and they do not establish whole-app pixel parity.
+
+Review follow-up `7561ee0` added the pinned 16 dp horizontal padding to the
+Send label after zeroing the Material button's content padding. A new
+self-contained APK (SHA-256
+`1AE230C2E6D777E861B11D87F6FAE458833DEEFC5558632527681D0B9070E05E`)
+contained the exact reviewed app/runtime assemblies. On Pixel10, activity-local
+light/dark captures covered disabled-empty and enabled-`pad` states at the
+original 1080 x 2424 / 420 dpi / font-scale-1.0 configuration and the short
+1080 x 1920 / 480 dpi / font-scale-1.3 configuration. The widened control and
+complete label remained inside the selector row without overlap or clipping.
+The device was restored to its exact initial size, density, font, and night
+state before release. This focused rerun supersedes the earlier runtime
+payload only for the Send-padding geometry; all prior bounded evidence and
+limitations remain unchanged.
+
 ### Reply
+
+Post-baseline integration evidence for #383 was recorded separately on
+2026-09-17, with the final compact reviewer-fix validation at executable
+source `0edae7729af64010ac5a361e99d6030ab8d80207`.
+On a physical Pixel 10 (Android 16 / API 36), original 1080 x 2424 at
+420 dpi (411 x 923.4 dp), font scale 1.0, all nine
+`ReplyNavigationTests` and all three `ReplySearchTests` passed from exact
+fresh-installed, embedded-assembly APKs. The run exercised avatar selection,
+strict Android checked-state semantics, forward/back FAB behavior and detail
+presence, scrolling/centered detail toolbar, navigation/restoration and
+search ownership. Fresh compact light/dark screenshots and accessibility
+hierarchies are session artifacts. This is source-specific C# acceptance,
+not a new matched Kotlin comparison; the R01-R12 observations below remain
+the fixed #349 baseline.
+
+A separate source-specific matrix then passed the exact adaptive test at
+600 x 900 dp (rail), 840 x 800 dp (rail), 1200 x 800 dp (drawer), and
+840 x 450 dp (compact-height bottom navigation), with native hierarchy
+evidence that the exact localized label belongs to a selected navigation
+control rather than content text. Light/dark Inbox/detail captures cover the
+600 and 840 dp presentation.
+The pinned policy uses bottom navigation below 600 dp width or 480 dp height,
+a rail through 1199 dp, and a drawer from 1200 dp; the 1200 dp boundary is
+covered by a focused policy regression. Those matrix dimensions were
+temporary window/density overrides on the same physical phone. They do not
+prove physical tablet/foldable behavior, fold posture handling, or dual-pane
+content; #168 remains the list/detail boundary.
 
 | ID | Initial state / action | Result |
 | --- | --- | --- |

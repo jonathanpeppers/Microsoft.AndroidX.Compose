@@ -11,32 +11,34 @@ public static class ReplyEmailThreadItem
         new Composed(c =>
         {
             var scheme = c.ColorScheme();
-            return new Card
+            var surface = new Surface
             {
-                Modifier
-                    .Padding(horizontal: 16, vertical: 4)
-                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new Column
-                {
-                    Modifier.FillMaxWidth().Padding(20),
-                    BuildHeaderRow(email, scheme),
-                    new Text(email.Subject)
-                    {
-                        FontSize  = 14,
-                        Color     = Color.FromPacked(scheme.Outline),
-                        Modifier  = Modifier.Padding(top: 12, bottom: 8),
-                    },
-                    new Text(email.Body)
-                    {
-                        FontSize = 16,
-                        Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                    },
-                    BuildActionRow(scheme),
-                },
+                Shape = Shape.RoundedCorners(16),
+                Color = Color.FromPacked(scheme.SurfaceContainerHigh),
             };
+            surface.Add(Modifier.Padding(horizontal: 16, vertical: 4));
+            surface.Add(new Column
+            {
+                Modifier.FillMaxWidth().Padding(20),
+                BuildHeaderRow(email, scheme, c),
+                new Text(email.Subject)
+                {
+                    Color = Color.FromPacked(scheme.Outline),
+                    Modifier = Modifier.Padding(top: 12, bottom: 8),
+                }.WithTypography(ReplyTypography.BodyMedium),
+                new Text(email.Body)
+                {
+                    Color = Color.FromPacked(scheme.OnSurfaceVariant),
+                }.WithTypography(ReplyTypography.BodyLarge),
+                BuildActionRow(c, scheme),
+            });
+            return surface;
         });
 
-    static Row BuildHeaderRow(Email email, AndroidX.Compose.Material3.ColorScheme scheme) =>
+    static Row BuildHeaderRow(
+        Email email,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        AndroidX.Compose.Runtime.IComposer composer) =>
         new()
         {
             Modifier.FillMaxWidth(),
@@ -47,50 +49,51 @@ public static class ReplyEmailThreadItem
                     .Weight(1f)
                     .Padding(horizontal: 12, vertical: 4),
                 new Text(email.Sender.FirstName)
+                    .WithTypography(ReplyTypography.LabelMedium),
+                new Text(composer.StringResource(Resource.String.reply_twenty_minutes_ago))
                 {
-                    FontSize = 12,
-                },
-                new Text("20 mins ago")
-                {
-                    FontSize = 12,
                     Color    = Color.FromPacked(scheme.Outline),
-                },
+                }.WithTypography(ReplyTypography.LabelMedium),
             },
             new IconButton(onClick: NoOp)
             {
                 Modifier
                     .Clip(Shape.Circle())
                     .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new Icon(Resource.Drawable.ic_star_border, "Favorite")
+                new Icon(
+                    Resource.Drawable.ic_star_border,
+                    composer.StringResource(Resource.String.reply_favorite))
                 {
                     Tint = Color.FromPacked(scheme.Outline),
                 },
             },
         };
 
-    static Row BuildActionRow(AndroidX.Compose.Material3.ColorScheme scheme) =>
-        new(Arrangement.SpacedBy(12.Dp()))
+    static Row BuildActionRow(
+        AndroidX.Compose.Runtime.IComposer composer,
+        AndroidX.Compose.Material3.ColorScheme scheme)
+    {
+        var colors = composer.ButtonColors(
+            containerColor: Color.FromPacked(scheme.SurfaceBright));
+        var reply = new Button(onClick: NoOp) { Colors = colors };
+        reply.Add(Modifier.Weight(1f));
+        reply.Add(new Text(composer.StringResource(Resource.String.reply_action))
         {
-            Modifier
-                .FillMaxWidth()
-                .Padding(top: 20, bottom: 8),
-            new Button(onClick: NoOp)
-            {
-                Modifier.Weight(1f),
-                new Text("Reply")
-                {
-                    Color = Color.FromPacked(scheme.OnSurface),
-                },
-            },
-            new Button(onClick: NoOp)
-            {
-                Modifier.Weight(1f),
-                new Text("Reply All")
-                {
-                    Color = Color.FromPacked(scheme.OnSurface),
-                },
-            },
+            Color = Color.FromPacked(scheme.OnSurface),
+        });
+        var replyAll = new Button(onClick: NoOp) { Colors = colors };
+        replyAll.Add(Modifier.Weight(1f));
+        replyAll.Add(new Text(composer.StringResource(Resource.String.reply_all))
+        {
+            Color = Color.FromPacked(scheme.OnSurface),
+        });
+        return new Row(Arrangement.SpacedBy(12.Dp()))
+        {
+            Modifier.FillMaxWidth().Padding(top: 20, bottom: 8),
+            reply,
+            replyAll,
         };
+    }
 
     static void NoOp() { }
 }

@@ -9,7 +9,7 @@ namespace AndroidX.Compose.Samples.Reply;
 /// <see cref="ReplyApp.Content"/>.
 /// </summary>
 [Activity(
-    Label        = "@string/app_name",
+    Label        = "@string/reply_app_name",
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
 [Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
