@@ -53,7 +53,8 @@ public class AdvancedDrawingTests
                     bitmap,
                     activity.Pixel(215, 105),
                     NativeColor.Rgb(0x12, 0x24, 0x44),
-                    NativeColor.White);
+                    NativeColor.White,
+                    effectiveAlpha: 64);
             });
             Console.WriteLine(
                 $"ADVANCED_DRAWING restored={activity.ExceptionRestored} expired={activity.TransformExpired} "
@@ -121,20 +122,38 @@ public class AdvancedDrawingTests
         Bitmap bitmap,
         (int X, int Y) point,
         NativeColor background,
-        NativeColor foreground)
+        NativeColor foreground,
+        int effectiveAlpha)
     {
         int actual = bitmap.GetPixel(point.X, point.Y);
         Assert.AreEqual(0xFF, global::Android.Graphics.Color.GetAlphaComponent(actual));
-        Assert.AreNotEqual(background.ToArgb(), actual, "Alpha was treated as fully transparent.");
-        Assert.AreNotEqual(foreground.ToArgb(), actual, "Alpha was ignored and rendered opaque.");
-        int backgroundRed = global::Android.Graphics.Color.GetRedComponent(background.ToArgb());
-        int foregroundRed = global::Android.Graphics.Color.GetRedComponent(foreground.ToArgb());
-        int actualRed = global::Android.Graphics.Color.GetRedComponent(actual);
-        Assert.IsTrue(actualRed > backgroundRed, "Combined alpha produced no visible source contribution.");
-        Assert.IsTrue(
-            actualRed < (backgroundRed + foregroundRed) / 2,
-            "Source alpha and argument alpha were not multiplied.");
+        AssertChannel(
+            global::Android.Graphics.Color.GetRedComponent(actual),
+            Blend(
+                global::Android.Graphics.Color.GetRedComponent(background.ToArgb()),
+                global::Android.Graphics.Color.GetRedComponent(foreground.ToArgb()),
+                effectiveAlpha));
+        AssertChannel(
+            global::Android.Graphics.Color.GetGreenComponent(actual),
+            Blend(
+                global::Android.Graphics.Color.GetGreenComponent(background.ToArgb()),
+                global::Android.Graphics.Color.GetGreenComponent(foreground.ToArgb()),
+                effectiveAlpha));
+        AssertChannel(
+            global::Android.Graphics.Color.GetBlueComponent(actual),
+            Blend(
+                global::Android.Graphics.Color.GetBlueComponent(background.ToArgb()),
+                global::Android.Graphics.Color.GetBlueComponent(foreground.ToArgb()),
+                effectiveAlpha));
     }
+
+    static int Blend(int background, int foreground, int alpha) =>
+        (foreground * alpha + background * (255 - alpha) + 127) / 255;
+
+    static void AssertChannel(int actual, int expected) =>
+        Assert.IsTrue(
+            Math.Abs(actual - expected) <= 2,
+            $"Expected channel {expected} +/- 2, got {actual}.");
 
     static async Task WaitFor(Func<bool> condition)
     {
