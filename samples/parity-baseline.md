@@ -110,6 +110,65 @@ for that behavior, not an absent product feature or a successful comparison.
 | J12 activity recreation | Verified difference in both themes: C# loses unsent `Retain349` and closes the emoji selector; Kotlin preserves both. This is activity recreation, not process-death proof. |
 | J13 video | C# has no corresponding attachment/player surface. Kotlin's platform-picker ownership mismatch stopped capture before foreign UI inspection. Selection, preview, playback and sending are **not established**; no media was accessed. |
 
+These rows retain the frozen-build observations identified above. Current C#
+source now integrates #384's bounded selector, recording geometry, message
+baseline, drawer, jump-control, and profile presentation changes. A successful
+host build is not matched-device proof; the J01/J02/J04/J05/J07/J08/J09
+light/dark and compact/short/larger-window matrix must be rerun with exact
+source and APK identities before replacing the historical outcomes.
+
+The first Pixel10 acceptance lease for that rerun stopped before installation:
+the existing package-private fast-deployment override contained `Jetchat.dll`
+and `Microsoft.AndroidX.Compose.dll` payloads that differed from the frozen,
+self-contained APK. The installed signing certificate was compatible, but
+`install -r` preserves package data and therefore could not establish which
+managed payload would execute. No override, app data, system setting, or
+unrelated package was changed. Device results remain pending a separately
+authorized package-scoped override-isolation policy.
+
+The replacement Pixel10 lease used the user-authorized stronger isolation:
+uninstall only `net.compose.samples.jetchat` without preserving data, verify
+the package and override directory were absent, then fresh-install the frozen
+self-contained APK. The installed 123,395,580-byte base APK matched SHA-256
+`9BFEAC20A6081DE45FE5206877D5A808601DFA4794DC1E3CF7D091CDEF3118C7`
+and the expected signing certificate; no fast-deployment override existed.
+On the physical API 36 phone at its original 1080 x 2424 / 420 dpi,
+font-scale-1.0 settings, activity-local light/dark runs completed
+J01/J02/J04/J05/J07/J08/J09. They covered the drawer selections, exact
+`ab😀cd` caret insertion and selector focus handoff, @/Stickers dialogs,
+centered photo/location panels, nonblank-input mic, real long-press recording
+indicator, labeled jump action, and both profiles' expanded/collapsed FAB and
+unavailable actions. The scoped log tail contained no targeted fatal runtime
+signature. This is source-matched C# behavior evidence, not a Kotlin
+pixel-equivalence result.
+
+A separate, fully restored Pixel10 lease completed the remaining size matrix.
+The actual activity roots were 1080 x 1920 at 480 dpi / font scale 1.3
+(360 x 640 dp), 1400 x 1800 at 320 dpi / font scale 1.0 (700 x 900 dp), and
+2000 x 1600 at 320 dpi / font scale 1.0 (1000 x 800 dp). Short-window
+J01/J04/J07/J09 and medium/expanded J01/J09 completed in activity-local light
+and dark palettes; the short controlled-caret case again produced exact
+`ab😀cd`. The installed base still matched the frozen APK, override files
+remained absent, and the scoped final log tail contained no targeted fatal
+runtime signature. Size, density, and font scale were restored to the exact
+initial physical 1080 x 2424 / 420 dpi / font-scale-1.0 values before release.
+These are display overrides on a physical phone, not tablet or foldable
+hardware evidence, and they do not establish whole-app pixel parity.
+
+Review follow-up `7561ee0` added the pinned 16 dp horizontal padding to the
+Send label after zeroing the Material button's content padding. A new
+self-contained APK (SHA-256
+`1AE230C2E6D777E861B11D87F6FAE458833DEEFC5558632527681D0B9070E05E`)
+contained the exact reviewed app/runtime assemblies. On Pixel10, activity-local
+light/dark captures covered disabled-empty and enabled-`pad` states at the
+original 1080 x 2424 / 420 dpi / font-scale-1.0 configuration and the short
+1080 x 1920 / 480 dpi / font-scale-1.3 configuration. The widened control and
+complete label remained inside the selector row without overlap or clipping.
+The device was restored to its exact initial size, density, font, and night
+state before release. This focused rerun supersedes the earlier runtime
+payload only for the Send-padding geometry; all prior bounded evidence and
+limitations remain unchanged.
+
 ### Reply
 
 | ID | Initial state / action | Result |
