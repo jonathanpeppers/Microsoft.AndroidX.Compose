@@ -4,13 +4,17 @@ using Android.Media;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
-internal sealed class VideoThumbnailView : ImageView
+internal class VideoThumbnailView : ImageView
 {
     readonly Context _context;
     string _videoUri;
-    CancellationTokenSource _cancellation = new();
+    CancellationTokenSource? _cancellation;
     Bitmap? _bitmap;
+    bool _attached;
+    bool _disposed;
     internal string CurrentVideoUri => _videoUri;
+    internal int LoadGeneration { get; private set; }
+    internal bool HasActiveLoad => _cancellation is { IsCancellationRequested: false };
 
     internal VideoThumbnailView(Context context, string videoUri) : base(context)
     {
@@ -19,31 +23,65 @@ internal sealed class VideoThumbnailView : ImageView
         SetBackgroundColor(Android.Graphics.Color.Rgb(20, 20, 30));
         SetScaleType(ScaleType.CenterCrop);
         ImportantForAccessibility = Android.Views.ImportantForAccessibility.No;
-        _ = LoadAsync(_videoUri, _cancellation.Token);
     }
 
     internal void SetVideoUri(string videoUri)
     {
         if (_videoUri == videoUri)
             return;
-        _cancellation.Cancel();
-        _cancellation.Dispose();
-        _cancellation = new CancellationTokenSource();
+        CancelLoad();
         _videoUri = videoUri;
         SetImageDrawable(null);
         _bitmap?.Dispose();
         _bitmap = null;
-        _ = LoadAsync(_videoUri, _cancellation.Token);
+        if (_attached)
+            StartLoad();
+    }
+
+    protected override void OnAttachedToWindow()
+    {
+        base.OnAttachedToWindow();
+        _attached = true;
+        if (_bitmap is null)
+            StartLoad();
     }
 
     protected override void OnDetachedFromWindow()
     {
-        _cancellation.Cancel();
-        _cancellation.Dispose();
-        SetImageDrawable(null);
-        _bitmap?.Dispose();
-        _bitmap = null;
+        _attached = false;
+        CancelLoad();
         base.OnDetachedFromWindow();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed)
+        {
+            _disposed = true;
+            CancelLoad();
+            SetImageDrawable(null);
+            _bitmap?.Dispose();
+            _bitmap = null;
+        }
+        base.Dispose(disposing);
+    }
+
+    void StartLoad()
+    {
+        CancelLoad();
+        _cancellation = new CancellationTokenSource();
+        LoadGeneration++;
+        _ = LoadAsync(_videoUri, _cancellation.Token);
+    }
+
+    void CancelLoad()
+    {
+        var cancellation = _cancellation;
+        _cancellation = null;
+        if (cancellation is null)
+            return;
+        cancellation.Cancel();
+        cancellation.Dispose();
     }
 
     async Task LoadAsync(string videoUri, CancellationToken cancellationToken)

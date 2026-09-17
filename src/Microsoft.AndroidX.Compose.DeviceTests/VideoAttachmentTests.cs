@@ -59,13 +59,20 @@ public class VideoAttachmentTests
     [TestMethod]
     public void ThumbnailView_UpdatesUriOnPositionalReuse()
     {
-        VideoThumbnailView? view = null;
+        TestVideoThumbnailView? view = null;
         Runner.RunOnMainSync(() =>
         {
-            view = new VideoThumbnailView(
+            view = new TestVideoThumbnailView(
                 global::Android.App.Application.Context,
                 "file:///first.mp4");
+            view.Attach();
+            Assert.AreEqual(1, view.LoadGeneration);
+            view.Detach();
+            Assert.IsFalse(view.HasActiveLoad);
+            view.Attach();
+            Assert.AreEqual(2, view.LoadGeneration);
             view.SetVideoUri("file:///second.mp4");
+            Assert.AreEqual(3, view.LoadGeneration);
         });
         try
         {
