@@ -151,6 +151,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#1565C0"),
                 "navigation"),
             new DemoEntry(
+                "Tabbed pages",
+                "Top TabRow and bottom NavigationBar, pager gestures, two-way selection, and dynamic tabs.",
+                Color.FromArgb("#6750A4"),
+                "tabbed-pages"),
+            new DemoEntry(
                 "FlyoutPage",
                 "Modal and permanent Material 3 drawers, adaptive layout, gestures, and nested detail navigation.",
                 Color.FromArgb("#00838F"),
