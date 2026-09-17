@@ -179,6 +179,9 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
 
     ComposableNode BuildModalSheet(IFlyoutView virtualView, IMauiContext context)
     {
+        if (virtualView.FlyoutWidth < 0)
+            return BuildFullWidthSheet(virtualView.Flyout, context);
+
         var sheet = new ModalDrawerSheet
         {
             Modifier = DrawerSheetModifier(virtualView.FlyoutWidth),
@@ -189,6 +192,9 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
 
     ComposableNode BuildPermanentSheet(IFlyoutView virtualView, IMauiContext context)
     {
+        if (virtualView.FlyoutWidth < 0)
+            return BuildFullWidthSheet(virtualView.Flyout, context);
+
         var sheet = new PermanentDrawerSheet
         {
             Modifier = DrawerSheetModifier(virtualView.FlyoutWidth),
@@ -213,10 +219,19 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
         var modifier = Modifier.FillMaxHeight();
         return width switch
         {
-            < 0 => modifier.FillMaxWidth(),
             > 0 => modifier.Width(new Dp((float)width)),
             _   => modifier,
         };
+    }
+
+    static ComposableNode BuildFullWidthSheet(IView page, IMauiContext context)
+    {
+        var sheet = new Surface
+        {
+            Modifier = Modifier.FillMaxSize(),
+        };
+        sheet.Add(BuildPageHost(page, context));
+        return sheet;
     }
 
     static ComposableNode BuildPageHost(IView? page, IMauiContext context) =>
