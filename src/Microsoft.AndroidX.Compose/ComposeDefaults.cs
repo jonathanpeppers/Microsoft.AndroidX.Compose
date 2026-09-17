@@ -62,16 +62,17 @@ using AndroidX.Compose;
 // optional params, so no `$default` slot and no enum is needed for it.
 [assembly: ComposeDefaults("SelectionContainerDefault", "modifier", "!content")]
 
-// androidx.compose.foundation.layout.FlowLayoutKt — the simpler
-// FlowRow / FlowColumn overloads (no FlowRowOverflow / FlowColumnOverflow
-// slot) lower to 7 user params + content. The facade surfaces the trailing
-// max-item and max-line Int slots with Kotlin's Int.MAX_VALUE defaults.
+// Foundation 1.11.3 retains the deprecated overflow overloads, defaulting to Clip.
 [assembly: ComposeDefaults("FlowRowDefault",
     "modifier", "horizontalArrangement", "verticalArrangement",
-    "itemVerticalAlignment", "maxItemsInEachRow", "maxLines", "!content")]
+    "itemVerticalAlignment", "maxItemsInEachRow", "maxLines", "overflow", "!content")]
 [assembly: ComposeDefaults("FlowColumnDefault",
     "modifier", "verticalArrangement", "horizontalArrangement",
-    "itemHorizontalAlignment", "maxItemsInEachColumn", "maxLines", "!content")]
+    "itemHorizontalAlignment", "maxItemsInEachColumn", "maxLines", "overflow", "!content")]
+[assembly: ComposeDefaults("FlowRowIndicatorDefault",
+    "!expandIndicator", "!collapseIndicator", "minRowsToShowCollapse", "minHeightToShowCollapse")]
+[assembly: ComposeDefaults("FlowColumnIndicatorDefault",
+    "!expandIndicator", "!collapseIndicator", "minColumnsToShowCollapse", "minWidthToShowCollapse")]
 [assembly: ComposeDefaults<DividerKt>("HorizontalDivider", "HorizontalDividerDefault")]
 [assembly: ComposeDefaults<DividerKt>("VerticalDivider", "VerticalDividerDefault")]
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]

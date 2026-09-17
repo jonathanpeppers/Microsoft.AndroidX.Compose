@@ -29,24 +29,30 @@ public sealed class ReplySearchBar : ComposableNode
         {
             var session = c.Remember(() => new ReplySearchSession());
             var scope = c.RememberCoroutineScope();
+            string searchEmails = c.StringResource(Resource.String.reply_search_emails);
+            string search = c.StringResource(Resource.String.reply_search);
+            string back = c.StringResource(Resource.String.reply_back);
+            string profile = c.StringResource(Resource.String.reply_profile);
+            string noHistory = c.StringResource(Resource.String.reply_no_search_history);
+            string noItem = c.StringResource(Resource.String.reply_no_item_found);
 
             ComposableNode Input() => new SearchBarInputField(session.Input, session.Expansion)
             {
                 Modifier = Modifier.FillMaxWidth(),
-                Placeholder = new Text("Search emails"),
+                Placeholder = new Text(searchEmails),
                 OnSearch = _ => Run(scope, ct => session.DismissAsync(clearQuery: false, ct)),
                 LeadingIcon = new Composed(_ =>
                     session.Expansion.TargetValue.Equals(Material3.SearchBarValue.Expanded)
-                        ? new Icon(Resource.Drawable.ic_arrow_back, "Back")
+                        ? new Icon(Resource.Drawable.ic_arrow_back, back)
                         {
                             Modifier = Modifier.Padding(start: 16).Clickable(
                                 () => Run(scope, ct => session.DismissAsync(clearQuery: true, ct))),
                         }
-                        : new Icon(Resource.Drawable.ic_search, "Search")
+                        : new Icon(Resource.Drawable.ic_search, search)
                         {
                             Modifier = Modifier.Padding(start: 16),
                         }),
-                TrailingIcon = new Image(Resource.Drawable.avatar_6, "Profile")
+                TrailingIcon = new Image(Resource.Drawable.avatar_6, profile)
                 {
                     Modifier = Modifier.Padding(all: 12).Size(32).Clip(Shape.Circle()),
                 },
@@ -64,7 +70,7 @@ public sealed class ReplySearchBar : ComposableNode
                     var query = session.Input.Text;
                     var matches = ReplySearchSession.FindMatches(_emails, query);
                     if (matches.Count == 0)
-                        return new Text(query.Length == 0 ? "No search history" : "No item found")
+                        return new Text(query.Length == 0 ? noHistory : noItem)
                         {
                             Modifier = Modifier.Padding(all: 16),
                         };
@@ -73,7 +79,7 @@ public sealed class ReplySearchBar : ComposableNode
                     {
                         Headline = new Text(email.Subject),
                         Supporting = new Text(email.Sender.FullName),
-                        Leading = new Image(email.Sender.Avatar, "Profile")
+                        Leading = new Image(email.Sender.Avatar, profile)
                         {
                             Modifier = Modifier.Size(32).Clip(Shape.Circle()),
                         },

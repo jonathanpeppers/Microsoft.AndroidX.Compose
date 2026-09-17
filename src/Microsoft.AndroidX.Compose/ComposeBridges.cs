@@ -4243,53 +4243,66 @@ internal static partial class ComposeBridges
             _changed1:              defaults | (int)SliderDefault.Track);
     }
 
-    // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
-    // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow
-    // slot) are bound directly.
-    // The binder rename pattern: the C# `p4` param is the actual Kotlin
-    // `maxItemsInEachRow`/`maxItemsInEachColumn` Int, and the C# named
-    // `maxItemsInEachRow`/`maxItemsInEachColumn` is the Kotlin `maxLines`
-    // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
-    // is `$default`.
+    // The bound p4/maxItems/maxLines/_changed names mean maxItems/maxLines/$changed/$default.
+#pragma warning disable CS0618 // Pinned Foundation 1.11.3 overflow compatibility.
     [ComposeFacade(Defaults = typeof(FlowRowDefault), Scope = "Row")]
     public static partial void FlowRow(IModifier? modifier, IFunction3 content,
         [FacadeDefault(int.MaxValue)] int maxItemsInEachRow,
         [FacadeDefault(int.MaxValue)] int maxLines,
+        [FacadeAdded(PreserveArgumentPresence = true)] FlowRowOverflow? overflow,
         int defaults, IComposer composer, int _changed = 0);
 
     public static partial void FlowRow(IModifier? modifier, IFunction3 content,
-        int maxItemsInEachRow, int maxLines, int defaults, IComposer composer, int _changed)
-        => FlowLayoutKt.FlowRow(
+        int maxItemsInEachRow, int maxLines, FlowRowOverflow? overflow,
+        int defaults, IComposer composer, int _changed)
+    {
+        if ((defaults & (int)FlowRowDefault.Overflow) == 0)
+            ArgumentNullException.ThrowIfNull(overflow);
+        var nativeOverflow = (defaults & (int)FlowRowDefault.Overflow) != 0
+            ? null : overflow?.Build(composer);
+        FlowLayoutKt.FlowRow(
             modifier:              modifier,
             horizontalArrangement: null,
             verticalArrangement:   null,
             itemVerticalAlignment: null,
             p4:                    maxItemsInEachRow,
             maxItemsInEachRow:     maxLines,
+            overflow:              nativeOverflow,
             content:               content,
             _composer:             composer,
-            maxLines:              _changed,
+            maxLines:              0,
             _changed:              defaults);
+    }
 
     [ComposeFacade(Defaults = typeof(FlowColumnDefault), Scope = "Column")]
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content,
         [FacadeDefault(int.MaxValue)] int maxItemsInEachColumn,
         [FacadeDefault(int.MaxValue)] int maxLines,
+        [FacadeAdded(PreserveArgumentPresence = true)] FlowColumnOverflow? overflow,
         int defaults, IComposer composer, int _changed = 0);
 
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content,
-        int maxItemsInEachColumn, int maxLines, int defaults, IComposer composer, int _changed)
-        => FlowLayoutKt.FlowColumn(
+        int maxItemsInEachColumn, int maxLines, FlowColumnOverflow? overflow,
+        int defaults, IComposer composer, int _changed)
+    {
+        if ((defaults & (int)FlowColumnDefault.Overflow) == 0)
+            ArgumentNullException.ThrowIfNull(overflow);
+        var nativeOverflow = (defaults & (int)FlowColumnDefault.Overflow) != 0
+            ? null : overflow?.Build(composer);
+        FlowLayoutKt.FlowColumn(
             modifier:                modifier,
             verticalArrangement:     null,
             horizontalArrangement:   null,
             itemHorizontalAlignment: null,
             p4:                      maxItemsInEachColumn,
             maxItemsInEachColumn:    maxLines,
+            overflow:                nativeOverflow,
             content:                 content,
             _composer:               composer,
-            maxLines:                _changed,
+            maxLines:                0,
             _changed:                defaults);
+    }
+#pragma warning restore CS0618
 
     // WideNavigationRailKt.WideNavigationRailItem-pli-t6k. Bound C# wrapper
     // has misnamed trailing params: `iconPosition` is actually $changed,

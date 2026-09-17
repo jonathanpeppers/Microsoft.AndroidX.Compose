@@ -22,4 +22,21 @@ public static class DrawingStyle
             throw new ArgumentOutOfRangeException(nameof(miter));
         return ComposeBridges.DrawStroke(width, miter, (int)cap, (int)join, null, IntPtr.Zero);
     }
+
+    /// <summary>Paints an effected outline with the supplied stroke geometry.</summary>
+    public static BoundDrawStyle Stroke(
+        float width,
+        PathEffect pathEffect,
+        StrokeCap cap = StrokeCap.Butt,
+        StrokeJoin join = StrokeJoin.Miter,
+        float miter = 4f)
+    {
+        ArgumentNullException.ThrowIfNull(pathEffect);
+        if (width < 0f)
+            throw new ArgumentOutOfRangeException(nameof(width));
+        if (miter < 0f)
+            throw new ArgumentOutOfRangeException(nameof(miter));
+        return ComposeBridges.DrawStroke(
+            width, miter, (int)cap, (int)join, pathEffect.Jvm, IntPtr.Zero);
+    }
 }

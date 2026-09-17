@@ -97,11 +97,9 @@ public static class EmojiSelector
                         : Modifier.FocusRequester(focusRequester).FocusTarget())
                         .Semantics("Emoji selector")
                         .FillMaxWidth(),
-                    new Row(
-                        Arrangement.SpaceEvenly,
-                        Alignment.Vertical.CenterVertically)
+                    new Row
                     {
-                        Modifier.FillMaxWidth().Height(48),
+                        Modifier.FillMaxWidth().Padding(horizontal: 8),
                         BuildSelectorButton(
                             "Emojis",
                             selected: true,
@@ -119,9 +117,9 @@ public static class EmojiSelector
                             c,
                             scheme),
                     },
-                    new Box
+                    new Row
                     {
-                        Modifier.FillMaxWidth().Height(168).VerticalScroll(scroll),
+                        Modifier.FillMaxWidth().VerticalScroll(scroll),
                         BuildEmojiGrid(input, scheme),
                     },
                 },
@@ -159,16 +157,16 @@ public static class EmojiSelector
         var button = new TextButton(onClick)
         {
             Modifier = Modifier
+                .Weight(1f)
+                .Padding(8)
                 .Height(36)
                 .Semantics(label),
-            Shape = new RoundedCornerShape(18.Dp()),
+            ContentPadding = new PaddingValues(0),
             Colors = composer.ButtonColors(
                 containerColor: selected
-                    ? Color.FromPacked(scheme.SecondaryContainer)
+                    ? Color.FromPacked(scheme.OnSurface).WithAlpha(20)
                     : Color.Transparent,
-                contentColor: selected
-                    ? Color.FromPacked(scheme.OnSecondaryContainer)
-                    : Color.FromPacked(scheme.OnSurfaceVariant)),
+                contentColor: Color.FromPacked(scheme.OnSurface)),
         };
         button.Add(new Text(label) { FontFamily = JetchatFonts.Karla }
             .WithTypography(Typography.TitleSmall));
@@ -195,12 +193,13 @@ public static class EmojiSelector
                     Alignment.Vertical.CenterVertically)
                 {
                     Modifier = Modifier
-                        .Size(42)
                         .Semantics($"Emoji {emoji}")
                         .Clickable(() =>
                         {
                             input.Value = MessageInput.Insert(input.Value, emoji);
-                        }),
+                        })
+                        .SizeIn(minWidth: 42, minHeight: 42)
+                        .Padding(8),
                 };
                 emojiButton.Add(new Text(emoji)
                 {
