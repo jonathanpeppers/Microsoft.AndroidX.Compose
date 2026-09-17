@@ -14,3 +14,7 @@ using System.Runtime.CompilerServices;
 // ChangedBits / DiffSlotShift / MutableComposableLambda0 — that we
 // don't want in the public API surface.
 [assembly: InternalsVisibleTo("Microsoft.AndroidX.Compose.DeviceTests")]
+
+// Microsoft.AndroidX.Compose.Maui.DeviceTests verifies the internal movable
+// child-group contract used by the MAUI stack-layout handler.
+[assembly: InternalsVisibleTo("Microsoft.AndroidX.Compose.Maui.DeviceTests")]
