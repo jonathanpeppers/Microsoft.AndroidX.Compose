@@ -344,9 +344,8 @@ public class DrawScope
     {
         ArgumentNullException.ThrowIfNull(points);
         using var paint = DrawingPaint.CreatePointPaint(
-            strokeWidth, cap, pathEffect, colorFilter, alpha);
-        paint.Color = color.ToPacked();
-        paint.Alpha = alpha;
+            strokeWidth, cap, pathEffect, colorFilter);
+        paint.Color = color.ModulateOpacity(alpha).ToPacked();
         DrawContext().Canvas.DrawRawPoints((int)mode, DrawingPaint.Flatten(points), paint);
     }
 
@@ -364,7 +363,7 @@ public class DrawScope
         ArgumentNullException.ThrowIfNull(points);
         ArgumentNullException.ThrowIfNull(brush);
         using var paint = DrawingPaint.CreatePointPaint(
-            strokeWidth, cap, pathEffect, colorFilter, alpha);
+            strokeWidth, cap, pathEffect, colorFilter);
         brush.ApplyTo(Size.Packed, paint, alpha);
         paint.ColorFilter = colorFilter;
         DrawContext().Canvas.DrawRawPoints((int)mode, DrawingPaint.Flatten(points), paint);

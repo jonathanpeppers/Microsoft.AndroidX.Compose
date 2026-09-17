@@ -49,7 +49,7 @@ public class AdvancedDrawingTests
                     activity.Pixel(105, 120),
                     activity.Pixel(235, 179),
                     NativeColor.Green);
-                AssertTranslucentBlend(
+                AssertCombinedAlphaBlend(
                     bitmap,
                     activity.Pixel(215, 105),
                     NativeColor.Rgb(0x12, 0x24, 0x44),
@@ -77,6 +77,12 @@ public class AdvancedDrawingTests
         Assert.AreEqual(11, offset.Y);
         Assert.AreEqual(17, size.Width);
         Assert.AreEqual(23, size.Height);
+        Assert.AreEqual(
+            64,
+            global::AndroidX.Compose.Color.White
+                .WithOpacity(0.5f)
+                .ModulateOpacity(0.5f)
+                .A);
 
         using var path = new global::AndroidX.Compose.Path()
             .MoveTo(0f, 0f)
@@ -111,7 +117,7 @@ public class AdvancedDrawingTests
             + $"({topLeft.X},{topLeft.Y})-({bottomRight.X},{bottomRight.Y}).");
     }
 
-    static void AssertTranslucentBlend(
+    static void AssertCombinedAlphaBlend(
         Bitmap bitmap,
         (int X, int Y) point,
         NativeColor background,
@@ -121,9 +127,13 @@ public class AdvancedDrawingTests
         Assert.AreEqual(0xFF, global::Android.Graphics.Color.GetAlphaComponent(actual));
         Assert.AreNotEqual(background.ToArgb(), actual, "Alpha was treated as fully transparent.");
         Assert.AreNotEqual(foreground.ToArgb(), actual, "Alpha was ignored and rendered opaque.");
+        int backgroundRed = global::Android.Graphics.Color.GetRedComponent(background.ToArgb());
+        int foregroundRed = global::Android.Graphics.Color.GetRedComponent(foreground.ToArgb());
+        int actualRed = global::Android.Graphics.Color.GetRedComponent(actual);
+        Assert.IsTrue(actualRed > backgroundRed, "Combined alpha produced no visible source contribution.");
         Assert.IsTrue(
-            global::Android.Graphics.Color.GetRedComponent(actual)
-                > global::Android.Graphics.Color.GetRedComponent(background.ToArgb()));
+            actualRed < (backgroundRed + foregroundRed) / 2,
+            "Source alpha and argument alpha were not multiplied.");
     }
 
     static async Task WaitFor(Func<bool> condition)

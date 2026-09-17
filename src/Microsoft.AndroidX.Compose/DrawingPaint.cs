@@ -10,8 +10,7 @@ internal static class DrawingPaint
         float strokeWidth,
         StrokeCap cap,
         PathEffect? pathEffect,
-        ColorFilter? colorFilter,
-        float alpha)
+        ColorFilter? colorFilter)
     {
         if (strokeWidth < 0f)
             throw new ArgumentOutOfRangeException(nameof(strokeWidth));
@@ -22,7 +21,6 @@ internal static class DrawingPaint
         paint.StrokeCap = (int)cap;
         paint.PathEffect = pathEffect?.Jvm;
         paint.ColorFilter = colorFilter;
-        paint.Alpha = alpha;
         paint.BlendMode = SrcOverBlendMode;
         return paint;
     }

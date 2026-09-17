@@ -127,7 +127,7 @@ public class AdvancedDrawingTestActivity : ComponentActivity
         scope.DrawPoints(
             [new Offset(215f, 105f)],
             PointMode.Points,
-            Color.White,
+            Color.White.WithOpacity(0.5f),
             strokeWidth: 18f,
             cap: StrokeCap.Round,
             alpha: 0.5f);
