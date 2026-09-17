@@ -201,6 +201,9 @@ AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> AndroidX.Compose
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.set -> void
 AndroidX.Compose.CircularProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
 AndroidX.Compose.CircularProgressIndicator.TrackColor.set -> void
+AndroidX.Compose.ClipOperation
+AndroidX.Compose.ClipOperation.Difference = 0 -> AndroidX.Compose.ClipOperation
+AndroidX.Compose.ClipOperation.Intersect = 1 -> AndroidX.Compose.ClipOperation
 AndroidX.Compose.CollectedState<T>
 AndroidX.Compose.CollectedState<T>.Value.get -> T
 AndroidX.Compose.Color
@@ -415,23 +418,60 @@ AndroidX.Compose.DraggableState.DispatchRawDelta(float delta) -> void
 AndroidX.Compose.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
 AndroidX.Compose.DrawScope
 AndroidX.Compose.DrawScope.Center.get -> AndroidX.Compose.Offset
+AndroidX.Compose.DrawScope.ClipPath(AndroidX.Compose.Path! path, System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.ClipOperation operation = AndroidX.Compose.ClipOperation.Intersect) -> void
+AndroidX.Compose.DrawScope.ClipRect(AndroidX.Compose.Rect bounds, System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.ClipOperation operation = AndroidX.Compose.ClipOperation.Intersect) -> void
+AndroidX.Compose.DrawScope.ClipRect(System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.ClipOperation operation = AndroidX.Compose.ClipOperation.Intersect) -> void
 AndroidX.Compose.DrawScope.DrawArc(AndroidX.Compose.Color color, float startAngle, float sweepAngle, bool useCenter, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawArc(AndroidX.Compose.UI.Graphics.Brush! brush, float startAngle, float sweepAngle, bool useCenter, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawCircle(AndroidX.Compose.Color color, float? radius = null, AndroidX.Compose.Offset? center = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawCircle(AndroidX.Compose.UI.Graphics.Brush! brush, float? radius = null, AndroidX.Compose.Offset? center = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
+AndroidX.Compose.DrawScope.DrawImage(AndroidX.Compose.ImageBitmap! image, AndroidX.Compose.IntOffset sourceOffset, AndroidX.Compose.IntSize sourceSize, AndroidX.Compose.IntOffset destinationOffset, AndroidX.Compose.IntSize destinationSize, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null, AndroidX.Compose.FilterQuality filterQuality = AndroidX.Compose.FilterQuality.Low) -> void
+AndroidX.Compose.DrawScope.DrawImage(AndroidX.Compose.ImageBitmap! image, AndroidX.Compose.Offset? topLeft = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawImage(AndroidX.Compose.UI.Graphics.IImageBitmap! image, AndroidX.Compose.IntOffset sourceOffset, AndroidX.Compose.IntSize sourceSize, AndroidX.Compose.IntOffset destinationOffset, AndroidX.Compose.IntSize destinationSize, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null, AndroidX.Compose.FilterQuality filterQuality = AndroidX.Compose.FilterQuality.Low) -> void
+AndroidX.Compose.DrawScope.DrawImage(AndroidX.Compose.UI.Graphics.IImageBitmap! image, AndroidX.Compose.Offset? topLeft = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawIntoCanvas(System.Action<AndroidX.Compose.UI.Graphics.ICanvas!>! draw) -> void
+AndroidX.Compose.DrawScope.DrawLine(AndroidX.Compose.Color color, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, AndroidX.Compose.PathEffect! pathEffect, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, float alpha = 1) -> void
 AndroidX.Compose.DrawScope.DrawLine(AndroidX.Compose.Color color, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, float alpha = 1) -> void
+AndroidX.Compose.DrawScope.DrawLine(AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, AndroidX.Compose.PathEffect! pathEffect, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, float alpha = 1) -> void
 AndroidX.Compose.DrawScope.DrawLine(AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, float alpha = 1) -> void
+AndroidX.Compose.DrawScope.DrawOutline(AndroidX.Compose.Path! path, AndroidX.Compose.Color color, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawOutline(AndroidX.Compose.Path! path, AndroidX.Compose.UI.Graphics.Brush! brush, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawOutline(AndroidX.Compose.UI.Graphics.Outline! outline, AndroidX.Compose.Color color, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawOutline(AndroidX.Compose.UI.Graphics.Outline! outline, AndroidX.Compose.UI.Graphics.Brush! brush, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
 AndroidX.Compose.DrawScope.DrawOval(AndroidX.Compose.Color color, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawOval(AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawPath(AndroidX.Compose.Path! path, AndroidX.Compose.Color color, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawPath(AndroidX.Compose.Path! path, AndroidX.Compose.UI.Graphics.Brush! brush, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
+AndroidX.Compose.DrawScope.DrawPoints(System.Collections.Generic.IReadOnlyList<AndroidX.Compose.Offset>! points, AndroidX.Compose.PointMode mode, AndroidX.Compose.Color color, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.PathEffect? pathEffect = null, float alpha = 1, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
+AndroidX.Compose.DrawScope.DrawPoints(System.Collections.Generic.IReadOnlyList<AndroidX.Compose.Offset>! points, AndroidX.Compose.PointMode mode, AndroidX.Compose.UI.Graphics.Brush! brush, float strokeWidth = 0, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.PathEffect? pathEffect = null, float alpha = 1, AndroidX.Compose.UI.Graphics.ColorFilter? colorFilter = null) -> void
 AndroidX.Compose.DrawScope.DrawRect(AndroidX.Compose.Color color, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawRect(AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawRoundRect(AndroidX.Compose.Color color, AndroidX.Compose.CornerRadius cornerRadius, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
 AndroidX.Compose.DrawScope.DrawRoundRect(AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.CornerRadius cornerRadius, AndroidX.Compose.Offset? topLeft = null, AndroidX.Compose.Size? size = null, float alpha = 1, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
+AndroidX.Compose.DrawScope.DrawText(AndroidX.Compose.UI.Text.TextLayoutResult! textLayout, AndroidX.Compose.Color color, AndroidX.Compose.Offset? topLeft = null, float alpha = NaN, AndroidX.Compose.UI.Graphics.Shadow? shadow = null, AndroidX.Compose.TextDecoration? decoration = null, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
+AndroidX.Compose.DrawScope.DrawText(AndroidX.Compose.UI.Text.TextLayoutResult! textLayout, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Offset? topLeft = null, float alpha = NaN, AndroidX.Compose.UI.Graphics.Shadow? shadow = null, AndroidX.Compose.TextDecoration? decoration = null, AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle? style = null) -> void
+AndroidX.Compose.DrawScope.Inset(float horizontal, float vertical, System.Action<AndroidX.Compose.DrawScope!>! draw) -> void
+AndroidX.Compose.DrawScope.Inset(float inset, System.Action<AndroidX.Compose.DrawScope!>! draw) -> void
+AndroidX.Compose.DrawScope.Inset(float left, float top, float right, float bottom, System.Action<AndroidX.Compose.DrawScope!>! draw) -> void
 AndroidX.Compose.DrawScope.LayoutDirection.get -> AndroidX.Compose.UI.Unit.LayoutDirection!
 AndroidX.Compose.DrawScope.NativeCanvas.get -> Android.Graphics.Canvas!
+AndroidX.Compose.DrawScope.Rotate(float degrees, System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.Offset? pivot = null) -> void
+AndroidX.Compose.DrawScope.Scale(float scale, System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.Offset? pivot = null) -> void
+AndroidX.Compose.DrawScope.Scale(float scaleX, float scaleY, System.Action<AndroidX.Compose.DrawScope!>! draw, AndroidX.Compose.Offset? pivot = null) -> void
 AndroidX.Compose.DrawScope.Size.get -> AndroidX.Compose.Size
+AndroidX.Compose.DrawScope.Translate(AndroidX.Compose.Offset offset, System.Action<AndroidX.Compose.DrawScope!>! draw) -> void
+AndroidX.Compose.DrawScope.WithTransform(System.Action<AndroidX.Compose.DrawTransform!>! transform, System.Action<AndroidX.Compose.DrawScope!>! draw) -> void
+AndroidX.Compose.DrawTransform
+AndroidX.Compose.DrawTransform.Center.get -> AndroidX.Compose.Offset
+AndroidX.Compose.DrawTransform.ClipPath(AndroidX.Compose.Path! path, AndroidX.Compose.ClipOperation operation = AndroidX.Compose.ClipOperation.Intersect) -> void
+AndroidX.Compose.DrawTransform.ClipRect(AndroidX.Compose.Rect bounds, AndroidX.Compose.ClipOperation operation = AndroidX.Compose.ClipOperation.Intersect) -> void
+AndroidX.Compose.DrawTransform.Inset(float left, float top, float right, float bottom) -> void
+AndroidX.Compose.DrawTransform.Rotate(float degrees, AndroidX.Compose.Offset? pivot = null) -> void
+AndroidX.Compose.DrawTransform.Scale(float scale, AndroidX.Compose.Offset? pivot = null) -> void
+AndroidX.Compose.DrawTransform.Scale(float scaleX, float scaleY, AndroidX.Compose.Offset? pivot = null) -> void
+AndroidX.Compose.DrawTransform.Size.get -> AndroidX.Compose.Size
+AndroidX.Compose.DrawTransform.Transform(float[]! matrix) -> void
+AndroidX.Compose.DrawTransform.Translate(AndroidX.Compose.Offset offset) -> void
 AndroidX.Compose.DrawerStateHolder
 AndroidX.Compose.DrawerStateHolder.CloseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.DrawerStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.DrawerValue!
@@ -554,6 +594,11 @@ AndroidX.Compose.FilterChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilterChip.Shape.set -> void
 AndroidX.Compose.FilterChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.FilterChip.TrailingIcon.set -> void
+AndroidX.Compose.FilterQuality
+AndroidX.Compose.FilterQuality.High = 3 -> AndroidX.Compose.FilterQuality
+AndroidX.Compose.FilterQuality.Low = 1 -> AndroidX.Compose.FilterQuality
+AndroidX.Compose.FilterQuality.Medium = 2 -> AndroidX.Compose.FilterQuality
+AndroidX.Compose.FilterQuality.None = 0 -> AndroidX.Compose.FilterQuality
 AndroidX.Compose.FlexibleBottomAppBar
 AndroidX.Compose.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
 AndroidX.Compose.FloatRange
@@ -688,6 +733,14 @@ AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! paint
 AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId, string? contentDescription) -> void
+AndroidX.Compose.ImageBitmap
+AndroidX.Compose.ImageBitmap.Dispose() -> void
+AndroidX.Compose.ImageBitmap.HasAlpha.get -> bool
+AndroidX.Compose.ImageBitmap.Height.get -> int
+AndroidX.Compose.ImageBitmap.ImageBitmap(Android.Graphics.Bitmap! bitmap) -> void
+AndroidX.Compose.ImageBitmap.NativeBitmap.get -> Android.Graphics.Bitmap!
+AndroidX.Compose.ImageBitmap.PrepareToDraw() -> void
+AndroidX.Compose.ImageBitmap.Width.get -> int
 AndroidX.Compose.ImeAction
 AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
@@ -701,6 +754,18 @@ AndroidX.Compose.InputChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.InputChip.Shape.set -> void
 AndroidX.Compose.InputChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.TrailingIcon.set -> void
+AndroidX.Compose.IntOffset
+AndroidX.Compose.IntOffset.Equals(AndroidX.Compose.IntOffset other) -> bool
+AndroidX.Compose.IntOffset.IntOffset() -> void
+AndroidX.Compose.IntOffset.IntOffset(int x, int y) -> void
+AndroidX.Compose.IntOffset.X.get -> int
+AndroidX.Compose.IntOffset.Y.get -> int
+AndroidX.Compose.IntSize
+AndroidX.Compose.IntSize.Equals(AndroidX.Compose.IntSize other) -> bool
+AndroidX.Compose.IntSize.Height.get -> int
+AndroidX.Compose.IntSize.IntSize() -> void
+AndroidX.Compose.IntSize.IntSize(int width, int height) -> void
+AndroidX.Compose.IntSize.Width.get -> int
 AndroidX.Compose.KeyboardActionsHelper
 AndroidX.Compose.KeyboardOptionsCompanion
 AndroidX.Compose.KeyboardType
@@ -1210,6 +1275,8 @@ AndroidX.Compose.Path.RelativeQuadraticBezierTo(float dx1, float dy1, float dx2,
 AndroidX.Compose.Path.Reset() -> AndroidX.Compose.Path!
 AndroidX.Compose.Path.Rewind() -> AndroidX.Compose.Path!
 AndroidX.Compose.Path.Translate(AndroidX.Compose.Offset offset) -> AndroidX.Compose.Path!
+AndroidX.Compose.PathEffect
+AndroidX.Compose.PathEffect.Dispose() -> void
 AndroidX.Compose.PathFillType
 AndroidX.Compose.PathFillType.EvenOdd = 1 -> AndroidX.Compose.PathFillType
 AndroidX.Compose.PathFillType.NonZero = 0 -> AndroidX.Compose.PathFillType
@@ -1242,6 +1309,10 @@ AndroidX.Compose.PermanentNavigationDrawer.PermanentNavigationDrawer() -> void
 AndroidX.Compose.PlacementScope
 AndroidX.Compose.PlacementScope.Place(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
 AndroidX.Compose.PlacementScope.PlaceRelative(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
+AndroidX.Compose.PointMode
+AndroidX.Compose.PointMode.Lines = 1 -> AndroidX.Compose.PointMode
+AndroidX.Compose.PointMode.Points = 0 -> AndroidX.Compose.PointMode
+AndroidX.Compose.PointMode.Polygon = 2 -> AndroidX.Compose.PointMode
 AndroidX.Compose.PrimaryScrollableTabRow
 AndroidX.Compose.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.PrimaryTabRow
@@ -1504,6 +1575,10 @@ AndroidX.Compose.SpanStyle.LetterSpacing.get -> AndroidX.Compose.Sp?
 AndroidX.Compose.SpanStyle.LetterSpacing.set -> void
 AndroidX.Compose.SpanStyle.SpanStyle() -> void
 AndroidX.Compose.StaggeredGridCells
+AndroidX.Compose.StampedPathEffectStyle
+AndroidX.Compose.StampedPathEffectStyle.Morph = 2 -> AndroidX.Compose.StampedPathEffectStyle
+AndroidX.Compose.StampedPathEffectStyle.Rotate = 1 -> AndroidX.Compose.StampedPathEffectStyle
+AndroidX.Compose.StampedPathEffectStyle.Translate = 0 -> AndroidX.Compose.StampedPathEffectStyle
 AndroidX.Compose.StrokeCap
 AndroidX.Compose.StrokeCap.Butt = 0 -> AndroidX.Compose.StrokeCap
 AndroidX.Compose.StrokeCap.Round = 1 -> AndroidX.Compose.StrokeCap
@@ -1851,6 +1926,10 @@ override AndroidX.Compose.IconButton.Render(AndroidX.Compose.Runtime.IComposer! 
 override AndroidX.Compose.IconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Image.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.InputChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.IntOffset.Equals(object? obj) -> bool
+override AndroidX.Compose.IntOffset.GetHashCode() -> int
+override AndroidX.Compose.IntSize.Equals(object? obj) -> bool
+override AndroidX.Compose.IntSize.GetHashCode() -> int
 override AndroidX.Compose.LargeFlexibleTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LargeFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LargeTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -2386,6 +2465,7 @@ static AndroidX.Compose.Dp.operator >=(AndroidX.Compose.Dp a, AndroidX.Compose.D
 static AndroidX.Compose.DpExtensions.Dp(this float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DpExtensions.Dp(this int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DrawingStyle.Fill.get -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
+static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.PathEffect! pathEffect, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
@@ -2720,6 +2800,7 @@ static AndroidX.Compose.Icons.TwoTone.ShoppingCart.get -> AndroidX.Compose.UI.Gr
 static AndroidX.Compose.Icons.TwoTone.Star.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static AndroidX.Compose.ImageBitmap.Decode(byte[]! encoded) -> AndroidX.Compose.ImageBitmap!
 static AndroidX.Compose.ImeAction.Default.get -> int
 static AndroidX.Compose.ImeAction.Done.get -> int
 static AndroidX.Compose.ImeAction.Go.get -> int
@@ -2729,6 +2810,12 @@ static AndroidX.Compose.ImeAction.Previous.get -> int
 static AndroidX.Compose.ImeAction.Search.get -> int
 static AndroidX.Compose.ImeAction.Send.get -> int
 static AndroidX.Compose.ImeAction.Unspecified.get -> int
+static AndroidX.Compose.IntOffset.Zero.get -> AndroidX.Compose.IntOffset
+static AndroidX.Compose.IntOffset.operator !=(AndroidX.Compose.IntOffset left, AndroidX.Compose.IntOffset right) -> bool
+static AndroidX.Compose.IntOffset.operator ==(AndroidX.Compose.IntOffset left, AndroidX.Compose.IntOffset right) -> bool
+static AndroidX.Compose.IntSize.Zero.get -> AndroidX.Compose.IntSize
+static AndroidX.Compose.IntSize.operator !=(AndroidX.Compose.IntSize left, AndroidX.Compose.IntSize right) -> bool
+static AndroidX.Compose.IntSize.operator ==(AndroidX.Compose.IntSize left, AndroidX.Compose.IntSize right) -> bool
 static AndroidX.Compose.KeyboardActionsHelper.Create(System.Action? onDone = null, System.Action? onGo = null, System.Action? onNext = null, System.Action? onPrevious = null, System.Action? onSearch = null, System.Action? onSend = null) -> AndroidX.Compose.Foundation.Text.KeyboardActions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
 static AndroidX.Compose.KeyboardType.Ascii.get -> int
@@ -2989,6 +3076,10 @@ static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Zero.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
+static AndroidX.Compose.PathEffect.Chain(AndroidX.Compose.PathEffect! outer, AndroidX.Compose.PathEffect! inner) -> AndroidX.Compose.PathEffect!
+static AndroidX.Compose.PathEffect.Corner(float radius) -> AndroidX.Compose.PathEffect!
+static AndroidX.Compose.PathEffect.Dash(float[]! intervals, float phase = 0) -> AndroidX.Compose.PathEffect!
+static AndroidX.Compose.PathEffect.Stamped(AndroidX.Compose.Path! shape, float advance, float phase = 0, AndroidX.Compose.StampedPathEffectStyle style = AndroidX.Compose.StampedPathEffectStyle.Translate) -> AndroidX.Compose.PathEffect!
 static AndroidX.Compose.Rect.operator !=(AndroidX.Compose.Rect left, AndroidX.Compose.Rect right) -> bool
 static AndroidX.Compose.Rect.operator ==(AndroidX.Compose.Rect left, AndroidX.Compose.Rect right) -> bool
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!
