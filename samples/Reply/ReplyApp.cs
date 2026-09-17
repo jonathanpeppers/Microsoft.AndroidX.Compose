@@ -48,7 +48,8 @@ public static class ReplyApp
                             else
                                 state.SelectedEmailIds.Add(id);
                         },
-                        showComposeFab: compact)),
+                        showComposeFab: compact,
+                        composeFabExpanded: state.ComposeFabExpanded)),
             },
             new NavDestination(Route.Articles)
                 { BuildNavigation(Route.Articles, actions, _ => EmptyComingSoon.Build()) },
@@ -70,7 +71,8 @@ public static class ReplyApp
                         ReplyEmailDetail.Build(
                             email: email,
                             onBackPressed: close,
-                            showComposeFab: compact),
+                            showComposeFab: compact,
+                            composeFabExpanded: state.ComposeFabExpanded.Value),
                     });
             }),
         };
@@ -82,15 +84,15 @@ public static class ReplyApp
         Func<bool, ComposableNode> bodyFactory) =>
         new Composed(c =>
         {
-            var size = c.CurrentWindowAdaptiveInfo().WindowSizeClass;
-            var navigationType =
-                size.IsWidthAtLeastBreakpoint(
-                    AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpExpandedLowerBound)
-                    ? NavigationSuiteType.NavigationDrawer
-                    : size.IsWidthAtLeastBreakpoint(
-                        AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpMediumLowerBound)
-                        ? NavigationSuiteType.NavigationRail
-                        : NavigationSuiteType.NavigationBar;
+            var size = c.CurrentWindowAdaptiveInfo(
+                supportLargeAndXLargeWidth: true).WindowSizeClass;
+            var navigationType = ResolveNavigationType(
+                widthAtLeastMedium: size.IsWidthAtLeastBreakpoint(
+                    AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpMediumLowerBound),
+                heightAtLeastMedium: size.IsHeightAtLeastBreakpoint(
+                    AndroidX.Window.Core.Layout.WindowSizeClass.HeightDpMediumLowerBound),
+                widthAtLeastLarge: size.IsWidthAtLeastBreakpoint(
+                    AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpLargeLowerBound));
             NavigationTypeObserver?.Invoke(navigationType);
 
             var body = bodyFactory(navigationType == NavigationSuiteType.NavigationBar);
@@ -120,4 +122,14 @@ public static class ReplyApp
             }
             return navigation;
         });
+
+    internal static NavigationSuiteType ResolveNavigationType(
+        bool widthAtLeastMedium,
+        bool heightAtLeastMedium,
+        bool widthAtLeastLarge) =>
+        !widthAtLeastMedium || !heightAtLeastMedium
+            ? NavigationSuiteType.NavigationBar
+            : widthAtLeastLarge
+                ? NavigationSuiteType.NavigationDrawer
+                : NavigationSuiteType.NavigationRail;
 }

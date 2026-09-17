@@ -112,19 +112,22 @@ public class ReplyNavigationTests
             var actual = await observed.Task.WaitAsync(TimeSpan.FromSeconds(15));
             float density = 0;
             int width = 0;
+            int height = 0;
             await activity.OnUi(() =>
             {
                 density = activity.Resources?.DisplayMetrics?.Density
                     ?? throw new InvalidOperationException("Reply display density is unavailable.");
                 width = activity.View.Width;
+                height = activity.View.Height;
             });
             float widthDp = width / density;
-            var expected = widthDp >= 840
-                ? NavigationSuiteType.NavigationDrawer
-                : widthDp >= 600
-                    ? NavigationSuiteType.NavigationRail
-                    : NavigationSuiteType.NavigationBar;
-            Assert.AreEqual(expected, actual, $"Reply width was {widthDp:F1}dp ({width}px at {density:F2}x).");
+            float heightDp = height / density;
+            var expected = ReplyApp.ResolveNavigationType(
+                widthAtLeastMedium: widthDp >= 600,
+                heightAtLeastMedium: heightDp >= 480,
+                widthAtLeastLarge: widthDp >= 1200);
+            Assert.AreEqual(expected, actual,
+                $"Reply window was {widthDp:F1} x {heightDp:F1}dp ({width}x{height}px at {density:F2}x).");
             using var root = Root(activity);
             string inboxLabel = Label(TopLevelDestinations.All[0]);
             using var inbox = FindNavigationItem(root, inboxLabel)
@@ -139,7 +142,8 @@ public class ReplyNavigationTests
             else
                 Assert.IsTrue(itemBounds.CenterX() < windowBounds.CenterX(),
                     $"Rail/drawer navigation did not render at the start: item={itemBounds}, window={windowBounds}.");
-            Console.WriteLine($"Reply adaptive navigation: width={widthDp:F1}dp, type={actual}");
+            Console.WriteLine(
+                $"Reply adaptive navigation: size={widthDp:F1}x{heightDp:F1}dp, type={actual}");
         }
         finally
         {
@@ -172,6 +176,14 @@ public class ReplyNavigationTests
             Assert.IsTrue(collapsedWidth < expandedWidth,
                 $"Forward scroll did not collapse the FAB: expanded={expandedWidth}, collapsed={collapsedWidth}.");
 
+            long visibleEmailId = CaptureInbox(activity)[0].Id;
+            await ClickEmail(activity, visibleEmailId);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
+                "Compact detail did not preserve the collapsed inbox FAB state.");
+            await Back(activity);
+            await AssertRoute(activity, Route.Inbox);
+
             using (var list = ScrollableRoot(activity))
                 Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollBackward));
             await activity.AtNativeIdle();
@@ -179,9 +191,10 @@ public class ReplyNavigationTests
             Assert.IsTrue(restoredWidth > collapsedWidth,
                 $"Backward scroll did not expand the FAB: collapsed={collapsedWidth}, restored={restoredWidth}.");
 
-            await ClickEmail(activity, 0);
+            await ClickEmail(activity, visibleEmailId);
             await AssertRoute(activity, Route.EmailDetailPattern);
-            Assert.IsTrue(FabBounds(activity).Width() > 0, "Compact detail omitted the Compose FAB.");
+            Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
+                "Compact detail did not preserve the expanded inbox FAB state.");
         }
         finally
         {
@@ -230,6 +243,20 @@ public class ReplyNavigationTests
         Assert.IsTrue(IsNavigationItemMatch(visible: true, clickable: false, selected: true, exactLabel: true));
         Assert.IsFalse(IsNavigationItemMatch(visible: true, clickable: false, selected: false, exactLabel: true));
         Assert.IsFalse(IsNavigationItemMatch(visible: true, clickable: true, selected: false, exactLabel: false));
+    }
+
+    /// <summary>Pinned Reply navigation policy includes compact height and a 1200 dp drawer threshold.</summary>
+    [TestMethod]
+    public void NavigationPolicyMatchesPinnedBreakpoints()
+    {
+        Assert.AreEqual(NavigationSuiteType.NavigationBar,
+            ReplyApp.ResolveNavigationType(false, true, false));
+        Assert.AreEqual(NavigationSuiteType.NavigationBar,
+            ReplyApp.ResolveNavigationType(true, false, true));
+        Assert.AreEqual(NavigationSuiteType.NavigationRail,
+            ReplyApp.ResolveNavigationType(true, true, false));
+        Assert.AreEqual(NavigationSuiteType.NavigationDrawer,
+            ReplyApp.ResolveNavigationType(true, true, true));
     }
 
     /// <summary>Selected-row semantics association rejects viewport-wide and sibling-row nodes.</summary>

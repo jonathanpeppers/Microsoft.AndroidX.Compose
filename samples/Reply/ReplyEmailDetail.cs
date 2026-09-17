@@ -11,7 +11,8 @@ public static class ReplyEmailDetail
     public static ComposableNode Build(
         Email email,
         Action onBackPressed,
-        bool showComposeFab) =>
+        bool showComposeFab,
+        bool composeFabExpanded) =>
         new Composed(c =>
         {
             IReadOnlyList<Email?> items = [null, .. email.Threads];
@@ -39,7 +40,7 @@ public static class ReplyEmailDetail
                 content.Add(new Box
                 {
                     Modifier.Align(Alignment.BottomEnd).Padding(16),
-                    ReplyComposeFab.Build(c, expanded: true),
+                    ReplyComposeFab.Build(c, expanded: composeFabExpanded),
                 });
             }
             return content;

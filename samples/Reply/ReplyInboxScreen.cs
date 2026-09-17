@@ -15,10 +15,13 @@ public static class ReplyInboxScreen
         IReadOnlyList<long>      selectedEmailIds,
         Action<long> navigateToDetail,
         Action<long> toggleSelection,
-        bool showComposeFab) =>
+        bool showComposeFab,
+        MutableState<bool> composeFabExpanded) =>
         new Composed(c =>
         {
             var listState = c.RememberLazyListState();
+            bool expanded = listState.LastScrolledBackward || !listState.CanScrollBackward;
+            c.SideEffect(() => composeFabExpanded.Value = expanded);
             var list = new LazyColumn<Email>(
                 items: emails,
                 itemContent: email =>
@@ -49,7 +52,7 @@ public static class ReplyInboxScreen
                     Modifier.Align(Alignment.BottomEnd).Padding(16),
                     ReplyComposeFab.Build(
                         c,
-                        expanded: listState.LastScrolledBackward || !listState.CanScrollBackward),
+                        expanded: expanded),
                 });
             }
             return content;

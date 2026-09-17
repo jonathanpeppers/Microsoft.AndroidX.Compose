@@ -127,10 +127,12 @@ the fixed #349 baseline.
 
 A separate source-specific matrix then passed the exact adaptive test at
 600 x 900 dp and 840 x 800 dp, with native hierarchy evidence for the
-start-side navigation control and light/dark Inbox/detail captures at each
-width. Those dimensions were temporary window/density overrides on the same
-physical phone. They demonstrate medium/expanded navigation switching, not
-physical tablet/foldable behavior, fold posture handling, or dual-pane
+start-side rail control and light/dark Inbox/detail captures at each width.
+The pinned policy uses bottom navigation below 600 dp width or 480 dp height,
+a rail through 1199 dp, and a drawer from 1200 dp; the 1200 dp boundary is
+covered by a focused policy regression. Those matrix dimensions were
+temporary window/density overrides on the same physical phone. They do not
+prove physical tablet/foldable behavior, fold posture handling, or dual-pane
 content; #168 remains the list/detail boundary.
 
 | ID | Initial state / action | Result |
