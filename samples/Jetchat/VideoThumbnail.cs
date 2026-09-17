@@ -20,6 +20,7 @@ internal static class VideoThumbnail
                 Modifier = Modifier
                     .Align(Alignment.Center)
                     .Size(56)
+                    .Clickable(onClick)
                     .Padding(10)
                     .Background(Color.Black.WithAlpha(166), Shape.Circle()),
                 Tint = Color.White,
