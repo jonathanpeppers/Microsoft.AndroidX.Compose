@@ -127,8 +127,11 @@ not a new matched Kotlin comparison; the R01-R12 observations below remain
 the fixed #349 baseline.
 
 A separate source-specific matrix then passed the exact adaptive test at
-600 x 900 dp and 840 x 800 dp, with native hierarchy evidence for the
-start-side rail control and light/dark Inbox/detail captures at each width.
+600 x 900 dp (rail), 840 x 800 dp (rail), 1200 x 800 dp (drawer), and
+840 x 450 dp (compact-height bottom navigation), with native hierarchy
+evidence that the exact localized label belongs to a selected navigation
+control rather than content text. Light/dark Inbox/detail captures cover the
+600 and 840 dp presentation.
 The pinned policy uses bottom navigation below 600 dp width or 480 dp height,
 a rail through 1199 dp, and a drawer from 1200 dp; the 1200 dp boundary is
 covered by a focused policy regression. Those matrix dimensions were

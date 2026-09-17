@@ -170,19 +170,25 @@ Medium/expanded captures are a separate acceptance pass and are not implied
 by these compact results.
 
 The separate adaptive pass used the same Reply executable with source
-`856cc42`'s test locator and exact fresh-installed APK hashes
-`97F8A615...` / `91937574...`. On the same Pixel 10, temporary window
-overrides produced 1200 x 1800 at 320 dpi (600 x 900 dp) and
-1680 x 1600 at 320 dpi (840 x 800 dp). The exact
-`AdaptiveNavigationMatchesWindowWidth` test matched one case and passed at
-each width, with owned native hierarchies proving the localized Inbox label
-belongs to a clickable/selected start-side navigation control rather than
-content text. Both widths correctly select the pinned rail policy; the
-1200 dp drawer boundary is covered by the policy regression. Light/dark Inbox
-and detail frames were captured at both widths; a detail hierarchy confirmed
-the centered title node. These are
-emulated phone-window results, not physical tablet or foldable proof.
-The sample remains single-pane and fold-aware list/detail remains #168.
+`0edae77` and exact fresh-installed APK hashes `C1D39A2B...` /
+`E16AFC83...`. On the same Pixel 10, the exact
+`AdaptiveNavigationMatchesWindowWidth` test matched one case and passed for
+each temporary window override:
+
+| Actual app window | Expected and observed navigation |
+| --- | --- |
+| 600 x 900 dp | Rail |
+| 840 x 800 dp | Rail |
+| 1200 x 800 dp | Permanent drawer |
+| 840 x 450 dp | Bottom navigation (compact-height override) |
+
+Owned native hierarchies prove the localized Inbox label belongs to a
+clickable/selected navigation control rather than content text. Earlier
+light/dark Inbox/detail frames at 600 and 840 dp remain valid for the
+unchanged presentation code; a detail hierarchy confirms the centered title
+node. These are emulated phone-window results, not physical tablet or
+foldable proof. The sample remains single-pane and fold-aware list/detail
+remains #168.
 
 On 2026-09-15, source `8da2c4f` passed all four focused checks on the attached
 Pixel 7: the numeric-padding regression and all three `ReplySearchTests`
