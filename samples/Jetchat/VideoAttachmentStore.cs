@@ -75,7 +75,7 @@ internal static class VideoAttachmentStore
         ArgumentNullException.ThrowIfNull(context);
         if (videoUri is null)
             return;
-        var uri = Android.Net.Uri.Parse(videoUri);
+        using var uri = Android.Net.Uri.Parse(videoUri);
         if (uri?.Scheme != "file" || uri.Path is not string path)
             return;
         var cache = context.CacheDir

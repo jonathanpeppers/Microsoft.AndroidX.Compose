@@ -37,9 +37,9 @@ were also captured in short, medium and expanded windows. Blocked navigation,
 link, picker and recording-cancel observations remain explicit.
 The older device reports below retain their original build identities and
 limitations; they are not relabeled as these new comparisons.
-In particular, the pinned Kotlin app already includes **video messages and a
-video picker/player**, whereas the C# fixture has nine text/image messages and
-no video path. Comparing only the overlapping text screens would hide this gap.
+Both fixtures now contain ten messages including a video path. The C# fixture
+uses the bounded packaged MP4 described below instead of Kotlin's remote HLS
+seed, so paired checks explicitly select the same local media.
 
 ### Finite comparison checklist
 
@@ -60,11 +60,11 @@ palette extra for a system-theme change.
 
 | Case | Initial state and actions | Expected result / known comparison boundary |
 |---|---|---|
-| J01 — Conversation | Fresh launch; inspect newest messages, then scroll to both day headers. | Channel/member labels, reverse ordering, sender grouping, markup and sticker are visible. C# has nine rewritten messages; Kotlin has ten including a video. Record resulting wrapping/header-position differences, not pixel equality. |
+| J01 — Conversation | Fresh launch; inspect newest messages, then scroll to both day headers. | Channel/member labels, reverse ordering, sender grouping, markup, sticker and video are visible. Both fixtures have ten rewritten messages, but prose/assets differ; record resulting wrapping/header-position differences, not pixel equality. |
 | J02 — Drawer | Fresh launch; open drawer, choose `droidcon-nyc`, reopen, then choose `composers`. | Highlight changes and drawer closes; both implementations still show the single `#composers` conversation. Neither implements a second channel log. Compare header, row geometry, fonts and conditional widget entry. |
 | J03 — Send | Empty editor; enter ` hello ` and use visible Send. Repeat with IME Send; then try whitespace-only input. | Each nonblank action inserts exactly one message preserving surrounding spaces, clears editor/selection/composition and returns to newest content without explicitly clearing focus. Blank input sends nothing. C# stamps `8:30 PM`, Kotlin `now`; C# scroll reset animates. |
 | J04 — Emoji/focus | Type `abcd`, place caret between `b`/`c`, open emoji, insert a glyph; focus editor again. Reopen emoji, tap Stickers, dismiss, then Back. | Emoji inserts at the live caret and moves the cursor to buffer end; selector takes focus/ends IME, editor focus closes it, Stickers shows a dialog, Back dismisses selector before navigation. Capture tab/grid geometry; do not assume an earlier selected range survives native focus loss. |
-| J05 — Other selectors | Fresh launch; separately tap @, photo, location, and video; dismiss each with Back. | Kotlin @ is a dialog; photo/location are animated unavailable panels; video opens a `video/*` picker. C# shows a static unavailable panel for all four. Selecting an already selected C# icon toggles it off. |
+| J05 — Other selectors | Fresh launch; separately tap @, photo, location, and video; dismiss each with Back. | Kotlin @ is a dialog; photo/location are animated unavailable panels; video opens a `video/*` picker. C# uses static unavailable panels for @/photo/location and opens its own `video/*` picker. Selecting an already selected panel icon toggles it off. |
 | J06 — Recording | Empty editor; short-tap mic, then long-press/release. Repeat with a left drag ≥200 dp while vertical displacement stays within ±80 dp, and with a drag outside that corridor. | Short tap starts no recording; Kotlin shows a tooltip, C# does not. Long press starts UI-only timer/animation; release stops, qualifying swipe cancels once, outside-corridor movement alone does not cancel. No audio message is produced by either sample. |
 | J07 — Recording with text | Enter nonblank text; inspect the mic, then clear text and record for several seconds. | Kotlin keeps the mic beside nonblank text; C# hides it. Compare native button transition separately from C# timer-driven pulse and differing timer/cancellation layout. |
 | J08 — Jump to bottom | Scroll beyond 56 dp or the first item, then tap the jump control. | Both return to item 0. Kotlin shows an animated, labeled 36 dp surface/primary control; C# conditionally inserts a collapsed 48 dp control with default container styling. |
@@ -413,10 +413,10 @@ same while switching inset modes; its saved tap count must also survive
   emoji button opens the upstream-style pill selector with a vertically
   scrollable 10-column tappable grid. Selecting Stickers opens the
   upstream unavailable-feature dialog and resets to Emojis; selecting @ /
-  image / location / video opens a `FunctionalityNotAvailable` panel.
-  This differs from pinned upstream: @ is a dialog and the video icon
-  launches a video picker. Panel geometry/animation and selector dimensions
-  also differ; matching the icon inventory is not interaction parity.
+  image / location opens a `FunctionalityNotAvailable` panel; video launches
+  the bounded picker/preview flow documented below. This differs from pinned
+  upstream because @ is a dialog and panel geometry/animation and selector
+  dimensions differ; matching the icon inventory is not interaction parity.
 - **IME + navigation-bar safe insets** owned by the input's inner column via
   `Modifier.NavigationBarsPadding().ImePadding()`, excluded from Scaffold's
   content insets, plus

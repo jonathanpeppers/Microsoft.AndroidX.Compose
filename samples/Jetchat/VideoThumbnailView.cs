@@ -125,7 +125,7 @@ internal class VideoThumbnailView : ImageView
     {
         cancellationToken.ThrowIfCancellationRequested();
         using var retriever = new MediaMetadataRetriever();
-        var uri = Android.Net.Uri.Parse(videoUri)
+        using var uri = Android.Net.Uri.Parse(videoUri)
             ?? throw new InvalidOperationException("Video URI could not be parsed.");
         retriever.SetDataSource(_context, uri);
         return retriever.GetFrameAtTime(

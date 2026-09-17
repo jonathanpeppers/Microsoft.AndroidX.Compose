@@ -8,9 +8,9 @@ internal sealed class VideoErrorMessageProvider : Java.Lang.Object, IErrorMessag
 {
     public Pair GetErrorMessage(Java.Lang.Object? error)
     {
-        var code = Java.Lang.Integer.ValueOf(0)
+        using var code = Java.Lang.Integer.ValueOf(0)
             ?? throw new InvalidOperationException("Could not create the Media3 error code.");
-        var message = new Java.Lang.String("Unable to play this video.");
+        using var message = new Java.Lang.String("Unable to play this video.");
         return new Pair(code, message);
     }
 }
