@@ -12,7 +12,6 @@ public static class RecordButton
     const int SwipeToCancelThresholdDp = 200;
     const int PulseFrameDelayMs        = 64;
     const int PulseDurationMs          = 2000;
-    static readonly Action NoOpClick = static () => { };
 
     static float SwipeToCancelThresholdPx
     {
@@ -45,6 +44,8 @@ public static class RecordButton
             bool recording = isRecording.Value;
             float density = SwipeToCancelThresholdPx / SwipeToCancelThresholdDp;
             var gesture = c.Remember(() => new RecordingGestureState());
+            var click = c.Remember(() => new RecordButtonClickState(onClick));
+            c.SideEffect(() => click.Update(onClick));
 
             var visuals = RecordButtonVisuals.Read(c, recording);
             var innerModifier = Modifier.FillMaxSize().Padding(18);
@@ -53,8 +54,8 @@ public static class RecordButton
             {
                 Modifier
                     .Size(56)
-                    .Clickable(NoOpClick)
-                    .DetectTapGestures(onTap: _ => onClick())
+                    .Clickable(click.Invoke)
+                    .DetectTapGestures(onTap: _ => click.Invoke())
                     .DetectDragGesturesAfterLongPress(
                         onDragStart: _ =>
                         {

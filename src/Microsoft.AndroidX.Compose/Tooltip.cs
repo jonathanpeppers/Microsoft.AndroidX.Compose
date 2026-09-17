@@ -1,6 +1,4 @@
 using AndroidX.Compose.Runtime;
-using Android.Runtime;
-
 namespace AndroidX.Compose;
 
 /// <summary>
@@ -57,14 +55,9 @@ public sealed class Tooltip : ComposableNode
                 "Tooltip requires both Tip (popup body) and Anchor (visible content).");
 
         var positionProvider = ComposeBridges.RememberPlainTooltipPositionProvider(composer);
-        var stateHandle      = ComposeBridges.RememberTooltipState(_isPersistent, composer);
+        var state = ComposeBridges.RememberTooltipState(_isPersistent, composer);
         if (_state is not null)
         {
-            var state = Java.Lang.Object.GetObject<AndroidX.Compose.Material3.ITooltipState>(
-                stateHandle,
-                JniHandleOwnership.DoNotTransfer)
-                ?? throw new InvalidOperationException(
-                    "rememberTooltipState did not return a TooltipState peer.");
             var holder = _state;
             var binding = composer.Remember(() => new TooltipStateBinding());
             composer.SideEffect(() => binding.Publish(holder, state));
@@ -83,10 +76,11 @@ public sealed class Tooltip : ComposableNode
         ComposeBridges.TooltipBox(
             positionProvider: positionProvider,
             tooltip:          tooltip,
-            state:            stateHandle,
+            state:            state.Handle,
             modifier:         modifier,
             content:          anchor,
             defaults:         defaults,
             composer:         composer);
+        GC.KeepAlive(state);
     }
 }
