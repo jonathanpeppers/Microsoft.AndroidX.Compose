@@ -2,6 +2,7 @@ using Android.Util;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using AndroidX.DrawerLayout.Widget;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
@@ -35,7 +36,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// the sentinel leaves Material 3's default sheet width in control.
 /// </para>
 /// </remarks>
-public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, IFlyoutViewHandler
+public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>, IFlyoutViewHandler
 {
     const string LogTag = "ComposeFlyout";
 
@@ -61,6 +62,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, 
 
     readonly MutableState<int> _layoutVersion = new(0);
     DrawerStateHolder _drawerState = new();
+    ComposeView? _composeView;
     ThemeManager? _theme;
     bool _publishingPresentation;
     int _presentationOperation;
@@ -83,7 +85,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, 
             "PlatformView not set on FlyoutViewHandler.");
 
     /// <inheritdoc/>
-    protected override ComposeView CreatePlatformView()
+    protected override DrawerLayout CreatePlatformView()
     {
         var context = Context
             ?? throw new InvalidOperationException("Context not set on FlyoutViewHandler.");
@@ -95,21 +97,32 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, ComposeView>, 
         _theme = mauiContext.Services.GetService<ThemeManager>();
         _drawerState = CreateDrawerState(virtualView.IsPresented);
 
-        var compose = new ComposeView(context)
+        var compose = _composeView = new ComposeView(context)
         {
             LayoutParameters = new AViewGroup.LayoutParams(
                 AViewGroup.LayoutParams.MatchParent,
                 AViewGroup.LayoutParams.MatchParent),
         };
         compose.SetContent(Build);
-        return compose;
+
+        var root = new DrawerLayout(context)
+        {
+            LayoutParameters = new AViewGroup.LayoutParams(
+                AViewGroup.LayoutParams.MatchParent,
+                AViewGroup.LayoutParams.MatchParent),
+        };
+        root.AddView(compose, new DrawerLayout.LayoutParams(
+            DrawerLayout.LayoutParams.MatchParent,
+            DrawerLayout.LayoutParams.MatchParent));
+        return root;
     }
 
     /// <inheritdoc/>
-    protected override void DisconnectHandler(ComposeView platformView)
+    protected override void DisconnectHandler(DrawerLayout platformView)
     {
         _presentationOperation++;
-        platformView.DisposeComposition();
+        _composeView?.DisposeComposition();
+        _composeView = null;
         _theme = null;
         base.DisconnectHandler(platformView);
     }

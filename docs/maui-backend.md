@@ -2142,7 +2142,11 @@ visual chrome:
   transitions, `IsGestureEnabled` controls edge swipe, and positive
   adaptive `FlyoutWidth` values size the sheet. A Compose-backed
   `NavigationPage` detail shows the drawer button at its root and
-  replaces it with normal back navigation on pushed pages. The issue's
+  replaces it with normal back navigation on pushed pages. The Android
+  platform root remains an otherwise-empty `DrawerLayout` containing
+  the single `ComposeView`: MAUI's `NavigationRootManager` requires
+  that concrete root for modal `IFlyoutView` pages, while Material 3
+  still owns all visible drawer layout and gestures. The issue's
   `Popover`/`Split`/`Default` values belong to the Controls-layer
   `FlyoutLayoutBehavior`, not MAUI's handler-facing
   `FlyoutBehavior`; the handler deliberately preserves MAUI's own
