@@ -171,6 +171,33 @@ limitations remain unchanged.
 
 ### Reply
 
+Post-baseline integration evidence for #383 was recorded separately on
+2026-09-17, with the final compact reviewer-fix validation at executable
+source `0edae7729af64010ac5a361e99d6030ab8d80207`.
+On a physical Pixel 10 (Android 16 / API 36), original 1080 x 2424 at
+420 dpi (411 x 923.4 dp), font scale 1.0, all nine
+`ReplyNavigationTests` and all three `ReplySearchTests` passed from exact
+fresh-installed, embedded-assembly APKs. The run exercised avatar selection,
+strict Android checked-state semantics, forward/back FAB behavior and detail
+presence, scrolling/centered detail toolbar, navigation/restoration and
+search ownership. Fresh compact light/dark screenshots and accessibility
+hierarchies are session artifacts. This is source-specific C# acceptance,
+not a new matched Kotlin comparison; the R01-R12 observations below remain
+the fixed #349 baseline.
+
+A separate source-specific matrix then passed the exact adaptive test at
+600 x 900 dp (rail), 840 x 800 dp (rail), 1200 x 800 dp (drawer), and
+840 x 450 dp (compact-height bottom navigation), with native hierarchy
+evidence that the exact localized label belongs to a selected navigation
+control rather than content text. Light/dark Inbox/detail captures cover the
+600 and 840 dp presentation.
+The pinned policy uses bottom navigation below 600 dp width or 480 dp height,
+a rail through 1199 dp, and a drawer from 1200 dp; the 1200 dp boundary is
+covered by a focused policy regression. Those matrix dimensions were
+temporary window/density overrides on the same physical phone. They do not
+prove physical tablet/foldable behavior, fold posture handling, or dual-pane
+content; #168 remains the list/detail boundary.
+
 | ID | Initial state / action | Result |
 | --- | --- | --- |
 | R01 | Fresh Inbox, collapsed empty search | Paired light/dark states, including short window. Visual theme/card/FAB differences remain. |
