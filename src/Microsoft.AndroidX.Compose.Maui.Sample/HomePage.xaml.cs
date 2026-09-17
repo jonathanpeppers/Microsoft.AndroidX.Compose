@@ -136,6 +136,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#7E57C2"),
                 "collections"),
             new DemoEntry(
+                "Swipe views",
+                "Four directions, Reveal/Drag/Execute, custom actions, and nested CollectionView rows.",
+                Color.FromArgb("#1565C0"),
+                "swipe-views"),
+            new DemoEntry(
                 "Semantics",
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),

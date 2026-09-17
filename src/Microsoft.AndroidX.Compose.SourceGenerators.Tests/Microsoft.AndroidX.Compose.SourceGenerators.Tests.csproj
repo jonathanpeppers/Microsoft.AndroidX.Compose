@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing.XUnit" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Maui.Controls" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,5 +23,20 @@
     <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrencePool.cs" Link="Runtime\CompositionOccurrencePool.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrenceRegistry.cs" Link="Runtime\CompositionOccurrenceRegistry.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionViewportObserver.cs" Link="Maui\CollectionViewportObserver.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionViewportContext.cs" Link="Maui\CollectionViewportContext.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListScrollSnapshot.cs" Link="Maui\LazyListScrollSnapshot.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListVisibleItemSnapshot.cs" Link="Maui\LazyListVisibleItemSnapshot.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelPlacement.cs" Link="Maui\SwipePanelPlacement.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ReferenceItemCache.cs" Link="Maui\ReferenceItemCache.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ReferenceOccurrenceKeys.cs" Link="Maui\ReferenceOccurrenceKeys.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeThresholdPolicy.cs" Link="Maui\SwipeThresholdPolicy.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeInvocationPolicy.cs" Link="Maui\SwipeInvocationPolicy.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeExtentReconciliation.cs" Link="Maui\SwipeExtentReconciliation.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeDragLifecycle.cs" Link="Maui\SwipeDragLifecycle.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ViewportObserverBinding.cs" Link="Maui\ViewportObserverBinding.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeContentDismissal.cs" Link="Maui\SwipeContentDismissal.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelSizing.cs" Link="Maui\SwipePanelSizing.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelOrder.cs" Link="Maui\SwipePanelOrder.cs" />
   </ItemGroup>
 </Project>

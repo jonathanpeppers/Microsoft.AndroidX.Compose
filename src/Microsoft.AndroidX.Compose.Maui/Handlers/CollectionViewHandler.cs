@@ -60,8 +60,12 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// a fresh <see cref="BindableObject"/> with its
 /// <see cref="BindableObject.BindingContext"/> assigned to the item, then
 /// walked through <see cref="ComposeWalker.Render(IView, IComposer, IMauiContext)"/>.
-/// Per-item handler allocation cost is accepted for this slice;
-/// memoization is a follow-up.</para>
+/// Materialized template nodes are cached by item reference and template
+/// identity so stateful handlers survive lazy-item recomposition. Removed
+/// rows and template changes drop their cache roots without eagerly
+/// disconnecting outgoing composition-owned nodes; after Compose releases
+/// the node, normal GC collects its view/handler cycle. Viewport observer
+/// callbacks are weak and cannot retain an evicted row.</para>
 ///
 /// <para><b>Reactive sources.</b> Any
 /// <see cref="MauiCollectionView.ItemsSource"/> implementing
@@ -69,6 +73,14 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// mutation bumps the items version slot, which re-runs
 /// <see cref="BuildNode(IComposer)"/> and re-snapshots the source into
 /// an <see cref="IReadOnlyList{T}"/> the lazy facades index into.</para>
+///
+/// <para><b>Nested SwipeView closure.</b> Linear lists install a
+/// remembered <see cref="LazyListState"/> and observe Compose layout
+/// snapshots internally. Nested SwipeViews register with that observer
+/// while their item template is materialized. Movement greater than
+/// 10dp, or a discontinuous viewport jump with no shared visible item,
+/// closes registered rows without approximating MAUI's public
+/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> fields.</para>
 ///
 /// <para><b>Empty view.</b> When the source is null or empty and
 /// <see cref="MauiCollectionView.EmptyView"/> is set, the handler renders
@@ -85,9 +97,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Microsoft.Maui.Controls.SelectableItemsView.SelectedItems"/>
 /// so <see cref="Microsoft.Maui.Controls.SelectableItemsView.SelectionChanged"/>
 /// fires — but the selected row is not yet visually emphasised);
-/// <see cref="Microsoft.Maui.Controls.ItemsView.ScrollTo(int, int, Microsoft.Maui.Controls.ScrollToPosition, bool)"/>
-/// /
-/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> event;
+/// <see cref="Microsoft.Maui.Controls.ItemsView.ScrollTo(int, int, Microsoft.Maui.Controls.ScrollToPosition, bool)"/>;
 /// <see cref="Microsoft.Maui.Controls.ItemsView.ItemsUpdatingScrollMode"/>
 /// stability;
 /// <see cref="Microsoft.Maui.Controls.ItemsView.RemainingItemsThreshold"/>
@@ -95,8 +105,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.Header"/> /
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.Footer"/> /
 /// <see cref="Microsoft.Maui.Controls.StructuredItemsView.ItemSizingStrategy"/>;
-/// grouping;
-/// item-handler caching.</para>
+/// grouping.</para>
 /// </remarks>
 public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectionView>
 {
@@ -127,6 +136,12 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     // off the top of BuildNode so a single Compose dependency edge fans
     // out to the whole list subtree.
     readonly MutableState<int> _itemsVersion = new(0);
+    readonly MutableState<int> _virtualViewVersion = new(0);
+    readonly LazyListState _linearListState = new();
+    readonly CollectionViewportObserver _viewportObserver = new();
+    readonly ReferenceItemCache<CachedTemplate> _templateCache = new();
+    readonly ReferenceOccurrenceKeys _occurrenceKeys = new();
+    long _nextTemplateGeneration;
 
     // Tracks the currently-subscribed INotifyCollectionChanged source so
     // we can unsubscribe before swapping to a new source or disposing
@@ -143,9 +158,18 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc/>
+    public override void SetVirtualView(IView view)
+    {
+        base.SetVirtualView(view);
+        _virtualViewVersion.Value++;
+    }
+
+    /// <inheritdoc/>
     protected override void DisconnectHandler(ComposeView platformView)
     {
         UnsubscribeFromSource();
+        _templateCache.Clear();
+        _occurrenceKeys.Clear();
         base.DisconnectHandler(platformView);
     }
 
@@ -162,6 +186,10 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             ?? throw new InvalidOperationException("MauiContext not set on CollectionViewHandler.");
 
         var items    = Snapshot(view.ItemsSource);
+        var occurrenceKeys = _occurrenceKeys.GetKeys(items);
+        var rows = new ItemEntry[items.Count];
+        for (int i = 0; i < items.Count; i++)
+            rows[i] = new ItemEntry(items[i], occurrenceKeys[i]);
         var template = view.ItemTemplate;
         var clickable = view.SelectionMode != Microsoft.Maui.Controls.SelectionMode.None;
 
@@ -177,9 +205,14 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // No template + non-empty source: stock MAUI renders the
         // ToString() of each item in a TextCell-equivalent. Match that
         // so the handler degrades gracefully instead of throwing.
-        Func<object, ComposableNode> rawItemContent = template is null
-            ? item => new ComposeText(item?.ToString() ?? string.Empty)
-            : item => BuildFromTemplate(template, item, view, context);
+        Func<ItemEntry, ComposableNode> rawItemContent = template is null
+            ? row => new ComposeText(row.Item?.ToString() ?? string.Empty)
+            : row => BuildFromTemplate(
+                template,
+                row.Item,
+                row.CacheKey,
+                view,
+                context);
 
         // SelectionMode != None: wrap each item in a Clickable Box so
         // tapping a row fires MAUI's SelectionChanged + Command. Single
@@ -189,21 +222,28 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // wrapper is necessary even when the template's root is a
         // touchable Layout because MAUI's stock click delivery routes
         // through CollectionView's adapter, which we're replacing.
-        Func<object, ComposableNode> itemContent = clickable
-            ? item => WrapClickable(rawItemContent(item), () => OnItemTapped(view, item))
+        Func<ItemEntry, ComposableNode> renderItem = clickable
+            ? row => WrapClickable(
+                rawItemContent(row),
+                () => OnItemTapped(view, row.Item))
             : rawItemContent;
+        Func<ItemEntry, ComposableNode> itemContent = row =>
+            CollectionViewportContext.BuildItem(
+                _viewportObserver,
+                () => renderItem(row));
 
         // Read the layout live — it's a BindableObject the consumer can
         // swap at runtime, and the mapper bumped _itemsVersion if so.
         var layout = view.ItemsLayout;
-        return BuildList(view, layout, items, itemContent, context);
+        ConfigureScrollMonitoring(composer, view, layout, context);
+        return BuildList(view, layout, rows, itemContent, context);
     }
 
     ComposableNode BuildList(
         MauiCollectionView view,
         MauiItemsLayout? layout,
-        IReadOnlyList<object> items,
-        Func<object, ComposableNode> itemContent,
+        IReadOnlyList<ItemEntry> items,
+        Func<ItemEntry, ComposableNode> itemContent,
         IMauiContext context)
     {
         // ApplyViewProperties wraps the OUTER frame so opacity, scale,
@@ -240,44 +280,122 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         };
     }
 
-    static ComposableNode BuildLazyColumn(
-        IReadOnlyList<object> items,
-        Func<object, ComposableNode> itemContent,
+    ComposableNode BuildLazyColumn(
+        IReadOnlyList<ItemEntry> items,
+        Func<ItemEntry, ComposableNode> itemContent,
         Arrangement? spacing,
         Modifier outer)
     {
-        return new LazyColumn<object>(items, itemContent)
+        return new LazyColumn<ItemEntry>(items, itemContent)
         {
             Modifier            = outer,
+            State               = _linearListState,
+            Key                 = static row => row.CacheKey.Value,
             VerticalArrangement = spacing,
         };
     }
 
-    static ComposableNode BuildLazyRow(
-        IReadOnlyList<object> items,
-        Func<object, ComposableNode> itemContent,
+    ComposableNode BuildLazyRow(
+        IReadOnlyList<ItemEntry> items,
+        Func<ItemEntry, ComposableNode> itemContent,
         Arrangement? spacing,
         Modifier outer)
     {
-        return new LazyRow<object>(items, itemContent)
+        return new LazyRow<ItemEntry>(items, itemContent)
         {
             Modifier              = outer,
+            State                 = _linearListState,
+            Key                   = static row => row.CacheKey.Value,
             HorizontalArrangement = spacing,
         };
     }
 
+    void ConfigureScrollMonitoring(
+        IComposer composer,
+        MauiCollectionView view,
+        MauiItemsLayout? layout,
+        IMauiContext context)
+    {
+        bool? horizontal = layout switch
+        {
+            MauiGridItemsLayout => null,
+            MauiLinearItemsLayout linear =>
+                linear.Orientation == MauiItemsLayoutOrient.Horizontal,
+            _ => false,
+        };
+        if (!horizontal.HasValue)
+            return;
+
+        float density =
+            context.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
+        var dispatcher = view.Dispatcher
+            ?? throw new InvalidOperationException(
+                "Dispatcher not set on CollectionView.");
+        composer.LaunchedEffect(
+            "CollectionViewViewportObserver",
+            horizontal.Value,
+            _virtualViewVersion.Value,
+            async cancellationToken =>
+            {
+                _viewportObserver.ResetTracking();
+                await foreach (var snapshot in ComposeExtensions
+                    .SnapshotFlow(CaptureLinearScrollSnapshotKey)
+                    .WithCancellation(cancellationToken))
+                {
+                    if (_viewportObserver.HasSignificantChange(
+                        LazyListScrollSnapshot.Parse(snapshot),
+                        density))
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await dispatcher.DispatchAsync(() =>
+                        {
+                            if (ReferenceEquals(VirtualView, view))
+                                _viewportObserver.NotifySignificantChange();
+                        }).ConfigureAwait(false);
+                    }
+                }
+            });
+    }
+
+    string CaptureLinearScrollSnapshotKey()
+    {
+        var layoutInfo = _linearListState.Jvm.LayoutInfo;
+        var visible = layoutInfo.VisibleItemsInfo;
+        if (visible.Count == 0)
+            return string.Empty;
+
+        var snapshot = new System.Text.StringBuilder(visible.Count * 24);
+        for (int i = 0; i < visible.Count; i++)
+        {
+            var item = visible[i];
+            if (i > 0)
+                snapshot.Append(';');
+            snapshot
+                .Append(item.Index.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture))
+                .Append(',')
+                .Append(item.Offset.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture))
+                .Append(',')
+                .Append(item.Size.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture));
+        }
+        return snapshot.ToString();
+    }
+
     static ComposableNode BuildVerticalGrid(
-        IReadOnlyList<object> items,
-        Func<object, ComposableNode> itemContent,
+        IReadOnlyList<ItemEntry> items,
+        Func<ItemEntry, ComposableNode> itemContent,
         MauiGridItemsLayout grid,
         Modifier outer,
         IMauiContext context)
     {
         _ = context; // reserved for future per-cell handler caching
         int span = grid.Span > 0 ? grid.Span : 1;
-        return new LazyVerticalGrid<object>(GridCells.Fixed(span), items, itemContent)
+        return new LazyVerticalGrid<ItemEntry>(GridCells.Fixed(span), items, itemContent)
         {
             Modifier              = outer,
+            Key                   = static row => row.CacheKey.Value,
             VerticalArrangement   = ItemSpacingOf(grid.VerticalItemSpacing),
             HorizontalArrangement = ItemSpacingOf(grid.HorizontalItemSpacing),
         };
@@ -335,7 +453,12 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return column;
     }
 
-    static ComposableNode BuildFromTemplate(MauiDataTemplate template, object item, MauiCollectionView view, IMauiContext context)
+    ComposableNode BuildFromTemplate(
+        MauiDataTemplate template,
+        object item,
+        ReferenceOccurrenceKey cacheKey,
+        MauiCollectionView view,
+        IMauiContext context)
     {
         // Pass `view` (the source CollectionView) as the container so
         // DataTemplateSelector subclasses that branch on the host
@@ -345,22 +468,39 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             ? selector.SelectTemplate(item, container: view)
             : template;
 
-        var content = MaterialiseTemplate(resolved, item);
-        if (content is not IView contentView)
-        {
-            // Template materialised to a non-View (e.g. a Cell only). We
-            // fall back to ToString so the list keeps rendering.
-            return new ComposeText(item?.ToString() ?? string.Empty);
-        }
+        return _templateCache.GetOrReplace(
+            cacheKey,
+            cached => ReferenceEquals(cached.Template, resolved),
+            () =>
+            {
+                long generation = ++_nextTemplateGeneration;
+                var content = MaterialiseTemplate(resolved, item);
+                if (content is not IView contentView)
+                {
+                    return new CachedTemplate(
+                        resolved,
+                        new ComposeText(item?.ToString() ?? string.Empty),
+                        generation);
+                }
 
-        // ComposeWalker.Render needs a live IComposer, but the lazy
-        // facade defers item rendering until the Lazy* scope's measure
-        // pass actually pulls the index. We materialise the template up
-        // front so its BindingContext is set on the UI thread before any
-        // composer reads, then wrap the resolved IView in a deferred
-        // node whose own Render(IComposer) runs ComposeWalker.Render at
-        // the correct moment inside Instantiate4's composition.
-        return new DeferredViewNode(contentView, context);
+                var observer = CollectionViewportContext.Current
+                    ?? throw new InvalidOperationException(
+                        "Collection viewport context not set while materializing an item.");
+                return new CachedTemplate(
+                    resolved,
+                    new DeferredViewNode(
+                        contentView,
+                        context,
+                        observer,
+                        cacheKey.Value,
+                        generation,
+                        node => _templateCache.Remove(
+                            cacheKey,
+                            cached =>
+                                cached.Generation == generation &&
+                                ReferenceEquals(cached.Node, node))),
+                    generation);
+            }).Node;
     }
 
     /// <summary>
@@ -375,16 +515,55 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     {
         readonly IView _view;
         readonly IMauiContext _context;
+        readonly CollectionViewportObserver? _observer;
+        readonly long? _cacheKey;
+        readonly long _generation;
+        readonly Action<ComposableNode>? _onReleased;
 
-        public DeferredViewNode(IView view, IMauiContext context)
+        public DeferredViewNode(
+            IView view,
+            IMauiContext context,
+            CollectionViewportObserver? observer = null,
+            long? cacheKey = null,
+            long generation = 0,
+            Action<ComposableNode>? onReleased = null)
         {
             _view    = view;
             _context = context;
+            _observer = observer;
+            _cacheKey = cacheKey;
+            _generation = generation;
+            _onReleased = onReleased;
         }
 
-        public override void Render(IComposer composer) =>
-            ComposeWalker.Render(_view, composer, _context).Render(composer);
+        public override void Render(IComposer composer)
+        {
+            if (_cacheKey is long cacheKey && _onReleased is { } onReleased)
+            {
+                composer.DisposableEffect(
+                    cacheKey,
+                    _generation,
+                    () => () => onReleased(this));
+            }
+            if (_observer is null)
+            {
+                ComposeWalker.Render(_view, composer, _context).Render(composer);
+                return;
+            }
+            CollectionViewportContext.RenderItem(
+                _observer,
+                () => ComposeWalker
+                    .Render(_view, composer, _context)
+                    .Render(composer));
+        }
     }
+
+    sealed record CachedTemplate(
+        MauiDataTemplate Template,
+        ComposableNode Node,
+        long Generation);
+
+    sealed record ItemEntry(object Item, ReferenceOccurrenceKey CacheKey);
 
     static object? MaterialiseTemplate(MauiDataTemplate template, object item)
     {
@@ -439,9 +618,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
 
     void OnSourceCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // Add / Remove / Move / Reset / Replace all collapse to "re-snapshot
-        // and rebuild" for this slice. ItemsUpdatingScrollMode is a
-        // follow-up that distinguishes between these.
+        _occurrenceKeys.ApplyCollectionChanged(e);
         _itemsVersion.Value++;
     }
 
@@ -452,6 +629,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     /// </summary>
     public static void MapItemsSource(CollectionViewHandler handler, MauiCollectionView view)
     {
+        handler._occurrenceKeys.Clear();
         handler.SubscribeToSource(view);
         handler._itemsVersion.Value++;
     }
