@@ -689,7 +689,7 @@ The consumer rules reached the R8 task; R8 9.1.31 ran with shrinking enabled
 and `-dontobfuscate`. Mapping and DEX retained the declaring classes as empty
 shells, not renamed fields or relocated superclass declarations. Explicit
 class-plus-field retention restores all eleven eager reflection declarations.
-`scripts/check-shared-state-dex.py <apk> [<apk> ...]` checks the final APK's
+`dotnet run scripts/check-shared-state-dex.cs -- <apk> [<apk> ...]` checks the final APK's
 DEX class-data declarations (not mere field references) against the Java
 helper's actual reflection calls. CI runs it on the NativeAOT template APK.
 This is a new fix/validation population, not a reclassification of the frozen
@@ -752,7 +752,7 @@ The smoke runner's `shared-state-smoke.pro` keeps its JNI-selected
 tests' raw-JNI `DrawerState.getConfirmStateChange$material3` inspection getter.
 CoreCLR/R8 otherwise removes these members. These test-only rules are not
 exported by the runtime library or used by the Jetchat APK.
-Use `scripts/check-shared-state-dex.py --smoke-harness <test-apk>` to also check
+Use `dotnet run scripts/check-shared-state-dex.cs -- --smoke-harness <test-apk>` to also check
 the switch's declaring class, boolean type, and public/static flags, and the
 getter's exact instance-method declaration/signature.
 
