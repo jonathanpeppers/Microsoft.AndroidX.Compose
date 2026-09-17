@@ -226,14 +226,16 @@ public class ReplyNavigationTests
     [TestMethod]
     public void SelectedBoundsAssociationRejectsViewportAndOtherRows()
     {
-        using var viewport = new Rect(0, 100, 1080, 2200);
-        using var subject = new Rect(180, 500, 900, 560);
-        using var row = new Rect(40, 80, 1040, 760);
-        using var otherRow = new Rect(40, 780, 1040, 1220);
-        using var oversizedAncestor = new Rect(0, 100, 1080, 2200);
+        using var viewport = new Rect(0, 383, 1080, 2140);
+        using var subject = new Rect(95, 507, 271, 570);
+        using var row = new Rect(42, 363, 1038, 697);
+        using var otherRow = new Rect(42, 719, 1038, 1173);
+        using var offscreenRow = new Rect(42, -400, 1038, -20);
+        using var oversizedAncestor = new Rect(0, 383, 1080, 2140);
 
         Assert.IsTrue(IsEmailSelectionBounds(row, subject, viewport));
         Assert.IsFalse(IsEmailSelectionBounds(otherRow, subject, viewport));
+        Assert.IsFalse(IsEmailSelectionBounds(offscreenRow, subject, viewport));
         Assert.IsFalse(IsEmailSelectionBounds(oversizedAncestor, subject, viewport));
     }
 
@@ -485,6 +487,7 @@ public class ReplyNavigationTests
         candidate.Bottom > viewport.Top &&
         candidate.Width() <= viewport.Width() &&
         candidate.Height() < viewport.Height() / 2 &&
+        viewport.Contains(subject.CenterX(), subject.CenterY()) &&
         candidate.Contains(subject.CenterX(), subject.CenterY());
 
     static void PerformClick(AccessibilityNodeInfo node, bool longClick)
