@@ -15,13 +15,13 @@ namespace AndroidX.Compose;
 /// }
 /// </code>
 ///
-/// v1 wires up the simplest 7-param Kotlin overload (no
-/// <c>FlowRowOverflow</c> handle and no scope-receiver helpers for
-/// <c>fillMaxRowHeight</c>). Because <c>FlowRowScope</c> extends
+/// Set <see cref="Overflow"/> to supply expand/collapse indicators.
+/// Omission uses Kotlin's clip behavior. Overflow support retains the deprecated
+/// Foundation 1.11.3 API; see <see cref="FlowOverflowScope"/> for count timing.
+/// Because <c>FlowRowScope</c> extends
 /// <c>RowScope</c>, scope-aware modifiers like
 /// <see cref="Modifier.Weight(float, bool)"/> and
 /// <see cref="Modifier.Align(Alignment.Vertical)"/> work on children
-/// here exactly as they do inside a plain <see cref="Row"/>. The
-/// overflow indicator slot remains a follow-up.
+/// here exactly as they do inside a plain <see cref="Row"/>.
 /// </summary>
 public sealed partial class FlowRow;

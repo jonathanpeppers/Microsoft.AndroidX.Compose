@@ -7,7 +7,9 @@ using Microsoft.Maui.Platform;
 using AView = Android.Views.View;
 using AViewGroup = Android.Views.ViewGroup;
 using FrameLayout = Android.Widget.FrameLayout;
+using MauiFlyoutPage = Microsoft.Maui.Controls.FlyoutPage;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiNavigationPage = Microsoft.Maui.Controls.NavigationPage;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -239,8 +241,24 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
                 new Text("\u2190"),
             };
         }
+        else if (FlyoutParent() is { } flyout &&
+                 ((IFlyoutView)flyout).FlyoutBehavior == FlyoutBehavior.Flyout)
+        {
+            bar.NavigationIcon = new IconButton(onClick: () => flyout.IsPresented = true)
+            {
+                new Text("\u2630"),
+            };
+        }
         return bar;
     }
+
+    MauiFlyoutPage? FlyoutParent() =>
+        VirtualView is MauiNavigationPage navigationPage
+            ? navigationPage.Parent as MauiFlyoutPage
+            : null;
+
+    internal void InvalidateParentChrome() =>
+        _stackVersion.Value++;
 
     void OnBackPressed()
     {

@@ -49,12 +49,15 @@ public static class JetchatDrawer
     }
 
     static Row BuildHeader() =>
-        new()
+        new(
+            horizontalArrangement: null,
+            verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             Modifier.FillMaxWidth().Padding(16),
+            JetchatIcon.Build(null, sizeDp: 24),
             new Image(Resource.Drawable.jetchat_logo, "Jetchat")
             {
-                Modifier = Modifier.Width(87).Height(24),
+                Modifier = Modifier.Padding(start: 8).Width(87).Height(24),
             },
         };
 
@@ -70,12 +73,12 @@ public static class JetchatDrawer
     static Box BuildSectionHeader(string label, ColorScheme scheme) =>
         new()
         {
-            Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28),
+            Modifier.FillMaxWidth().HeightIn(min: 52).Padding(horizontal: 28),
             new Text(label)
             {
                 FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(top: 16),
+                Modifier = Modifier.Align(Alignment.CenterStart),
             }.WithTypography(Typography.BodySmall),
         };
 
@@ -105,7 +108,9 @@ public static class JetchatDrawer
         var textColor = Color.FromPacked(
             selected ? scheme.Primary : scheme.OnSurface);
 
-        return new Row
+        return new Row(
+            horizontalArrangement: null,
+            verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             modifier,
             new Icon(Resource.Drawable.ic_jetchat, null)
@@ -117,7 +122,7 @@ public static class JetchatDrawer
             {
                 FontFamily = JetchatFonts.Montserrat,
                 Color      = textColor,
-                Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12),
+                Modifier   = Modifier.Padding(start: 12),
             }.WithTypography(Typography.BodyMedium),
         };
     }
@@ -145,7 +150,9 @@ public static class JetchatDrawer
         if (selected)
             modifier = modifier.Background(Color.FromPacked(scheme.PrimaryContainer));
 
-        return new Row
+        return new Row(
+            horizontalArrangement: null,
+            verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             modifier,
             new Image(avatarRes, "Profile photo")
@@ -159,7 +166,7 @@ public static class JetchatDrawer
             {
                 FontFamily = JetchatFonts.Montserrat,
                 Color    = Color.FromPacked(scheme.OnSurface),
-                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
+                Modifier = Modifier.Padding(start: 12),
             }.WithTypography(Typography.BodyMedium),
         };
     }

@@ -641,6 +641,36 @@ public class ComposableMethodGeneratorTests
         AssertNoCompileErrors(output);
     }
 
+    [Theory]
+    [InlineData("Widget()", "3")]
+    [InlineData("Widget(value: null)", "2")]
+    public void DirectTarget_ForwardsCallerArgumentPresenceWithoutChangingValueOmission(string call, string mask)
+    {
+        var (output, diagnostics, emitted) = Run($$"""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Widget(AndroidX.Compose.Runtime.IComposer composer,
+                        string? value, string? __valueArgument, ulong omittedArguments, int changed) { }
+                }
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget(string? value = null,
+                        [System.Runtime.CompilerServices.CallerArgumentExpression("value")]
+                        string? __valueArgument = null) { }
+                    public static void CallSite() => {{call}};
+                }
+            }
+            """);
+        Assert.Empty(diagnostics);
+        Assert.NotNull(emitted);
+        Assert.Contains($"global::App.Direct.Widget(__c, value, __valueArgument, 0x{mask}UL, __dirty)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
     [Fact]
     public void DirectTarget_NonComposerExtensionReceiver_PreservesOmittedBitPosition()
     {

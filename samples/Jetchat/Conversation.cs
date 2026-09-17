@@ -23,7 +23,6 @@ public static class Conversation
     const int SelDm      = 2;
     const int SelPicture = 3;
     const int SelMap     = 4;
-    const int SelPhone   = 5;
     static readonly Func<DragAndDropEvent, bool> ShouldAcceptDrag = e =>
     {
         foreach (var mimeType in e.MimeTypes)
@@ -270,20 +269,30 @@ public static class Conversation
                             || messagesScroll.FirstVisibleItemScrollOffset > jumpThreshold),
                     key1: messagesScroll,
                     key2: jumpThreshold);
-                if (!visible.Value)
+                var transition = c.UpdateTransition(visible.Value, "Jump to bottom");
+                var motion = c.Remember(() => AnimationSpecs.Tween(200));
+                float bottomOffset = transition.AnimateFloat(
+                    c,
+                    enabled => enabled ? 32f : -32f,
+                    motion,
+                    "Jump to bottom offset").Value;
+                if (bottomOffset <= 0)
                     return null;
 
                 return new ExtendedFloatingActionButton(
                     onClick:  () => _ = messagesScroll.AnimateScrollToItemAsync(0),
-                    expanded: false)
+                    expanded: true)
                 {
                     Modifier = Modifier
                         .Align(Alignment.BottomCenter)
-                        .Padding(bottom: 16)
-                        .Height(48),
+                        .Offset(y: -bottomOffset)
+                        .Height(36),
+                    ContainerColor = Color.FromPacked(scheme.Surface),
+                    ContentColor = Color.FromPacked(scheme.Primary),
                     Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to latest message")
                     {
                         Tint = Color.FromPacked(scheme.Primary),
+                        Modifier = Modifier.Height(18),
                     },
                     Text = new Text("Jump to bottom"),
                 };
@@ -382,14 +391,16 @@ public static class Conversation
             {
                 FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
-                Modifier   = Modifier.Padding(bottom: 8),
+                Modifier   = Modifier
+                    .AlignBy(Baselines.LastBaseline)
+                    .PaddingFrom(Baselines.LastBaseline, after: 8),
             }.WithTypography(Typography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(bottom: 8),
+                Modifier = Modifier.AlignBy(Baselines.LastBaseline),
             }.WithTypography(Typography.BodySmall),
         };
 
@@ -578,8 +589,6 @@ public static class Conversation
         Action<FocusState> onFocusChanged,
         bool focused)
     {
-        bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
-
         var row = new Row
         {
             Modifier.FillMaxWidth().Height(64),
@@ -626,35 +635,32 @@ public static class Conversation
             },
         };
 
-        if (textEmpty || isRecording.Value)
+        row.Add(new Tooltip
         {
-            row.Add(new Tooltip
+            Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
+            EnableUserInput = false,
+            Tip = new Surface
             {
-                Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
-                EnableUserInput = false,
-                Tip = new Surface
+                new Text("Touch and hold to record")
                 {
-                    new Text("Touch and hold to record")
-                    {
-                        Modifier = Modifier.Padding(horizontal: 12, vertical: 8),
-                    },
+                    Modifier = Modifier.Padding(horizontal: 12, vertical: 8),
                 },
-                Anchor = RecordButton.BuildButton(
-                    isRecording,
-                    swipeOffset,
-                    onCommit: () =>
-                    {
-                        isRecording.Value = false;
-                        swipeOffset.Value = 0f;
-                    },
-                    onCancel: () =>
-                    {
-                        isRecording.Value = false;
-                        swipeOffset.Value = 0f;
-                    },
-                    scheme: scheme),
-            });
-        }
+            },
+            Anchor = RecordButton.BuildButton(
+                isRecording,
+                swipeOffset,
+                onCommit: () =>
+                {
+                    isRecording.Value = false;
+                    swipeOffset.Value = 0f;
+                },
+                onCancel: () =>
+                {
+                    isRecording.Value = false;
+                    swipeOffset.Value = 0f;
+                },
+                scheme: scheme),
+        });
         return row;
     }
 
@@ -668,17 +674,23 @@ public static class Conversation
         MutableState<bool>   importingVideo,
         Action               onPickVideo)
     {
-        var row = new Row(Arrangement.SpaceBetween)
+        var row = new Row(
+            horizontalArrangement: null,
+            verticalAlignment: Alignment.Vertical.CenterVertically)
         {
-            Modifier.FillMaxWidth().Height(40).Padding(horizontal: 4),
-            new Row
+            Modifier
+                .FillMaxWidth()
+                .Height(72)
+                .Padding(start: 16, end: 16, bottom: 16),
+            InputSelectorButton(Resource.Drawable.ic_mood,            "Show Emoji selector", SelEmoji,   selectedSelector, scheme),
+            InputSelectorButton(Resource.Drawable.ic_alternate_email, "Direct Message",      SelDm,      selectedSelector, scheme),
+            InputSelectorButton(Resource.Drawable.ic_insert_photo,    "Attach Photo",        SelPicture, selectedSelector, scheme),
+            InputSelectorButton(Resource.Drawable.ic_place,           "Location selector",   SelMap,     selectedSelector, scheme),
+            BuildVideoPickerButton(
+                scheme, onPickVideo, enabled: !importingVideo.Value),
+            new Spacer
             {
-                InputSelectorButton(Resource.Drawable.ic_mood,            "Show Emoji selector", SelEmoji,   selectedSelector, scheme),
-                InputSelectorButton(Resource.Drawable.ic_alternate_email, "Direct Message",      SelDm,      selectedSelector, scheme),
-                InputSelectorButton(Resource.Drawable.ic_insert_photo,    "Attach Photo",        SelPicture, selectedSelector, scheme),
-                InputSelectorButton(Resource.Drawable.ic_place,           "Location selector",   SelMap,     selectedSelector, scheme),
-                BuildVideoPickerButton(
-                    scheme, onPickVideo, enabled: !importingVideo.Value),
+                Modifier = Modifier.Weight(1f),
             },
         };
         bool enabled = !importingVideo.Value
@@ -699,6 +711,7 @@ public static class Conversation
         {
             Modifier = sendModifier,
             Shape = new RoundedCornerShape(18.Dp()),
+            ContentPadding = new PaddingValues(0),
             Colors = ComposableContext.Current.ButtonColors(
                 containerColor: Color.FromPacked(scheme.Primary),
                 contentColor: Color.FromPacked(scheme.OnPrimary),
@@ -708,6 +721,7 @@ public static class Conversation
         sendButton.Add(new Text("Send")
             {
                 FontWeight = FontWeight.SemiBold,
+                Modifier = Modifier.Padding(horizontal: 16),
             });
         row.Add(sendButton);
         return row;
@@ -766,11 +780,12 @@ public static class Conversation
         });
         if (selected)
             button.Modifier = Modifier
-                .Size(40)
-                .Padding(4)
+                .Size(48)
                 .Background(
                     Color.FromPacked(scheme.Secondary),
-                    new RoundedCornerShape(16.Dp()));
+                    new RoundedCornerShape(14.Dp()));
+        else
+            button.Modifier = Modifier.Size(48);
         return button;
     }
 
@@ -781,30 +796,58 @@ public static class Conversation
         FocusRequester      selectorFocus)
     {
         int sel = selectedSelector.Value;
-        if (sel == 0) return Spacer.Width(0);
-        var surface = new Surface { TonalElevation = 8 };
+        var surface = new Surface
+        {
+            TonalElevation = 8,
+            Modifier = Modifier.FillMaxWidth(),
+        };
         if (sel == SelEmoji)
         {
             surface.Add(EmojiSelector.Build(input, scheme, selectorFocus));
             return surface;
         }
+
+        if (sel == SelDm)
+        {
+            return new AlertDialog(onDismissRequest: () => selectedSelector.Value = 0)
+            {
+                Text = new Text("Functionality not available \U0001F648"),
+                ConfirmButton = new TextButton(() => selectedSelector.Value = 0)
+                {
+                    new Text("CLOSE"),
+                },
+            };
+        }
+
+        bool showUnavailable = sel is SelPicture or SelMap;
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
-        surface.Add(new Column
+        surface.Add(new AnimatedVisibility(
+            showUnavailable,
+            enter: Transitions.FadeIn(),
+            exit: Transitions.FadeOut())
         {
-            Modifier.FillMaxWidth().Height(320),
-            Spacer.Height(96),
-            new Text(title)
+            new Column(
+                verticalArrangement: Arrangement.Center,
+                horizontalAlignment: Alignment.Horizontal.CenterHorizontally)
             {
-                FontSize   = 16,
-                FontWeight = FontWeight.Medium,
-                Modifier   = Modifier.Padding(horizontal: 16),
-            },
-            new Text(subtitle)
-            {
-                FontSize = 14,
-                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(horizontal: 16).PaddingFrom(Baselines.FirstBaseline, before: 32),
+                Modifier
+                    .FillMaxWidth()
+                    .Height(320)
+                    .AnimateEnterExit(
+                        enter: Transitions.SlideInHorizontally(width => -width),
+                        exit: Transitions.SlideOutHorizontally(width => -width)),
+                new Text(title)
+                {
+                    FontFamily = JetchatFonts.Montserrat,
+                    Color = Color.FromPacked(scheme.OnSurface),
+                }.WithTypography(Typography.TitleMedium),
+                new Text(subtitle)
+                {
+                    FontFamily = JetchatFonts.Montserrat,
+                    Color = Color.FromPacked(scheme.OnSurfaceVariant),
+                    Modifier = Modifier.PaddingFrom(Baselines.FirstBaseline, before: 32),
+                }.WithTypography(Typography.BodyMedium),
             },
         });
         return surface;
