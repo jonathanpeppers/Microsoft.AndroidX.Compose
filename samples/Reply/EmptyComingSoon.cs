@@ -15,20 +15,17 @@ public static class EmptyComingSoon
             return new Column(verticalArrangement: Arrangement.Center)
             {
                 Modifier.FillMaxSize().Padding(8),
-                new Text("Screen under construction")
+                new Text(c.StringResource(Resource.String.reply_empty_title))
                 {
-                    FontSize   = 18,
-                    FontWeight = FontWeight.SemiBold,
                     Color      = Color.FromPacked(scheme.Primary),
                     Modifier   = Modifier.FillMaxWidth(),
-                },
+                }.WithTypography(ReplyTypography.TitleMedium),
                 Spacer.Height(8),
-                new Text("This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose")
+                new Text(c.StringResource(Resource.String.reply_empty_subtitle))
                 {
-                    FontSize = 14,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(horizontal: 16),
-                },
+                }.WithTypography(ReplyTypography.BodyMedium),
             };
         });
 }

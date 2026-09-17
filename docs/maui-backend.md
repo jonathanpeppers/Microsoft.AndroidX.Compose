@@ -2155,20 +2155,29 @@ The sample's "Tabbed pages" demo launches both placements and exercises tab
 taps, swipes, programmatic `CurrentPage`, disabled tabs, icon/title updates,
 and dynamic child insertion/removal.
 
-#### Slices 3-5 — deferred follow-ups
+#### Slice 3 — `FlyoutViewHandler` ✅ shipped; Slices 4-5 deferred
 
-All three remaining navigation surfaces work **functionally** via
-stock today (each registers against its concrete type, so our
-`PageHandler` doesn't accidentally intercept them). The pages they
-host already get our converted leaves. The remaining gap is purely
-visual chrome:
-
-- **Slice 3 — `FlyoutPageHandler`** (`FlyoutPage` →
-  `ModalNavigationDrawer`). Stock = `DrawerLayout`. The
-  `ModalNavigationDrawer` facade + `[ConfirmStateChange]` adapter
-  pattern (Phase 10 + 4c, see `ModalBottomSheet`) are in place;
-  hand-write a drawer state holder wired to `IFlyoutView`'s
-  `IsPresented`.
+- **Slice 3 — `FlyoutViewHandler`** (`FlyoutPage` → Material 3
+  navigation drawers) is implemented. MAUI resolves
+  `FlyoutLayoutBehavior` plus device idiom/orientation into the
+  effective `IFlyoutView.FlyoutBehavior`: `Flyout` renders
+  `ModalNavigationDrawer`, `Locked` renders
+  `PermanentNavigationDrawer`, and `Disabled` renders detail only.
+  `IsPresented` synchronizes in both directions after settled drawer
+  transitions (including reversing an in-flight request),
+  `IsGestureEnabled` controls edge swipe, positive adaptive
+  `FlyoutWidth` values size the sheet, and MAUI's `-1` sentinel fills
+  the available width. A Compose-backed
+  `NavigationPage` detail shows the drawer button at its root and
+  replaces it with normal back navigation on pushed pages. The Android
+  platform root remains an otherwise-empty `DrawerLayout` containing
+  the single `ComposeView`: MAUI's `NavigationRootManager` requires
+  that concrete root for modal `IFlyoutView` pages, while Material 3
+  still owns all visible drawer layout and gestures. The issue's
+  `Popover`/`Split`/`Default` values belong to the Controls-layer
+  `FlyoutLayoutBehavior`, not MAUI's handler-facing
+  `FlyoutBehavior`; the handler deliberately preserves MAUI's own
+  responsive resolution rather than duplicating it.
 - **Slice 4 — `ShellHandler`** (closes #248). Stock works; the
   visible regression was that the built-in `FlyoutItem` template's
   MAUI `Label`s rendered through our `LabelHandler` without any

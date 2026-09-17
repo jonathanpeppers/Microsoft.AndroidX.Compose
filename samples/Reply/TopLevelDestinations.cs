@@ -9,27 +9,27 @@ namespace AndroidX.Compose.Samples.Reply;
 public static class TopLevelDestinations
 {
     /// <summary>The four top-level destinations, in display order.</summary>
-    public static readonly IReadOnlyList<ReplyTopLevelDestination> All = new[]
-    {
+    public static readonly IReadOnlyList<ReplyTopLevelDestination> All =
+    [
         new ReplyTopLevelDestination(
             route:          Route.Inbox,
             selectedIcon:   Resource.Drawable.ic_inbox,
             unselectedIcon: Resource.Drawable.ic_inbox,
-            iconTextId:     "Inbox"),
+            labelResourceId: Resource.String.reply_tab_inbox),
         new ReplyTopLevelDestination(
             route:          Route.Articles,
             selectedIcon:   Resource.Drawable.ic_article,
             unselectedIcon: Resource.Drawable.ic_article,
-            iconTextId:     "Articles"),
+            labelResourceId: Resource.String.reply_tab_articles),
         new ReplyTopLevelDestination(
             route:          Route.DirectMessages,
             selectedIcon:   Resource.Drawable.ic_chat_bubble_outline,
             unselectedIcon: Resource.Drawable.ic_chat_bubble_outline,
-            iconTextId:     "DM"),
+            labelResourceId: Resource.String.reply_tab_direct_messages),
         new ReplyTopLevelDestination(
             route:          Route.Groups,
             selectedIcon:   Resource.Drawable.ic_group,
             unselectedIcon: Resource.Drawable.ic_group,
-            iconTextId:     "Groups"),
-    };
+            labelResourceId: Resource.String.reply_tab_groups),
+    ];
 }

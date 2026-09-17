@@ -15,9 +15,9 @@ namespace AndroidX.Compose;
 /// }
 /// </code>
 ///
-/// As with <see cref="FlowRow"/>, the v1 facade uses the simpler
-/// 7-param overload — no <c>FlowColumnOverflow</c> slot and no
-/// scope-receiver helper for <c>fillMaxColumnWidth</c>. Because
+/// Set <see cref="Overflow"/> to supply expand/collapse indicators.
+/// Omission uses Kotlin's clip behavior. Overflow support retains the deprecated
+/// Foundation 1.11.3 API; see <see cref="FlowOverflowScope"/> for count timing. Because
 /// <c>FlowColumnScope</c> extends <c>ColumnScope</c>, scope-aware
 /// modifiers like <see cref="Modifier.Weight(float, bool)"/> and
 /// <see cref="Modifier.Align(Alignment.Horizontal)"/> work on

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
-/// Managed value types that wrapper-passthrough facades can surface as
+/// Managed types that wrapper-passthrough facades can surface as
 /// nullable properties while their handwritten wrapper owns platform lowering.
 /// </summary>
 internal static class ComposeFacadeManagedTypes
@@ -13,14 +13,18 @@ internal static class ComposeFacadeManagedTypes
     [
         "AndroidX.Compose.FloatRange",
         "AndroidX.Compose.NavigationSuiteType",
+        "AndroidX.Compose.FlowRowOverflow",
+        "AndroidX.Compose.FlowColumnOverflow",
     ];
 
-    public static bool IsRecognized(ITypeSymbol type)
+    public static bool IsRecognized(ITypeSymbol type, NullableAnnotation annotation)
     {
-        if (type is not INamedTypeSymbol nullable ||
-            nullable.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T ||
-            nullable.TypeArguments.Length != 1 ||
-            nullable.TypeArguments[0] is not INamedTypeSymbol managed)
+        if (type is not INamedTypeSymbol managed)
+            return false;
+        if (managed.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T &&
+            managed.TypeArguments.Length == 1 && managed.TypeArguments[0] is INamedTypeSymbol value)
+            managed = value;
+        else if (!managed.IsReferenceType || annotation != NullableAnnotation.Annotated)
             return false;
 
         var ns = managed.ContainingNamespace?.IsGlobalNamespace == true

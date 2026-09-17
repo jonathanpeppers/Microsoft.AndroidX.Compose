@@ -576,8 +576,17 @@ AndroidX.Compose.FloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FloatingActionButton.Shape.set -> void
 AndroidX.Compose.FlowColumn
 AndroidX.Compose.FlowColumn.FlowColumn(int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647) -> void
+AndroidX.Compose.FlowColumn.Overflow.get -> AndroidX.Compose.FlowColumnOverflow?
+AndroidX.Compose.FlowColumn.Overflow.set -> void
+AndroidX.Compose.FlowColumnOverflow
+AndroidX.Compose.FlowOverflowScope
+AndroidX.Compose.FlowOverflowScope.ShownItemCount.get -> int
+AndroidX.Compose.FlowOverflowScope.TotalItemCount.get -> int
 AndroidX.Compose.FlowRow
 AndroidX.Compose.FlowRow.FlowRow(int maxItemsInEachRow = 2147483647, int maxLines = 2147483647) -> void
+AndroidX.Compose.FlowRow.Overflow.get -> AndroidX.Compose.FlowRowOverflow?
+AndroidX.Compose.FlowRow.Overflow.set -> void
+AndroidX.Compose.FlowRowOverflow
 AndroidX.Compose.FocusManagerExtensions
 AndroidX.Compose.FocusRequester
 AndroidX.Compose.FocusRequester.CaptureFocus() -> bool
@@ -2071,8 +2080,12 @@ static AndroidX.Compose.Composables.FilterChip(bool selected, System.Action! onC
 static AndroidX.Compose.Composables.FlexibleBottomAppBar(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
 static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
-static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
+static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.FlowColumnOverflow? overflow = null, string? __overflowArgument = null) -> void
+static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn, int maxLines, AndroidX.Compose.Modifier? modifier) -> void
+static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn, int maxLines, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.FlowColumnOverflow? overflow) -> void
+static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.FlowRowOverflow? overflow = null, string? __overflowArgument = null) -> void
+static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow, int maxLines, AndroidX.Compose.Modifier? modifier) -> void
+static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow, int maxLines, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.FlowRowOverflow? overflow) -> void
 static AndroidX.Compose.Composables.HorizontalCenteredHeroCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? maxItemWidth = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
 static AndroidX.Compose.Composables.HorizontalMultiBrowseCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, AndroidX.Compose.Dp preferredItemWidth, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
 static AndroidX.Compose.Composables.HorizontalPager<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.PagerState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, System.Func<T, object!>? key = null) -> void
@@ -2381,6 +2394,20 @@ static AndroidX.Compose.DrawingStyle.Fill.get -> AndroidX.Compose.UI.Graphics.Dr
 static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
+static AndroidX.Compose.FlowColumnOverflow.Clip.get -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandIndicator(AndroidX.Compose.ComposableNode! content) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandIndicator(System.Action<AndroidX.Compose.FlowOverflowScope!>! content) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandIndicator(System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! content) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandOrCollapseIndicator(AndroidX.Compose.ComposableNode! expandIndicator, AndroidX.Compose.ComposableNode! collapseIndicator, int? minColumnsToShowCollapse = null, AndroidX.Compose.Dp? minWidthToShowCollapse = null) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandOrCollapseIndicator(System.Action<AndroidX.Compose.FlowOverflowScope!>! expandIndicator, System.Action<AndroidX.Compose.FlowOverflowScope!>! collapseIndicator, int? minColumnsToShowCollapse = null, AndroidX.Compose.Dp? minWidthToShowCollapse = null) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowColumnOverflow.ExpandOrCollapseIndicator(System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! expandIndicator, System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! collapseIndicator, int? minColumnsToShowCollapse = null, AndroidX.Compose.Dp? minWidthToShowCollapse = null) -> AndroidX.Compose.FlowColumnOverflow!
+static AndroidX.Compose.FlowRowOverflow.Clip.get -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandIndicator(AndroidX.Compose.ComposableNode! content) -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandIndicator(System.Action<AndroidX.Compose.FlowOverflowScope!>! content) -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandIndicator(System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! content) -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandOrCollapseIndicator(AndroidX.Compose.ComposableNode! expandIndicator, AndroidX.Compose.ComposableNode! collapseIndicator, int? minRowsToShowCollapse = null, AndroidX.Compose.Dp? minHeightToShowCollapse = null) -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandOrCollapseIndicator(System.Action<AndroidX.Compose.FlowOverflowScope!>! expandIndicator, System.Action<AndroidX.Compose.FlowOverflowScope!>! collapseIndicator, int? minRowsToShowCollapse = null, AndroidX.Compose.Dp? minHeightToShowCollapse = null) -> AndroidX.Compose.FlowRowOverflow!
+static AndroidX.Compose.FlowRowOverflow.ExpandOrCollapseIndicator(System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! expandIndicator, System.Func<AndroidX.Compose.FlowOverflowScope!, AndroidX.Compose.ComposableNode!>! collapseIndicator, int? minRowsToShowCollapse = null, AndroidX.Compose.Dp? minHeightToShowCollapse = null) -> AndroidX.Compose.FlowRowOverflow!
 static AndroidX.Compose.FocusManagerExtensions.ClearFocus(this AndroidX.Compose.UI.Focus.IFocusManager! manager, bool force = false) -> void
 static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
