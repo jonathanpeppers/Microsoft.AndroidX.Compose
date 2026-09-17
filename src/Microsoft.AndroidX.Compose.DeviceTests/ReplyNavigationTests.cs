@@ -250,13 +250,21 @@ public class ReplyNavigationTests
     public void NavigationPolicyMatchesPinnedBreakpoints()
     {
         Assert.AreEqual(NavigationSuiteType.NavigationBar,
-            ReplyApp.ResolveNavigationType(false, true, false));
-        Assert.AreEqual(NavigationSuiteType.NavigationBar,
-            ReplyApp.ResolveNavigationType(true, false, true));
+            ResolveAt(widthDp: 599, heightDp: 900));
         Assert.AreEqual(NavigationSuiteType.NavigationRail,
-            ReplyApp.ResolveNavigationType(true, true, false));
+            ResolveAt(widthDp: 600, heightDp: 480));
+        Assert.AreEqual(NavigationSuiteType.NavigationBar,
+            ResolveAt(widthDp: 1200, heightDp: 479));
+        Assert.AreEqual(NavigationSuiteType.NavigationRail,
+            ResolveAt(widthDp: 1199, heightDp: 900));
         Assert.AreEqual(NavigationSuiteType.NavigationDrawer,
-            ReplyApp.ResolveNavigationType(true, true, true));
+            ResolveAt(widthDp: 1200, heightDp: 900));
+
+        static NavigationSuiteType ResolveAt(int widthDp, int heightDp) =>
+            ReplyApp.ResolveNavigationType(
+                widthAtLeastMedium: widthDp >= 600,
+                heightAtLeastMedium: heightDp >= 480,
+                widthAtLeastLarge: widthDp >= 1200);
     }
 
     /// <summary>Selected-row semantics association rejects viewport-wide and sibling-row nodes.</summary>
