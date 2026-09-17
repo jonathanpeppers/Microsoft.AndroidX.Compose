@@ -45,6 +45,34 @@ public class BasicTextFieldTests
         Assert.AreEqual("", state.Value.Text);
         Assert.AreEqual(1, resetCount);
         Assert.AreEqual(1, dismissCount);
+
+        using var whitespace = ComposeExtensions.NewTextFieldValue("   ");
+        state.Value = whitespace;
+        sentCaption = null;
+        Assert.IsTrue(MessageInput.Send(
+            state,
+            "file:///video.mp4",
+            _ => Assert.Fail("Video send must not use the text-only callback."),
+            (_, caption) => sentCaption = caption,
+            () => { },
+            () => { }));
+        Assert.AreEqual("", sentCaption);
+    }
+
+    /// <summary>Picker completion reconnects to the newest activity consumer.</summary>
+    [TestMethod]
+    public void VideoPicker_ReconnectsInFlightResultAfterRecreation()
+    {
+        var state = new VideoPickerViewModel();
+        VideoPickResult? oldResult = null;
+        VideoPickResult? newResult = null;
+        state.Connect(result => oldResult = result);
+        Assert.IsTrue(state.Begin());
+        state.Connect(result => newResult = result);
+        state.Complete(VideoPickResult.Selected("file:///video.mp4"));
+
+        Assert.IsNull(oldResult);
+        Assert.AreEqual("file:///video.mp4", newResult?.VideoUri);
     }
 
     /// <summary>Diagnoses native admission independently of the editing assertions.</summary>

@@ -7,8 +7,11 @@ internal static class VideoAttachmentStore
     const long MaxVideoBytes = 25L * 1024 * 1024;
     const string DirectoryName = "jetchat-videos";
 
-    internal static string SeedVideoUri =>
-        $"android.resource://net.compose.samples.jetchat/{Resource.Raw.jetchat_video_fixture}";
+    internal static string SeedVideoUri(Context context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return $"android.resource://{context.PackageName}/{Resource.Raw.jetchat_video_fixture}";
+    }
 
     internal static async Task<string> ImportAsync(
         Context context,
@@ -50,6 +53,23 @@ internal static class VideoAttachmentStore
         foreach (var file in directory.EnumerateFiles("*.mp4"))
             if (file.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-1))
                 file.Delete();
+    }
+
+    internal static void DeleteImported(Context context, string? videoUri)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (videoUri is null)
+            return;
+        var uri = Android.Net.Uri.Parse(videoUri);
+        if (uri?.Scheme != "file" || uri.Path is not string path)
+            return;
+        var cache = context.CacheDir
+            ?? throw new InvalidOperationException("Jetchat cache directory is unavailable.");
+        var importRoot = System.IO.Path.GetFullPath(
+            System.IO.Path.Combine(cache.AbsolutePath, DirectoryName));
+        var file = new FileInfo(System.IO.Path.GetFullPath(path));
+        if (string.Equals(file.DirectoryName, importRoot, StringComparison.Ordinal))
+            file.Delete();
     }
 
     static void CopyBounded(

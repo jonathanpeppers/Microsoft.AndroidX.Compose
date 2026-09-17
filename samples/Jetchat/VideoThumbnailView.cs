@@ -7,8 +7,8 @@ namespace AndroidX.Compose.Samples.Jetchat;
 internal sealed class VideoThumbnailView : ImageView
 {
     readonly Context _context;
-    readonly string _videoUri;
-    readonly CancellationTokenSource _cancellation = new();
+    string _videoUri;
+    CancellationTokenSource _cancellation = new();
     Bitmap? _bitmap;
 
     internal VideoThumbnailView(Context context, string videoUri) : base(context)
@@ -18,25 +18,42 @@ internal sealed class VideoThumbnailView : ImageView
         SetBackgroundColor(Android.Graphics.Color.Rgb(20, 20, 30));
         SetScaleType(ScaleType.CenterCrop);
         ImportantForAccessibility = Android.Views.ImportantForAccessibility.No;
-        _ = LoadAsync();
+        _ = LoadAsync(_videoUri, _cancellation.Token);
+    }
+
+    internal void SetVideoUri(string videoUri)
+    {
+        if (_videoUri == videoUri)
+            return;
+        _cancellation.Cancel();
+        _cancellation.Dispose();
+        _cancellation = new CancellationTokenSource();
+        _videoUri = videoUri;
+        SetImageDrawable(null);
+        _bitmap?.Dispose();
+        _bitmap = null;
+        _ = LoadAsync(_videoUri, _cancellation.Token);
     }
 
     protected override void OnDetachedFromWindow()
     {
         _cancellation.Cancel();
+        _cancellation.Dispose();
         SetImageDrawable(null);
         _bitmap?.Dispose();
         _bitmap = null;
         base.OnDetachedFromWindow();
     }
 
-    async Task LoadAsync()
+    async Task LoadAsync(string videoUri, CancellationToken cancellationToken)
     {
         Bitmap? loaded = null;
         try
         {
-            loaded = await Task.Run(ExtractFrame, _cancellation.Token);
-            if (_cancellation.IsCancellationRequested || loaded is null)
+            loaded = await Task.Run(
+                () => ExtractFrame(videoUri, cancellationToken),
+                cancellationToken);
+            if (cancellationToken.IsCancellationRequested || loaded is null)
             {
                 loaded?.Dispose();
                 return;
@@ -44,7 +61,7 @@ internal sealed class VideoThumbnailView : ImageView
 
             Post(() =>
             {
-                if (_cancellation.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                 {
                     loaded.Dispose();
                     return;
@@ -65,11 +82,11 @@ internal sealed class VideoThumbnailView : ImageView
         }
     }
 
-    Bitmap? ExtractFrame()
+    Bitmap? ExtractFrame(string videoUri, CancellationToken cancellationToken)
     {
-        _cancellation.Token.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         using var retriever = new MediaMetadataRetriever();
-        var uri = Android.Net.Uri.Parse(_videoUri)
+        var uri = Android.Net.Uri.Parse(videoUri)
             ?? throw new InvalidOperationException("Video URI could not be parsed.");
         retriever.SetDataSource(_context, uri);
         return retriever.GetFrameAtTime(

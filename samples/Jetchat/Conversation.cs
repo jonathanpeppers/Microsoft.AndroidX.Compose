@@ -40,7 +40,8 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        Action<Action<VideoPickResult>> requestVideo,
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
         Action                       onOpenDrawer,
         Action<string>               onAuthorClicked) =>
         new Composed(c =>
@@ -70,7 +71,8 @@ public static class Conversation
                         TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                         Body   = BuildBody(
                             ui, input, scheme, selectedSelector, messagesScroll,
-                            onAuthorClicked, isRecording, swipeOffset, requestVideo, activeVideoUri),
+                            onAuthorClicked, isRecording, swipeOffset,
+                            videoPickerState, requestVideo, activeVideoUri),
                     },
                 },
             };
@@ -148,7 +150,8 @@ public static class Conversation
         Action<string>               onAuthorClicked,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        Action<Action<VideoPickResult>> requestVideo,
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
         MutableState<string?>        activeVideoUri) =>
         new Composed(c =>
         {
@@ -196,7 +199,8 @@ public static class Conversation
                     videoUri => activeVideoUri.Value = videoUri),
                 BuildInputArea(
                     ui, input, scheme, selectedSelector, messagesScroll,
-                    isRecording, swipeOffset, requestVideo),
+                    isRecording, swipeOffset, videoPickerState, requestVideo,
+                    activeVideoUri),
             };
         });
 
@@ -453,7 +457,9 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        Action<Action<VideoPickResult>> requestVideo) =>
+        VideoPickerViewModel         videoPickerState,
+        Action                       requestVideo,
+        MutableState<string?>        activeVideoUri) =>
         new Composed(c =>
         {
             var focused = c.MutableStateOf(false);
@@ -461,6 +467,18 @@ public static class Conversation
                 () => new MutableState<string?>((string?)null), key1: ui.ChannelName);
             var videoError = c.MutableStateOf<string?>(null);
             var importingVideo = c.MutableStateOf(false);
+            var context = LocalContext.Current(c);
+            c.SideEffect(() => videoPickerState.Connect(result =>
+            {
+                importingVideo.Value = false;
+                if (result.VideoUri is string selectedVideo)
+                {
+                    VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
+                    attachedVideoUri.Value = selectedVideo;
+                }
+                if (result.Error is string pickError)
+                    videoError.Value = pickError;
+            }));
             long cursorColor = scheme.Secondary;
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
@@ -489,8 +507,10 @@ public static class Conversation
                 attachedVideoUri.Value is string videoUri
                     ? BuildAttachedVideoPreview(
                         videoUri,
+                        () => activeVideoUri.Value = videoUri,
                         () =>
                         {
+                            VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
                             attachedVideoUri.Value = null;
                             videoError.Value = null;
                         })
@@ -520,14 +540,7 @@ public static class Conversation
                         importingVideo.Value = true;
                         videoError.Value = null;
                         selectedSelector.Value = 0;
-                        requestVideo(result =>
-                        {
-                            importingVideo.Value = false;
-                            if (result.VideoUri is string selectedVideo)
-                                attachedVideoUri.Value = selectedVideo;
-                            if (result.Error is string pickError)
-                                videoError.Value = pickError;
-                        });
+                        requestVideo();
                     }),
                 BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
             });
@@ -776,9 +789,12 @@ public static class Conversation
         return surface;
     }
 
-    static ComposableNode BuildAttachedVideoPreview(string videoUri, Action onRemove)
+    static ComposableNode BuildAttachedVideoPreview(
+        string videoUri,
+        Action onPlay,
+        Action onRemove)
     {
-        var preview = VideoThumbnail.Build(videoUri, () => { }, "Attached video preview");
+        var preview = VideoThumbnail.Build(videoUri, onPlay, "Attached video preview");
         preview.Modifier = Modifier.FillMaxWidth().Height(180);
         return new Box
         {

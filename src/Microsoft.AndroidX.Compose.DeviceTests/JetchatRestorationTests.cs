@@ -1,6 +1,7 @@
 using Android.Content;
 using Android.Views;
 using Android.Views.Accessibility;
+using AndroidX.Compose.Samples.Jetchat;
 using NativeAction = Android.Views.Accessibility.Action;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
@@ -150,6 +151,27 @@ public class JetchatRestorationTests
                 Assert.HasCount(1, owners.Value.Messages);
                 Assert.AreEqual(" second386 ", owners.Value.Messages[0].Content);
             });
+        }
+        finally { await Finish(activity); }
+    }
+
+    /// <summary>An in-flight picker result reconnects to the recreated activity's retained owner.</summary>
+    [TestMethod]
+    public async Task VideoPicker_InFlightResultReconnectsAfterRecreation()
+    {
+        var activity = await Start("light");
+        try
+        {
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            Assert.IsTrue(picker.Begin());
+            activity = await Recreate(activity);
+            Assert.AreSame(picker, activity.VideoPickerState);
+
+            VideoPickResult? delivered = null;
+            picker.Connect(result => delivered = result);
+            picker.Complete(VideoPickResult.Selected("file:///video.mp4"));
+            Assert.AreEqual("file:///video.mp4", delivered?.VideoUri);
         }
         finally { await Finish(activity); }
     }

@@ -11,7 +11,9 @@ internal static class VideoThumbnail
                 .Clip(new RoundedCornerShape(12.Dp()))
                 .Clickable(onClick)
                 .Semantics(description),
-            new AndroidView(context => new VideoThumbnailView(context, videoUri))
+            new AndroidView(
+                context => new VideoThumbnailView(context, videoUri),
+                view => ((VideoThumbnailView)view).SetVideoUri(videoUri))
             {
                 Modifier = Modifier.FillMaxSize(),
             },

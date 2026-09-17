@@ -17,7 +17,8 @@ public class MainActivity : ComponentActivity
 {
     ActivityResultLauncher? _videoPicker;
     VideoActivityResultCallback? _videoPickerCallback;
-    Action<VideoPickResult>? _pendingVideoPick;
+    VideoPickerViewModel? _videoPickerState;
+    internal VideoPickerViewModel? VideoPickerState => _videoPickerState;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -37,10 +38,11 @@ public class MainActivity : ComponentActivity
             new ActivityResultContracts.GetContent(),
             _videoPickerCallback);
         VideoAttachmentStore.Prune(CacheDir);
+        var seedVideoUri = VideoAttachmentStore.SeedVideoUri(this);
         this.EnableEdgeToEdge();
         this.SetContent(() =>
         {
-            var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
+            var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages(seedVideoUri)));
             var selectedMenu     = MutableStateOf("composers");
             var drawerScroll     = Remember(() => new ScrollState());
             var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
@@ -50,6 +52,8 @@ public class MainActivity : ComponentActivity
             var swipeOffset      = MutableStateOf(0f);
             var nav              = Remember(() => new NavController());
             var profileViewModel = Remember(() => new ProfileViewModel());
+            var videoPickerState = ViewModel(() => new VideoPickerViewModel());
+            _videoPickerState = videoPickerState;
             JetchatApp.Content(
                 nav:              nav,
                 ui:               ui,
@@ -61,6 +65,7 @@ public class MainActivity : ComponentActivity
                 isRecording:      isRecording,
                 swipeOffset:      swipeOffset,
                 profileViewModel: profileViewModel,
+                videoPickerState: videoPickerState,
                 requestVideo:     PickVideo,
                 darkThemeOverride: darkThemeOverride);
         });
@@ -89,52 +94,51 @@ public class MainActivity : ComponentActivity
         base.OnDestroy();
     }
 
-    void PickVideo(Action<VideoPickResult> completed)
+    void PickVideo()
     {
-        ArgumentNullException.ThrowIfNull(completed);
-        if (_pendingVideoPick is not null)
-        {
-            completed(VideoPickResult.Failed("A video picker is already open."));
+        var state = _videoPickerState;
+        if (state is null)
             return;
-        }
+        if (!state.Begin())
+            return;
 
         var picker = _videoPicker;
         if (picker is null)
         {
-            completed(VideoPickResult.Failed("The video picker is unavailable."));
+            state.Complete(VideoPickResult.Failed("The video picker is unavailable."));
             return;
         }
 
-        _pendingVideoPick = completed;
         using var mimeType = new Java.Lang.String("video/*");
         picker.Launch(mimeType);
     }
 
     void OnVideoPicked(Android.Net.Uri? source)
     {
-        var completed = _pendingVideoPick;
-        _pendingVideoPick = null;
-        if (completed is null)
+        var state = _videoPickerState;
+        if (state is null)
             return;
         if (source is null)
         {
-            completed(VideoPickResult.Cancelled);
+            state.Complete(VideoPickResult.Cancelled);
             return;
         }
 
-        _ = ImportPickedVideoAsync(source, completed);
+        _ = ImportPickedVideoAsync(source, state);
     }
 
-    async Task ImportPickedVideoAsync(Android.Net.Uri source, Action<VideoPickResult> completed)
+    async Task ImportPickedVideoAsync(Android.Net.Uri source, VideoPickerViewModel state)
     {
         try
         {
-            var uri = await VideoAttachmentStore.ImportAsync(this, source);
-            completed(VideoPickResult.Selected(uri));
+            var context = ApplicationContext
+                ?? throw new InvalidOperationException("Jetchat application context is unavailable.");
+            var uri = await VideoAttachmentStore.ImportAsync(context, source, state.Scope);
+            state.Complete(VideoPickResult.Selected(uri));
         }
         catch (Exception ex)
         {
-            completed(VideoPickResult.Failed(ex.Message));
+            state.Complete(VideoPickResult.Failed(ex.Message));
         }
     }
 }

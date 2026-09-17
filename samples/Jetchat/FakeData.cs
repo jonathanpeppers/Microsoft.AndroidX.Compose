@@ -21,10 +21,10 @@ internal static class FakeData
     const string PointRight   = "\uD83D\uDC49";
     const string PinkHeart    = "\uD83E\uDE77";
 
-    public static List<Message> InitialMessages() =>
+    public static List<Message> InitialMessages(string seedVideoUri) =>
     [
         new Message("me",              "Take a look at this!",                                                                                                                                  "8:07 PM"),
-        new Message("Taylor Brooks",   "Here's the local video fixture in action!",                                                                                                             "8:06 PM", VideoUri: VideoAttachmentStore.SeedVideoUri),
+        new Message("Taylor Brooks",   "Here's the local video fixture in action!",                                                                                                             "8:06 PM", VideoUri: seedVideoUri),
         new Message("me",              $"Appreciate it {PinkHeart}",                                                                                                                            "8:06 PM", Resource.Drawable.sticker),
         new Message("Taylor Brooks",   "Everything composable carries over.",                                                                                                                   "8:05 PM"),
         new Message("Taylor Brooks",   "@aliconors give `Flow.collectAsStateWithLifecycle()` a try.",                                                                                           "8:05 PM"),

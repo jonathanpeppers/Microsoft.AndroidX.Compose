@@ -46,8 +46,8 @@ public class JetchatRestorationTestActivity : MainActivity
                 {
                     Conversation.Build(
                         ui, menu, popup, scroll, recording, swipe,
-                        completed => completed(VideoPickResult.Cancelled),
-                        () => { }, _ => { }),
+                        new VideoPickerViewModel(),
+                        () => { }, () => { }, _ => { }),
                 };
             });
         }
