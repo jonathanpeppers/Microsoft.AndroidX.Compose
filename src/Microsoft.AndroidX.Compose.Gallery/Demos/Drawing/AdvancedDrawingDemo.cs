@@ -61,10 +61,11 @@ public static class AdvancedDrawingDemo
             using var dash = PathEffect.Dash([10f, 6f]);
             using var corners = PathEffect.Corner(8f);
             using var chained = PathEffect.Chain(corners, dash);
+            using var stroke = DrawingStyle.Stroke(5f, chained, StrokeCap.Round);
             scope.DrawPath(
                 guide,
                 Color.Cyan,
-                style: DrawingStyle.Stroke(5f, chained, StrokeCap.Round));
+                style: stroke);
             scope.DrawPoints(
                 points,
                 PointMode.Polygon,
