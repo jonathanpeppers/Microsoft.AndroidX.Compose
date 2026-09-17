@@ -30,7 +30,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 {
     const int AnimationDurationMilliseconds = 200;
-    const float DefaultMenuItemWidthDp = 100f;
+    const float DefaultMenuItemExtentDp = 100f;
 
     /// <summary>Property mapper for SwipeView content, items, mode, and state.</summary>
     public static IPropertyMapper<ISwipeView, SwipeViewHandler> Mapper =
@@ -138,9 +138,25 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             activeDirection == (int)MauiSwipeDirection.Up,
             composer,
             context);
-        var content = view.PresentedContent is { } presented
+        ComposableNode content = view.PresentedContent is { } presented
             ? ComposeWalker.Render(presented, composer, context)
             : new Box();
+        if (SwipeContentDismissal.ShouldDismiss(
+            view.IsOpen,
+            _isSettledOpen,
+            _dragLifecycle.IsDragging))
+        {
+            var dismiss = new Box
+            {
+                Modifier = Modifier.Companion
+                    .FillMaxSize()
+                    .DetectTapGestures(
+                        onTap: _ => Close(animated: true),
+                        key: "SwipeViewContentDismiss"),
+            };
+            dismiss.Add(content);
+            content = dismiss;
+        }
 
         var layout = new ComposeLayout((scope, measurables, constraints) =>
             MeasureSwipeLayout(
@@ -185,6 +201,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     {
         bool horizontal = IsHorizontal(direction);
         var visibleItems = items.Where(IsVisible).ToArray();
+        bool intrinsicVertical = SwipePanelSizing.UsesIntrinsicVerticalSize(
+            horizontal,
+            visibleItems.Any(item => item is ISwipeItemView));
         if (SwipePanelOrder.ShouldReverse((int)direction))
             Array.Reverse(visibleItems);
         var row = new Row(
@@ -193,7 +212,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         {
             Modifier = horizontal
                 ? Modifier.Companion.FillMaxHeight()
-                : Modifier.Companion.FillMaxSize(),
+                : intrinsicVertical
+                    ? Modifier.Companion.FillMaxWidth()
+                    : Modifier.Companion.FillMaxSize(),
         };
 
         foreach (var item in visibleItems)
@@ -224,11 +245,21 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             {
                 itemModifier = item is ISwipeItemView
                     ? Modifier.Companion
-                        .WidthIn(min: new Dp(DefaultMenuItemWidthDp))
+                        .WidthIn(min: new Dp(DefaultMenuItemExtentDp))
                         .FillMaxHeight()
                     : Modifier.Companion
-                        .Width(new Dp(DefaultMenuItemWidthDp))
+                        .Width(new Dp(DefaultMenuItemExtentDp))
                         .FillMaxHeight();
+            }
+            else if (intrinsicVertical)
+            {
+                itemModifier = Modifier.Companion.Weight(1f);
+                float? requestedHeight = item is ISwipeItemView &&
+                    item is Microsoft.Maui.Controls.VisualElement custom
+                    ? SwipePanelSizing.RequestedCustomHeight(custom.HeightRequest)
+                    : DefaultMenuItemExtentDp;
+                if (requestedHeight is float height)
+                    itemModifier = itemModifier.Height(new Dp(height));
             }
             else
             {

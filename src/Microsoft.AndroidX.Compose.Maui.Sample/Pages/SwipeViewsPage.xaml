@@ -77,9 +77,14 @@
                 </SwipeView.RightItems>
                 <SwipeView.TopItems>
                     <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
-                        <SwipeItem Text="Pin"
-                                   BackgroundColor="#6A1B9A"
-                                   Invoked="OnItemInvoked" />
+                        <SwipeItemView HeightRequest="72"
+                                       BackgroundColor="#6A1B9A"
+                                       Invoked="OnCustomItemInvoked">
+                            <Label Text="Pin custom 72dp"
+                                   TextColor="White"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+                        </SwipeItemView>
                     </SwipeItems>
                 </SwipeView.TopItems>
                 <SwipeView.BottomItems>

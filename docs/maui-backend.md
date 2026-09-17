@@ -2009,10 +2009,14 @@ composition instead of falling back to MAUI's AppCompat
   minimum, and right-side actions reverse source order so the first item
   sits at the trailing edge like stock MAUI. Solid `SwipeView` and custom
   `SwipeItemView` backgrounds are painted on their folded Compose roots;
-  non-solid paints remain unsupported.
+  non-solid paints remain unsupported. Custom top/bottom items preserve
+  their requested or intrinsic height instead of expanding to the full
+  SwipeView height.
 - User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
   in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
   the requested side and animation flag without synthesizing user events.
+  Tapping shifted content on a settled-open row consumes that tap and closes
+  the row; closed content retains its normal interaction behavior.
 - Item and visibility changes remeasure the active panel. An empty active
   side closes immediately; a changed non-empty side snaps a settled open
   offset to its new measured extent so content cannot remain translated
