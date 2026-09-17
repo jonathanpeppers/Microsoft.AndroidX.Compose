@@ -10,6 +10,7 @@ internal sealed class VideoThumbnailView : ImageView
     string _videoUri;
     CancellationTokenSource _cancellation = new();
     Bitmap? _bitmap;
+    internal string CurrentVideoUri => _videoUri;
 
     internal VideoThumbnailView(Context context, string videoUri) : base(context)
     {
