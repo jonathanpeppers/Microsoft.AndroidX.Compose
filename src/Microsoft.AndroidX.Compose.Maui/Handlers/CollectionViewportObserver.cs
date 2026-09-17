@@ -5,6 +5,7 @@ internal sealed class CollectionViewportObserver
     readonly System.Collections.Generic.List<System.WeakReference<System.Action>>
         _listeners = [];
     LazyListScrollSnapshot? _previous;
+    int? _previousOffset;
 
     public void Register(System.Action listener)
     {
@@ -24,7 +25,27 @@ internal sealed class CollectionViewportObserver
             !existing.TryGetTarget(out var target) || target == listener);
     }
 
-    public void ResetTracking() => _previous = null;
+    public void ResetTracking()
+    {
+        _previous = null;
+        _previousOffset = null;
+    }
+
+    public bool HasSignificantOffsetChange(int current, float density)
+    {
+        if (density <= 0f)
+            throw new System.ArgumentOutOfRangeException(
+                nameof(density), density, "Density must be positive.");
+        if (_previousOffset is not int previous)
+        {
+            _previousOffset = current;
+            return false;
+        }
+        if (System.Math.Abs(current - previous) / density <= 10f)
+            return false;
+        _previousOffset = current;
+        return true;
+    }
 
     public bool HasSignificantChange(
         LazyListScrollSnapshot current,

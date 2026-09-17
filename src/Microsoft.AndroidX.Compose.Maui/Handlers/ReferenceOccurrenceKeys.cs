@@ -66,7 +66,6 @@ internal sealed class ReferenceOccurrenceKeys
     public void Clear()
     {
         _entries.Clear();
-        _nextValue = 1;
     }
 
     Entry NewEntry(object item) =>

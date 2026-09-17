@@ -8,6 +8,18 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 public sealed class CollectionViewportObserverTests
 {
     [Fact]
+    public void OffsetChanges_AccumulateUntilThreshold()
+    {
+        var observer = new CollectionViewportObserver();
+
+        Assert.False(observer.HasSignificantOffsetChange(0, density: 2f));
+        Assert.False(observer.HasSignificantOffsetChange(10, density: 2f));
+        Assert.False(observer.HasSignificantOffsetChange(20, density: 2f));
+        Assert.True(observer.HasSignificantOffsetChange(21, density: 2f));
+        Assert.False(observer.HasSignificantOffsetChange(30, density: 2f));
+    }
+
+    [Fact]
     public void InitialSnapshot_DoesNotNotify()
     {
         var observer = new CollectionViewportObserver();

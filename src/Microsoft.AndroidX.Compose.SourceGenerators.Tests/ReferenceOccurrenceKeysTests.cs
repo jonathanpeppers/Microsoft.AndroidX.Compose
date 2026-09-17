@@ -96,4 +96,17 @@ public sealed class ReferenceOccurrenceKeysTests
         Assert.Same(first[0], inserted[1]);
         Assert.Same(first[1], inserted[2]);
     }
+
+    [Fact]
+    public void ClearForSourceReplacement_DoesNotReuseKeyValues()
+    {
+        var cache = new ReferenceOccurrenceKeys();
+        var first = cache.GetKeys([new object(), new object()]);
+
+        cache.Clear();
+        var replacement = cache.GetKeys([new object(), new object()]);
+
+        Assert.NotEqual(first[0].Value, replacement[0].Value);
+        Assert.NotEqual(first[1].Value, replacement[1].Value);
+    }
 }

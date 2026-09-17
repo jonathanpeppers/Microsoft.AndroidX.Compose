@@ -67,12 +67,12 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     readonly DraggableState _verticalDrag;
     readonly HashSet<Element> _observedItems = [];
     readonly Action _closeForParentScroll;
+    readonly SwipeDragLifecycle _dragLifecycle = new();
 
     ValueAnimator? _animator;
     int _animationGeneration;
     MauiSwipeDirection? _activeDirection;
     (OpenSwipeItem Item, bool Animated)? _pendingOpen;
-    bool _isDragging;
     bool _isSettledOpen;
     float _density = 1f;
     float _leftExtent;
@@ -341,7 +341,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         var action = SwipeExtentReconciliationPolicy.Resolve(
             view.IsOpen,
             _isSettledOpen,
-            _isDragging,
+            _dragLifecycle.IsDragging,
             _animator is not null,
             extent);
         if (action == SwipeExtentReconciliation.Close)
@@ -404,9 +404,8 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (horizontal != IsHorizontal(direction))
             return;
 
-        if (!_isDragging)
+        if (_dragLifecycle.Begin())
         {
-            _isDragging = true;
             _isSettledOpen = false;
             view.SwipeStarted(new SwipeViewSwipeStarted(direction));
         }
@@ -428,13 +427,14 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     void OnDragStopped(bool horizontal)
     {
         var view = VirtualView;
-        if (view is null || !_isDragging || _activeDirection is not { } direction ||
+        if (view is null || !_dragLifecycle.End())
+            return;
+        if (_activeDirection is not { } direction ||
             horizontal != IsHorizontal(direction))
         {
             return;
         }
 
-        _isDragging = false;
         float current = horizontal ? _offsetX.Value : _offsetY.Value;
         float extent = ExtentFor(direction);
         float openDistance = SwipeThresholdPolicy.ResolveOpenDistancePixels(
@@ -561,6 +561,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     void Close(bool animated)
     {
         _pendingOpen = null;
+        _dragLifecycle.Cancel();
         if (_activeDirection is { } direction)
             SetOpen(direction, open: false, animated);
         else

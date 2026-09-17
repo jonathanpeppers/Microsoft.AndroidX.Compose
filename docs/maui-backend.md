@@ -2027,6 +2027,9 @@ composition instead of falling back to MAUI's AppCompat
   the resting offset before an item can leave composition; it does not
   depend on an offscreen animation completing. No approximate public
   `ItemsView.Scrolled` offsets or deltas are emitted.
+- Compose-backed `ScrollViewHandler` publishes the same weak viewport
+  observer while rendering its content and closes nested SwipeViews after
+  cumulative movement exceeds 10dp.
 
 `SwipeViewsPage` exercises every direction, both transition modes,
 execute mode, icon/text and custom-content items, runtime collection and
