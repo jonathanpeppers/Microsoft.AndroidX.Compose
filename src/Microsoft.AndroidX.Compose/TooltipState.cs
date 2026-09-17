@@ -49,8 +49,9 @@ public sealed class TooltipState
         {
             // Compose uses an internal timeout to dismiss nonpersistent tooltips.
         }
-        catch (Java.Util.Concurrent.CancellationException)
-            when (!cancellationToken.IsCancellationRequested)
+        catch (Java.Util.Concurrent.CancellationException ex)
+            when (ex is not Xamarin.KotlinX.Coroutines.TimeoutCancellationException
+                && !cancellationToken.IsCancellationRequested)
         {
             // Explicit dismissal and competing shows cancel Compose's stored continuation.
         }
