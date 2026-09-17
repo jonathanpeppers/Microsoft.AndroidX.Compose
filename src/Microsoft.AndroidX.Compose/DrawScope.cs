@@ -606,8 +606,13 @@ public class DrawScope
         BoundColorFilter? colorFilter = null)
     {
         ArgumentNullException.ThrowIfNull(path);
-        using var outline = new BoundOutline.Generic(path.Jvm);
-        DrawOutline(outline, color, alpha, style, colorFilter);
+        _jvm.DrawPath(
+            path.Jvm,
+            color.ToPacked(),
+            alpha,
+            style ?? DrawingStyle.Fill,
+            colorFilter,
+            SrcOverBlendMode);
     }
 
     /// <summary>Draws a generic path outline with a brush.</summary>
@@ -619,8 +624,14 @@ public class DrawScope
         BoundColorFilter? colorFilter = null)
     {
         ArgumentNullException.ThrowIfNull(path);
-        using var outline = new BoundOutline.Generic(path.Jvm);
-        DrawOutline(outline, brush, alpha, style, colorFilter);
+        ArgumentNullException.ThrowIfNull(brush);
+        _jvm.DrawPath(
+            path.Jvm,
+            brush,
+            alpha,
+            style ?? DrawingStyle.Fill,
+            colorFilter,
+            SrcOverBlendMode);
     }
 
     /// <summary>Draws an existing measured text layout with a solid color.</summary>
