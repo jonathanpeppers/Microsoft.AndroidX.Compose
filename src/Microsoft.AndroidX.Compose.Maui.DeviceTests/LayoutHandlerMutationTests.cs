@@ -16,7 +16,13 @@ public class LayoutHandlerMutationTests
     [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
-    public void ChildMutations_RecomposeInOrderAndPreserveSurvivorState(bool vertical)
+    public void ChildMutations_RecomposeInOrderAndPreserveSurvivorState(bool vertical) =>
+        Microsoft.Maui.ApplicationModel.MainThread
+            .InvokeOnMainThreadAsync(() => RunChildMutations(vertical))
+            .GetAwaiter()
+            .GetResult();
+
+    static void RunChildMutations(bool vertical)
     {
         var layout = vertical
             ? (MauiLayout)new Microsoft.Maui.Controls.VerticalStackLayout()
@@ -124,7 +130,12 @@ public class LayoutHandlerMutationTests
     {
         var action = ComposeLayoutHandler.CommandMapper.GetCommand(command)
             ?? throw new InvalidOperationException($"Layout command '{command}' is not registered.");
+        int previousVersion = handler.ChildrenVersion;
         action(handler, layout, args);
+        Assert.AreEqual(
+            previousVersion + 1,
+            handler.ChildrenVersion,
+            $"Layout command '{command}' did not increment the subscribed children version.");
     }
 
     static void AssertQuiescent(
@@ -147,8 +158,8 @@ public class LayoutHandlerMutationTests
         IList<string> order)
     {
         Assert.IsTrue(
-            snapshots.IsApplyObserverNotificationPending || composition.HasInvalidations,
-            "The layout command neither published a pending snapshot-state notification nor invalidated the composition.");
+            snapshots.IsApplyObserverNotificationPending,
+            "The layout command did not publish a pending snapshot-state notification.");
         snapshots.SendApplyNotifications();
         Assert.IsTrue(composition.HasInvalidations, "The layout command did not invalidate its composed child snapshot.");
         observed.Clear();

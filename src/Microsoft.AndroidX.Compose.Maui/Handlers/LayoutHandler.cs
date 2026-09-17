@@ -187,6 +187,8 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         return children;
     }
 
+    internal int ChildrenVersion => _childrenVersion.Value;
+
     internal Java.Lang.Integer GetChildIdentity(IView child)
     {
         ArgumentNullException.ThrowIfNull(child);
