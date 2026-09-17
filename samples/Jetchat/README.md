@@ -23,7 +23,7 @@ continues to follow the system theme.
 ## Parity baseline and audit scope (#349)
 
 The source audit below uses **android/compose-samples
-`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, inspected on **2026-09-15**.
+`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, inspected on **2026-09-16**.
 See the [shared parity baseline](../parity-baseline.md) for matched Kotlin/C#
 capture configuration, artifacts, and results. An individual screenshot can
 establish only its recorded screen/state comparison, not whole-app behavior,
@@ -64,11 +64,11 @@ palette extra for a system-theme change.
 | J02 — Drawer | Fresh launch; open drawer, choose `droidcon-nyc`, reopen, then choose `composers`. | Highlight changes and drawer closes; both implementations still show the single `#composers` conversation. Neither implements a second channel log. Compare header, row geometry, fonts and conditional widget entry. |
 | J03 — Send | Empty editor; enter ` hello ` and use visible Send. Repeat with IME Send; then try whitespace-only input. | Each nonblank action inserts exactly one message preserving surrounding spaces, clears editor/selection/composition and returns to newest content without explicitly clearing focus. Blank input sends nothing. C# stamps `8:30 PM`, Kotlin `now`; C# scroll reset animates. |
 | J04 — Emoji/focus | Type `abcd`, place caret between `b`/`c`, open emoji, insert a glyph; focus editor again. Reopen emoji, tap Stickers, dismiss, then Back. | Emoji inserts at the live caret and moves the cursor to buffer end; selector takes focus/ends IME, editor focus closes it, Stickers shows a dialog, Back dismisses selector before navigation. Capture tab/grid geometry; do not assume an earlier selected range survives native focus loss. |
-| J05 — Other selectors | Fresh launch; separately tap @, photo, location, and video; dismiss each with Back. | Kotlin @ is a dialog; photo/location are animated unavailable panels; video opens a `video/*` picker. C# shows a static unavailable panel for all four. Selecting an already selected C# icon toggles it off. |
+| J05 — Other selectors | Fresh launch; separately tap @, photo, location, and video; dismiss each with Back. | Both @ selectors use a dialog and photo/location use centered animated unavailable panels. Kotlin video opens a `video/*` picker; that separate C# integration remains tracked by #387. Selecting an already selected C# non-video icon toggles it off. |
 | J06 — Recording | Empty editor; short-tap mic, then long-press/release. Repeat with a left drag ≥200 dp while vertical displacement stays within ±80 dp, and with a drag outside that corridor. | Short tap starts no recording; Kotlin shows a tooltip, C# does not. Long press starts UI-only timer/animation; release stops, qualifying swipe cancels once, outside-corridor movement alone does not cancel. No audio message is produced by either sample. |
-| J07 — Recording with text | Enter nonblank text; inspect the mic, then clear text and record for several seconds. | Kotlin keeps the mic beside nonblank text; C# hides it. Compare native button transition separately from C# timer-driven pulse and differing timer/cancellation layout. |
-| J08 — Jump to bottom | Scroll beyond 56 dp or the first item, then tap the jump control. | Both return to item 0. Kotlin shows an animated, labeled 36 dp surface/primary control; C# conditionally inserts a collapsed 48 dp control with default container styling. |
-| J09 — Profiles | Fresh launch; visit Ali and Taylor separately via drawer; scroll each away from top and back; tap profile FAB and More, dismiss, then Back. | Correct profile values and Edit profile/Message affordance; FAB collapses/expands and opens unavailable dialog. Tertiary-container role is wired. Header clipping, baseline heights, host collapse and custom FAB motion still differ. |
+| J07 — Recording with text | Enter nonblank text; inspect the mic, then clear text and record for several seconds. | Both keep the mic beside nonblank text. Timer and centered cancellation-label geometry follow the pinned layout; native pulse timing remains separate #385 work. |
+| J08 — Jump to bottom | Scroll beyond 56 dp or the first item, then tap the jump control. | Both return to item 0 with an animated, labeled 36 dp surface/primary control moving through the pinned -32/+32 dp trajectory. |
+| J09 — Profiles | Fresh launch; visit Ali and Taylor separately via drawer; scroll each away from top and back; tap profile FAB and More, dismiss, then Back. | Correct profile values and Edit profile/Message affordance; the circular header, baseline spacing, and custom expanding FAB motion are integrated. The C# all-Compose host deliberately keeps a bottom-end inset instead of Kotlin's CoordinatorLayout-compensating -100 dp offset. |
 | J10 — Profile history | Open one profile; use drawer gesture to choose the other; press Back. | C# normalizes to home before navigating, so Back returns to conversation. Pinned Kotlin directly navigates and can retain the preceding profile. Record the intentional routing difference. |
 | J11 — Links/drop | Scroll to `@aliconors` and URL messages; tap each and return. Drag one plain-text payload over/out/onto the conversation; separately try an image URI. | Mention opens Ali; URL uses the platform handler. Both provide red drag feedback and insert the first text item. C# additionally accepts image MIME types/URI text and animates to item 0; it does not render a dropped URI as an image attachment. |
 | J12 — Recreation | Type an unsent draft, open emoji, recreate the activity without clearing app data. | Both now save editor text/selection and the input selector. The historical #349 baseline observed the earlier C# loss; see the restoration contract below. Process-death, navigation/scroll restoration and TalkBack are not established by activity recreation. |
@@ -88,7 +88,7 @@ their older motivation/unchecked body lists are not the source of truth:
 | [#337 — Bind pointer-input long-press drag gesture APIs](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | `RecordButton.BuildButton` uses `DetectDragGesturesAfterLongPress`; short-tap tooltip is still separate. |
 | [#339 — Expose Scaffold contentWindowInsets customization](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | Conversation excludes navigation/IME insets and applies them once inside its input Surface. |
 | [#340 — Expose BasicTextField and wire Jetchat IME Send](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340) | Both the Foundation editor and shared IME/button send path are present; see scope reconciliation below. |
-| [#341 — Add baseline alignment and clipToBounds modifiers](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341) | Recording baseline/clipping and unavailable subtitle baseline padding are wired. Message-author and profile layout still need sample work. |
+| [#341 — Add baseline alignment and clipToBounds modifiers](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341) | Recording, unavailable subtitle, author/timestamp, and profile baseline layout are wired. |
 | [#342 — Expose focus target and focus-manager APIs](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342) | Remembered emoji requester/`FocusTarget` and selector-keyed focus effect are wired. |
 | [#343 — Expose complete Material 3 Surface styling slots](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343) | Input/selector tonal and content roles are wired. |
 | [#344 — Expose color and elevation slots on Material 3 FAB facades](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) | Profile supplies live `TertiaryContainer`; jump-control color/geometry remains sample integration, not an unavailable FAB slot. |
@@ -330,8 +330,10 @@ same while switching inset modes; its saved tap count must also survive
   fires `CloseAsync()`. Both go through new `SuspendBridge` plumbing
   around `DrawerState.open()` / `close()`.
 - **Navigation drawer** — `ModalNavigationDrawer` + `ModalDrawerSheet`
-  with the upstream vector wordmark, divider, "Chats" section, divider, "Recent
-  Profiles" section. The drawer column is wrapped in
+  with the separate 24 dp Jetchat mark, upstream vector wordmark, divider,
+  "Chats" section, divider, and "Recent Profiles" section. Header and item
+  contents are center-aligned; section headings use a 52 dp minimum so larger
+  fonts can grow rather than clip. The drawer column is wrapped in
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
 - **Single conversation, two drawer selections** — `ConversationUiState`
@@ -405,18 +407,16 @@ same while switching inset modes; its saved tap count must also survive
   replacement remains covered separately. The Send button's filled/outlined
   enabled and disabled treatment follows upstream.
 - **5 input-selector icons** — emoji, @ mention, image, location,
-  video — the same icon inventory as upstream's `UserInputSelector`,
-  but not the same row geometry or all the same actions.
+  video — the same icon inventory and 72 dp row/16 dp edge geometry as
+  upstream's `UserInputSelector`.
   Each is a toggleable `IconButton` whose background fills with
   `secondary` and whose tint flips to `onSecondary`
   when selected, matching upstream's selection visual. Selecting the
-  emoji button opens the upstream-style pill selector with a vertically
-  scrollable 10-column tappable grid. Selecting Stickers opens the
-  upstream unavailable-feature dialog and resets to Emojis; selecting @ /
-  image / location / video opens a `FunctionalityNotAvailable` panel.
-  This differs from pinned upstream: @ is a dialog and the video icon
-  launches a video picker. Panel geometry/animation and selector dimensions
-  also differ; matching the icon inventory is not interaction parity.
+  emoji button opens the upstream-style weighted tab row and vertically
+  scrollable 10-column, 42 dp-minimum tappable grid. Selecting Stickers or @
+  opens the unavailable-feature dialog; photo/location use a centered 320 dp
+  panel with native enter/exit motion. The video picker remains separate #387
+  work, so matching these presentation paths is not whole-input parity.
 - **IME + navigation-bar safe insets** owned by the input's inner column via
   `Modifier.NavigationBarsPadding().ImePadding()`, excluded from Scaffold's
   content insets, plus
@@ -424,9 +424,10 @@ same while switching inset modes; its saved tap count must also survive
   the keyboard pushes the input row up without obscuring it (and
   without the system's default `adjustUnspecified` behaviour
   double-shifting the content under edge-to-edge).
-- **Voice record mic + recording indicator** — when the text field
-  is empty the trailing send affordance is joined by a mic
-  gesture target that swaps the `BasicTextField` for an animated
+- **Voice record mic + recording indicator** — the trailing mic remains
+  present beside both blank and nonblank text, while the Send affordance
+  follows input validity. The gesture target swaps the `BasicTextField`
+  for an animated
   recording overlay (pulsing red dot + MM:SS timer + "Swipe to
   cancel" hint). A native long press starts the UI-only recording;
   release finishes it. Per-event X/Y pixel movement accumulates, and a left
@@ -442,7 +443,7 @@ same while switching inset modes; its saved tap count must also survive
   handler; removing the control cancels its Kotlin pointer-input job.
   The surrounding tooltip disables automatic input so it cannot compete
   for the same long press. See *Remaining differences and classification*
-  for the short-tap tooltip and nonblank-input mic gaps.
+  for the separate short-tap tooltip work.
   The button background scale (spring with medium-bouncy damping and low
   stiffness), alpha (2000 ms tween), and icon tint (200 ms tween) now share one
   native `Transition<bool>`, matching pinned `RecordButton.kt` at
@@ -466,8 +467,9 @@ same while switching inset modes; its saved tap count must also survive
 - **Image attachment bubbles** — the upstream sticker drawable is seeded
   on the second message and rendered in its own 160 dp rounded bubble
   through the existing resource-backed `Image` facade.
-- **Jump-to-bottom FAB** — appears after the list moves beyond the
-  upstream 56 dp threshold and calls
+- **Jump-to-bottom FAB** — a composition-owned 200 ms transition moves the
+  labeled 36 dp surface/primary control through the pinned -32/+32 dp
+  trajectory after the list crosses the upstream 56 dp threshold. It calls
   `LazyListState.AnimateScrollToItemAsync(0)`.
 - **Pinned top-bar scroll behavior** — the conversation scaffold installs
   `Modifier.NestedScroll(...)` and passes the same remembered behavior to
@@ -494,15 +496,15 @@ same while switching inset modes; its saved tap count must also survive
 - **Profile screen** (`Profile.cs`) — `Scaffold` with a
   `CenterAlignedTopAppBar` (back + more-options), a vertically
   scrolling body wrapped in `BoxWithConstraints` so the hero
-  portrait caps at half the available height and moves at half scroll
-  speed for the upstream parallax effect, name / status /
-  display-name / position / twitter / timezone rows,
-  and an `ExtendedFloatingActionButton` aligned `BottomEnd` that
-  expands / collapses based on `scrollState.Value == 0` (the M3
-  approximation of upstream's custom `AnimatingFabContent`). The FAB
+  portrait caps at half the available height, uses a circular clip, and moves
+  at half scroll speed for the upstream parallax effect. Name, position, and
+  property rows use the pinned 32/24 dp first-baseline spacing. A 48 dp
+  `FloatingActionButton` aligned `BottomEnd` animates its label width/opacity
+  based on `scrollState.Value == 0`. The FAB
   reads live `tertiaryContainer`, with the icon/label inheriting Material 3's
-  corresponding content color. Color support is complete; custom animation
-  and profile geometry are not. FAB
+  corresponding content color. The all-Compose host deliberately retains its
+  bottom/end system-bar inset instead of copying the pinned XML
+  CoordinatorLayout's -100 dp compensation offset. FAB
   icon and label switch on `ProfileScreenState.IsMe()`:
   `ic_create` + "Edit profile" for the local user; `ic_chat` +
   "Message" for a colleague.
@@ -604,9 +606,12 @@ establish pixel parity.
 
 ## Baseline alignment and clipping
 
-The recording timer and cancellation viewport now use `Modifier.AlignByBaseline()`.
-The moving cancellation content is inside `ClipToBounds()`, rather than moving
-the clipping viewport itself. The unavailable-panel subtitle uses
+The author and timestamp now align on `LastBaseline`, with the pinned 8 dp
+post-baseline distance owned by the author. The recording timer and
+cancellation viewport use `Modifier.AlignByBaseline()`; cancellation is
+centered text without the earlier extra arrow/spacer. The moving cancellation
+content is inside `ClipToBounds()`, rather than moving the clipping viewport
+itself. The unavailable-panel subtitle uses
 `PaddingFrom(AlignmentLineKt.FirstBaseline, before: 32)` instead of a fixed
 8 dp gap. Existing font sizes, family assignments, text metrics and accessibility
 labels are unchanged.
@@ -616,20 +621,24 @@ These uses follow
 The ordinary input editor uses Box center-start alignment upstream, not baseline
 alignment; the baseline group belongs to the recording indicator.
 
-The issue's profile-clipping motivation was broader than that pinned source:
+The profile integration follows the pinned source's
 [`Profile.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/profile/Profile.kt)
-uses half-scroll top padding and `clip(CircleShape)`, **not** `clipToBounds`.
-This change therefore leaves profile geometry untouched. The port's rounded
-header, host/collapsing-container behavior, and baseline-height helpers still
-differ; adding a rectangular clip would not establish profile parallax parity.
+half-scroll top padding, `CircleShape`, and baseline spacing. Its XML
+CoordinatorLayout/collapsing-toolbar host is not reproduced; adding its
+-100 dp FAB compensation to this all-Compose Scaffold would move the control
+away from the visible bottom inset. These bounded geometry choices do not
+establish profile-screen pixel or host-scroll parity.
 
 ## Remaining differences and classification
 
-Open follow-ups from the #349 audit (issue titles verified on 2026-09-15):
+#384's bounded conversation/profile presentation integration and
+light/dark compact/short/larger-window matrix are complete in current source;
+the exact evidence and remaining comparison limits are recorded in the shared
+baseline. Open follow-ups from the #349 audit (issue titles verified on
+2026-09-16):
 
 | Tracking | Bounded remaining work |
 | --- | --- |
-| [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384) | Conversation/selector, recording presentation, author baselines, drawer, jump control and profile integration using delivered APIs. |
 | [#388](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/388) | Programmatic Tooltip control and recording short tap; inspect the official binding before adding JNI. |
 | [#385](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/385) | Native infinite float animation for the pulse; separate from completed finite transitions in #336. |
 | [#387](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/387) | Video attachment/playback flow, beginning with a dependency/API audit. |
@@ -648,14 +657,14 @@ it does **not** mean the underlying official binding is necessarily absent.
 | Difference | Classification and precise remaining work |
 |---|---|
 | Video messages/picker/player | **Sample integration; reusable prerequisites not investigated.** Pinned [input][upstream-input] launches `video/*`, remembers an attachment, previews/removes it and sends its URI/caption. [Conversation][upstream-conversation] opens the fullscreen [player][upstream-video]. C# `Message` has only `Image`, `FakeData` omits the seeded video, and the video icon opens an unavailable panel. Audit Media3, lifecycle, SurfaceView and blur requirements before proposing new bindings; do not call this upstream-placeholder parity. |
-| Composer and selector layout | **Sample integration.** `Conversation.BuildSelectorRow` uses 40 dp height/4 dp horizontal padding rather than upstream's 72 dp row/16 dp padding. @ uses a panel rather than a dialog; photo/location panels lack the upstream centered arrangement and expand/fade animation. `EmojiSelector` uses different tab colors/weights and a fixed 168 dp grid viewport. The primitives for layout, Surface/Button colors and top-level visibility animation already exist. |
-| Recording mic and indicator | **Sample integration.** Upstream keeps the mic alongside nonblank text; C# shows it only for blank input or active recording. Timer/cancellation styling differs: C# explicitly sizes the timer at 22 sp and adds an arrow/spacer; upstream uses inherited timer style and centered cancellation text. Native long-press drag and finite button transitions are already implemented. |
+| Composer and selector layout | **Implemented sample integration.** The selector uses the pinned 72 dp/16 dp geometry, @ dialog, centered animated photo/location panel, and weighted emoji tabs/grid. Video behavior remains #387 and selector toggle-close remains an intentional C# interaction. |
+| Recording mic and indicator | **Implemented presentation; related animation separate.** The mic remains beside nonblank text, and the timer/cancellation geometry uses inherited timer styling plus centered clipped cancellation text. Native long-press drag and finite button transitions remain intact; #385 owns the pulse implementation. |
 | Short-tap recording tooltip | **Missing reusable API plus sample integration.** `Tooltip` internally remembers its state but exposes no caller-controlled state/show operation. C# disables automatic input and has no short-tap handler; [upstream recording][upstream-record] separately detects taps and calls `tooltipState.show()`. Expose state control and integrate a noncompeting tap path; do not replace the working long-press detector. |
 | Recording-indicator pulse | **Missing reusable facade / sample approximation.** `Transition<T>` exposes finite float/color animations, not an infinite-transition wrapper. C# updates a linear triangular pulse every 64 ms over a complete 2000 ms cycle; upstream uses `infiniteRepeatable(tween(2000), Reverse)` (2000 ms each direction). Exact native infinite-animation lowering/binding availability has not been audited. Audio capture is absent in upstream too, so it is not a port gap. |
-| Message-author baseline | **Sample integration.** C# author/timestamp use bottom padding; [upstream conversation][upstream-conversation] aligns both by `LastBaseline` and applies `paddingFrom(LastBaseline, after = 8.dp)` to the author. `Modifier.AlignBy` and `PaddingFrom` already exist; #341 need not be duplicated. |
-| Profile geometry and FAB motion | **Sample integration; intentional all-Compose host.** C# uses a Scaffold, 120 dp rounded header clip and fixed text padding. [Upstream profile][upstream-profile] uses `CircleShape`, a custom [baseline-height layout][upstream-baseline-height], nested-scroll interop with a [CoordinatorLayout host][upstream-profile-host], and a -100 dp FAB compensation offset. Its [custom FAB layout/200 ms transition][upstream-fab] differs from M3 `ExtendedFloatingActionButton`. Keep the now-correct tertiary color role; do not blindly add a host-specific offset to the C# Scaffold. |
-| Jump control styling/motion | **Sample integration; typed animation convenience not investigated.** C# conditionally inserts a collapsed 48 dp FAB with default container and 16 dp bottom padding. [Upstream jump control][upstream-jump] is labeled, 36 dp high, surface/primary colored and animated from -32 to +32 dp before applying the negative offset. FAB color slots and float transitions are available; exact `animateDp` support is not established here. |
-| Drawer presentation | **Sample integration.** C# header renders the wordmark without upstream's separate 24 dp Jetchat icon. Section/row alignment and fixed heights differ from [upstream drawer][upstream-drawer]. Its scrollable C# column is a deliberate small-height accommodation, not an upstream layout match. |
+| Message-author baseline | **Implemented sample integration.** Author/timestamp align by `LastBaseline`; the author owns the pinned `paddingFrom(LastBaseline, after = 8.dp)`. |
+| Profile geometry and FAB motion | **Implemented with intentional all-Compose-host adaptation.** The circular header, 32/24 dp baseline spacing, tertiary 48 dp FAB, and label expansion motion follow the pinned presentation. The C# Scaffold retains bottom/end system-bar placement instead of copying the XML CoordinatorLayout's -100 dp compensation; host collapse parity is not claimed. |
+| Jump control styling/motion | **Implemented sample integration.** The labeled 36 dp surface/primary FAB follows the pinned -32/+32 dp offset trajectory using the delivered float-transition API. |
+| Drawer presentation | **Implemented sample integration with small-height adaptation.** Header icon/wordmark and centered item geometry follow the pinned drawer. The C# column remains vertically scrollable and section headers use minimum rather than fixed height to preserve short-window/larger-font access. |
 | Draft and selector recreation | **Implemented sample integration.** [Upstream input][upstream-input]'s native `TextFieldValue.Saver` is reused for text/selection, with a separate saveable selector inside the conversation destination. IME composition/focus are not restored; process-death parity is not claimed. See the restoration contract above. |
 | Sample data and send/drop behavior | **Intentional rewritten prose/local assets; other integration differences explicit.** Nine C# messages versus ten in [upstream data][upstream-data] change wrapping and date-group placement. `Message.AuthorImage` shares the non-me avatar, not one portrait per author. C# send timestamps are fixed `8:30 PM`; drops use `now`, accept image MIME/URI text as an extension, and animate scrolling. Kotlin accepts text/plain drops only and does not reset scroll on drop; ordinary Send resets with nonanimated `scrollToItem(0)`. |
 | Deliberate interaction/layout choices | **Intentional deviation.** C# day headers omit the fixed 16 dp height; selector buttons toggle closed; emoji focus is requested once per selector change rather than every upstream `SideEffect`; profile drawer navigation normalizes the stack. These choices require explicit comparison notes, not claims of exact parity. |
@@ -834,13 +843,13 @@ tracks the remaining work):
   background in the current content color. The port uses the active
   scheme's secondary/on-secondary pair directly, matching the input
   Surface's inherited secondary content role.
-- **`FunctionalityNotAvailable` collapse.** Upstream has two
+- **`FunctionalityNotAvailable` variants.** Upstream has two
   variants — an `AlertDialog` (DM selector) and a full panel
   ("Functionality currently not available / Grab a beverage and
-  check back later!"). The port collapses both into one panel for
-  @/photo/location; the dialog variant still fires from the search/info
-  icons. Pinned video selection is functional upstream and is a separate
-  missing integration, not another unavailable upstream selector.
+  check back later!"). The port uses the dialog for @ and search/info, and
+  the centered animated panel for photo/location. Pinned video selection is
+  functional upstream and is separate #387 integration, not another
+  unavailable upstream selector.
 - **`ModalDrawerSheet` background.** The sample explicitly supplies
   `scheme.Surface`, avoiding reliance on the facade's default color.
   This is a source-level color choice, not proof of matching the pinned

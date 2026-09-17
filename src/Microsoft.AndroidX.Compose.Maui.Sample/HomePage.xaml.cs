@@ -155,6 +155,11 @@ public partial class HomePage : ContentPage
                 "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
                 Color.FromArgb("#1565C0"),
                 "navigation"),
+            new DemoEntry(
+                "FlyoutPage",
+                "Modal and permanent Material 3 drawers, adaptive layout, gestures, and nested detail navigation.",
+                Color.FromArgb("#00838F"),
+                "flyout"),
 
             // ---- Phase 5 — self-drawing AndroidView fallback ----
             //

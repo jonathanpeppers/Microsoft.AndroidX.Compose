@@ -21,39 +21,52 @@ public static class ReplyEmailListItem
                 isOpened   ? scheme.SecondaryContainer :
                              scheme.SurfaceVariant);
 
-            return new Card
+            var surface = new Surface
             {
-                Modifier
+                Shape = Shape.RoundedCorners(16),
+                Color = bg,
+                Modifier = Modifier
                     .Padding(horizontal: 16, vertical: 4)
-                    .Background(bg)
+                    .Semantics(s => s.Selected(isSelected))
+                    .Clip(Shape.RoundedCorners(16))
                     .CombinedClickable(
                         onClick:     () => navigateToDetail(email.Id),
                         onLongClick: () => toggleSelection(email.Id)),
-                new Column
-                {
-                    Modifier.FillMaxWidth().Padding(20),
-                    BuildHeaderRow(email, isSelected, toggleSelection, scheme),
-                    new Text(email.Subject)
-                    {
-                        FontSize = 16,
-                        Modifier = Modifier.Padding(top: 12, bottom: 8),
-                    },
-                    new Text(email.Body)
-                    {
-                        FontSize = 14,
-                        MaxLines = 2,
-                    },
-                },
             };
+            surface.Add(new Column
+            {
+                Modifier.FillMaxWidth().Padding(20),
+                BuildHeaderRow(email, isSelected, toggleSelection, scheme, c),
+                new Text(email.Subject)
+                {
+                    Modifier = Modifier.Padding(top: 12, bottom: 8),
+                }.WithTypography(ReplyTypography.BodyLarge),
+                new Text(email.Body)
+                {
+                    MaxLines = 2,
+                }.WithTypography(ReplyTypography.BodyMedium),
+            });
+            return surface;
         });
 
-    static Row BuildHeaderRow(Email email, bool isSelected, Action<long> toggleSelection, AndroidX.Compose.Material3.ColorScheme scheme)
+    static Row BuildHeaderRow(
+        Email email,
+        bool isSelected,
+        Action<long> toggleSelection,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        AndroidX.Compose.Runtime.IComposer composer)
     {
         var avatar = new AnimatedContent<bool>(
             targetState: isSelected,
             content:     selected => selected
-                ? ReplyProfileImage.BuildSelected()
-                : ReplyProfileImage.Build(email.Sender.Avatar, email.Sender.FullName));
+                ? ReplyProfileImage.BuildSelected(
+                    () => toggleSelection(email.Id),
+                    selectionKey: email.Id)
+                : ReplyProfileImage.Build(
+                    email.Sender.Avatar,
+                    email.Sender.FullName,
+                    () => toggleSelection(email.Id),
+                    selectionKey: email.Id));
 
         return new Row
         {
@@ -65,20 +78,18 @@ public static class ReplyEmailListItem
                     .Weight(1f)
                     .Padding(horizontal: 12, vertical: 4),
                 new Text(email.Sender.FirstName)
-                {
-                    FontSize = 12,
-                },
+                    .WithTypography(ReplyTypography.LabelMedium),
                 new Text(email.CreatedAt)
-                {
-                    FontSize = 12,
-                },
+                    .WithTypography(ReplyTypography.LabelMedium),
             },
             new IconButton(onClick: NoOp)
             {
                 Modifier
                     .Clip(Shape.Circle())
                     .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new Icon(Resource.Drawable.ic_star_border, "Favorite")
+                new Icon(
+                    Resource.Drawable.ic_star_border,
+                    composer.StringResource(Resource.String.reply_favorite))
                 {
                     Tint = Color.FromPacked(scheme.Outline),
                 },
