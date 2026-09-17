@@ -62,7 +62,10 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// walked through <see cref="ComposeWalker.Render(IView, IComposer, IMauiContext)"/>.
 /// Materialized template nodes are cached by item reference and template
 /// identity so stateful handlers survive lazy-item recomposition. Removed
-/// rows and template changes disconnect their cached handlers.</para>
+/// rows and template changes drop their cache roots without eagerly
+/// disconnecting outgoing composition-owned nodes; after Compose releases
+/// the node, normal GC collects its view/handler cycle. Viewport observer
+/// callbacks are weak and cannot retain an evicted row.</para>
 ///
 /// <para><b>Reactive sources.</b> Any
 /// <see cref="MauiCollectionView.ItemsSource"/> implementing

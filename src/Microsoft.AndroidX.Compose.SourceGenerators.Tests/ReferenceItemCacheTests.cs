@@ -1,4 +1,5 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using System;
 using Xunit;
 
 namespace AndroidX.Compose.SourceGenerators.Tests;
@@ -95,7 +96,38 @@ public sealed class ReferenceItemCacheTests
                 () => new CachedValue(template)));
     }
 
+    [Fact]
+    public void PrunedValue_CanBeCollected()
+    {
+        var cache = new ReferenceItemCache<CachedValue>();
+        var reference = AddThenPrune(cache);
+
+        ForceCollection();
+
+        Assert.False(reference.IsAlive);
+    }
+
     sealed record CachedValue(object Template);
 
     sealed record EqualItem(int Value);
+
+    static WeakReference AddThenPrune(
+        ReferenceItemCache<CachedValue> cache)
+    {
+        var item = new object();
+        var value = cache.GetOrReplace(
+            item,
+            _ => true,
+            () => new CachedValue(new object()));
+        var reference = new WeakReference(value);
+        cache.Prune([]);
+        return reference;
+    }
+
+    static void ForceCollection()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
 }

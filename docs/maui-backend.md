@@ -2065,8 +2065,12 @@ CollectionView rows.
   `template.CreateContent()` there resets handler-owned drag/state slots
   mid-gesture. `CollectionViewHandler` therefore caches the materialized
   node by item reference + selected template identity, disconnecting
-  entries when rows leave the source or the selector changes templates.
-  Equal-but-distinct row objects never share state.
+  cache ownership when rows leave the source or the selector changes
+  templates. Eviction does not eagerly disconnect an outgoing
+  composition-owned node; after Compose releases it, normal GC collects
+  the view/handler cycle, and the viewport observer's weak callback cannot
+  retain it. Equal-but-distinct row objects and duplicate occurrences of
+  the same reference never share state.
 - **Investigation discipline matters more than ever at Phase 3 scope.**
   Three of the original Phase 3 candidates (`ListView`, `TableView`,
   `SwipeView`) are deferred outright, and one (`CarouselView`) is its
