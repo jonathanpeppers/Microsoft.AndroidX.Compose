@@ -451,7 +451,9 @@ same while switching inset modes; its saved tap count must also survive
   from the live `LocalContentColor`/`contentColorFor` roles, with circle clipping.
   Row alignment belongs to the enclosing Tooltip, not its recording anchor:
   animation-driven anchor recomposition can run without the parent Row scope.
-  The independent recording-indicator timer and repeating pulse remain unchanged.
+  The independent recording-indicator timer remains separate from animation
+  progress. Its pulse now uses a composition-owned native infinite transition:
+  a 2000 ms tween reverses at each endpoint, matching pinned `UserInput.kt`.
   No audio recording or permissions are added.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
   selector before system back reaches navigation. A remembered requester
@@ -719,7 +721,7 @@ It makes no timing or performance claim.
 | Composer and selector layout | **Implemented sample integration.** The selector uses the pinned 72 dp/16 dp geometry, @ dialog, centered animated photo/location panel, and weighted emoji tabs/grid. Video behavior remains #387 and selector toggle-close remains an intentional C# interaction. |
 | Recording mic and indicator | **Implemented presentation; related animation separate.** The mic remains beside nonblank text, and the timer/cancellation geometry uses inherited timer styling plus centered clipped cancellation text. Native long-press drag and finite button transitions remain intact; #385 owns the pulse implementation. |
 | Short-tap recording tooltip | **Missing reusable API plus sample integration.** `Tooltip` internally remembers its state but exposes no caller-controlled state/show operation. C# disables automatic input and has no short-tap handler; [upstream recording][upstream-record] separately detects taps and calls `tooltipState.show()`. Expose state control and integrate a noncompeting tap path; do not replace the working long-press detector. |
-| Recording-indicator pulse | **Missing reusable facade / sample approximation.** `Transition<T>` exposes finite float/color animations, not an infinite-transition wrapper. C# updates a linear triangular pulse every 64 ms over a complete 2000 ms cycle; upstream uses `infiniteRepeatable(tween(2000), Reverse)` (2000 ms each direction). Exact native infinite-animation lowering/binding availability has not been audited. Audio capture is absent in upstream too, so it is not a port gap. |
+| Recording-indicator pulse | **Implemented reusable facade and sample integration.** `InfiniteTransition` wraps the official bound native APIs with composition-owned lifecycle. C# now uses `infiniteRepeatable(tween(2000), Reverse)` (2000 ms each direction), keeps elapsed recording time separate, and stops/restarts native frame work on removal/re-entry. Enabled and disabled animator-scale device regressions cover both the reusable wrapper and actual recording-indicator path. Audio capture is absent in upstream too, so it is not a port gap. |
 | Message-author baseline | **Implemented sample integration.** Author/timestamp align by `LastBaseline`; the author owns the pinned `paddingFrom(LastBaseline, after = 8.dp)`. |
 | Profile geometry and FAB motion | **Implemented with intentional all-Compose-host adaptation.** The circular header, 32/24 dp baseline spacing, tertiary 48 dp FAB, and label expansion motion follow the pinned presentation. The C# Scaffold retains bottom/end system-bar placement instead of copying the XML CoordinatorLayout's -100 dp compensation; host collapse parity is not claimed. |
 | Jump control styling/motion | **Implemented sample integration.** The labeled 36 dp surface/primary FAB follows the pinned -32/+32 dp offset trajectory using the delivered float-transition API. |

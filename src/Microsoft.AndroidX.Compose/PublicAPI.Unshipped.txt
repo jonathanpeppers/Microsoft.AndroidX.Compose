@@ -746,6 +746,9 @@ AndroidX.Compose.ImageBitmap.NativeBitmap.get -> Android.Graphics.Bitmap!
 AndroidX.Compose.ImageBitmap.PrepareToDraw() -> void
 AndroidX.Compose.ImageBitmap.Width.get -> int
 AndroidX.Compose.ImeAction
+AndroidX.Compose.InfiniteTransition
+AndroidX.Compose.InfiniteTransition.AnimateFloat(AndroidX.Compose.Runtime.IComposer! composer, float initialValue, float targetValue, AndroidX.Compose.Animation.Core.InfiniteRepeatableSpec! animationSpec, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<float>!
+AndroidX.Compose.InfiniteTransition.AnimateFloat(float initialValue, float targetValue, AndroidX.Compose.Animation.Core.InfiniteRepeatableSpec! animationSpec, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<float>!
 AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Avatar.set -> void
@@ -2049,6 +2052,7 @@ static AndroidX.Compose.Alignment.TopStart.get -> AndroidX.Compose.Alignment!
 static AndroidX.Compose.Alignment.Vertical.Bottom.get -> AndroidX.Compose.Alignment.Vertical!
 static AndroidX.Compose.Alignment.Vertical.CenterVertically.get -> AndroidX.Compose.Alignment.Vertical!
 static AndroidX.Compose.Alignment.Vertical.Top.get -> AndroidX.Compose.Alignment.Vertical!
+static AndroidX.Compose.AnimationSpecs.InfiniteRepeatable(AndroidX.Compose.Animation.Core.IDurationBasedAnimationSpec! animation, AndroidX.Compose.Animation.Core.RepeatMode? repeatMode = null) -> AndroidX.Compose.Animation.Core.InfiniteRepeatableSpec!
 static AndroidX.Compose.AnimationSpecs.Spring(float dampingRatio = 1, float stiffness = 1500) -> AndroidX.Compose.Animation.Core.SpringSpec!
 static AndroidX.Compose.AnimationSpecs.Tween(int durationMillis = 300, int delayMillis = 0, AndroidX.Compose.Animation.Core.IEasing? easing = null) -> AndroidX.Compose.Animation.Core.TweenSpec!
 static AndroidX.Compose.Arrangement.Bottom.get -> AndroidX.Compose.Arrangement!
@@ -2256,6 +2260,7 @@ static AndroidX.Compose.Composables.RememberDatePickerState(AndroidX.Compose.Dat
 static AndroidX.Compose.Composables.RememberDateRangePickerState(AndroidX.Compose.DateRangePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DateRangePickerState!
 static AndroidX.Compose.Composables.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.Composables.RememberDrawerState(AndroidX.Compose.DrawerStateHolder? state = null, System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>? confirmStateChange = null, int line = 0, string! file = "") -> AndroidX.Compose.DrawerStateHolder!
+static AndroidX.Compose.Composables.RememberInfiniteTransition(string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.InfiniteTransition!
 static AndroidX.Compose.Composables.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberLazyGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.Composables.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
@@ -2384,6 +2389,7 @@ static AndroidX.Compose.ComposeExtensions.RememberDatePickerState(this AndroidX.
 static AndroidX.Compose.ComposeExtensions.RememberDateRangePickerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.DateRangePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DateRangePickerState!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.ComposeExtensions.RememberDrawerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.DrawerStateHolder? state = null, System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>? confirmStateChange = null, int line = 0, string! file = "") -> AndroidX.Compose.DrawerStateHolder!
+static AndroidX.Compose.ComposeExtensions.RememberInfiniteTransition(this AndroidX.Compose.Runtime.IComposer! composer, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.InfiniteTransition!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberLazyGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
