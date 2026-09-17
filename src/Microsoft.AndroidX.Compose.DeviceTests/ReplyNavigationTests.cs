@@ -183,6 +183,11 @@ public class ReplyNavigationTests
             await AssertDetailId(activity, visibleEmailId);
             Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
                 "Compact detail did not preserve the collapsed inbox FAB state.");
+            activity = await Recreate(activity);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, visibleEmailId);
+            Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
+                "Compact detail did not restore the collapsed inbox FAB state.");
             await Back(activity);
             await AssertRoute(activity, Route.Inbox);
 
@@ -193,11 +198,17 @@ public class ReplyNavigationTests
             Assert.IsTrue(restoredWidth > collapsedWidth,
                 $"Backward scroll did not expand the FAB: collapsed={collapsedWidth}, restored={restoredWidth}.");
 
-            await ClickEmail(activity, visibleEmailId);
+            await WaitForStableInbox(activity);
+            long expandedEmailId = await ClickFirstVisibleEmail(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
-            await AssertDetailId(activity, visibleEmailId);
+            await AssertDetailId(activity, expandedEmailId);
             Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
                 "Compact detail did not preserve the expanded inbox FAB state.");
+            activity = await Recreate(activity);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, expandedEmailId);
+            Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
+                "Compact detail did not restore the expanded inbox FAB state.");
         }
         finally
         {
