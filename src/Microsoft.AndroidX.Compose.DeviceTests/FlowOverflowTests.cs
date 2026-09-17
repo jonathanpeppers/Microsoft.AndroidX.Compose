@@ -148,7 +148,8 @@ public class FlowOverflowTests
         return snapshot ?? throw new InvalidOperationException("Flow snapshot was not captured.");
     }
 
-    static async Task<FlowOverflowTestActivity> Start(int style, bool horizontal, int policy)
+    internal static async Task<FlowOverflowTestActivity> Start(int style, bool horizontal, int policy,
+        int thresholdPhase = 0)
     {
         var context = Runner.TargetContext ?? throw new InvalidOperationException("Flow test target context missing.");
         FlowOverflowTestActivity.Ready = FlowOverflowTestActivity.NewReady();
@@ -157,6 +158,7 @@ public class FlowOverflowTests
         intent.PutExtra("style", style);
         intent.PutExtra("horizontal", horizontal);
         intent.PutExtra("policy", policy);
+        intent.PutExtra("thresholdPhase", thresholdPhase);
         FlowTestAdmission.OnUi(() => context.StartActivity(intent));
         var activity = await FlowOverflowTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(15));
         try
@@ -171,7 +173,7 @@ public class FlowOverflowTests
         }
     }
 
-    static async Task Finish(FlowOverflowTestActivity activity)
+    internal static async Task Finish(FlowOverflowTestActivity activity)
     {
         FlowTestAdmission.OnUi(() =>
         {
@@ -181,7 +183,7 @@ public class FlowOverflowTests
         await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
     }
 
-    static async Task WaitFor(Func<bool> predicate, string message)
+    internal static async Task WaitFor(Func<bool> predicate, string message)
     {
         for (int i = 0; i < 150; i++)
         {
@@ -193,7 +195,7 @@ public class FlowOverflowTests
         Assert.Fail(message);
     }
 
-    static async Task Click(FlowOverflowTestActivity activity, string description)
+    internal static async Task Click(FlowOverflowTestActivity activity, string description)
     {
         for (int attempt = 0; attempt < 30; attempt++)
         {

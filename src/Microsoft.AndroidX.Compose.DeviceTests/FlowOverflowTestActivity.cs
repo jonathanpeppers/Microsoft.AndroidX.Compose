@@ -25,11 +25,13 @@ public class FlowOverflowTestActivity : ComponentActivity
     internal MutableState<int> Total { get; } = new(8);
     internal MutableState<int> Generation { get; } = new(0);
     internal MutableState<int> Tick { get; } = new(0);
+    internal MutableState<int> ThresholdPhase { get; } = new(0);
     internal FlowOverflowSnapshot? Last;
     internal readonly Dictionary<int, HashSet<int>> DrawnItems = [];
     internal readonly Dictionary<int, Dictionary<int, object>> ComposedItems = [];
     internal readonly Dictionary<string, (int Total, int Shown)> NestedCounts = [];
     internal readonly Dictionary<string, ScopeKind> ScopeChecks = [];
+    internal readonly Dictionary<int, (bool Expand, int Counter, ScopeKind Kind)> NodeIndicators = [];
     internal bool PrematureReadRejected;
     internal bool OuterRestored;
     internal int RootPasses;
@@ -46,6 +48,7 @@ public class FlowOverflowTestActivity : ComponentActivity
         _style = Intent?.GetIntExtra("style", 0) ?? 0;
         _policy = Intent?.GetIntExtra("policy", 3) ?? 3;
         _horizontal = Intent?.GetBooleanExtra("horizontal", true) ?? true;
+        ThresholdPhase.Value = Intent?.GetIntExtra("thresholdPhase", 0) ?? 0;
         this.SetContent(c => Root(c, this));
         Ready.TrySetResult(this);
     }
@@ -77,6 +80,7 @@ public class FlowOverflowTestActivity : ComponentActivity
         int lines = activity.Lines.Value;
         int total = activity.Total.Value;
         int generation = activity.Generation.Value;
+        _ = activity.ThresholdPhase.Value;
         var modifier = activity._horizontal ? Modifier.Width(144) : Modifier.Height(144).Width(220);
         if (activity._style == 2)
         {
@@ -84,7 +88,7 @@ public class FlowOverflowTestActivity : ComponentActivity
         }
         else if (activity._horizontal)
         {
-            if (activity._style == 0)
+            if (activity._style is 0 or 3)
             {
                 var flow = new FlowRow(3, lines) { Overflow = activity.RowOption(generation) };
                 flow.Add(modifier);
@@ -100,7 +104,7 @@ public class FlowOverflowTestActivity : ComponentActivity
         }
         else
         {
-            if (activity._style == 0)
+            if (activity._style is 0 or 3)
             {
                 var flow = new FlowColumn(3, lines) { Overflow = activity.ColumnOption(generation) };
                 flow.Add(modifier);
@@ -121,11 +125,15 @@ public class FlowOverflowTestActivity : ComponentActivity
     {
         0 => null,
         1 => FlowRowOverflow.Clip,
+        2 when _style is 3 or 4 => FlowRowOverflow.ExpandIndicator(NodeIndicator(generation, true)),
         2 when _style == 1 => FlowRowOverflow.ExpandIndicator(scope =>
         {
             Indicator(scope, generation, true).Render(ComposableContext.Current);
         }),
         2 => FlowRowOverflow.ExpandIndicator(scope => Indicator(scope, generation, true)),
+        _ when _style is 3 or 4 => FlowRowOverflow.ExpandOrCollapseIndicator(
+            NodeIndicator(generation, true), NodeIndicator(generation, false),
+            minRowsToShowCollapse: MinimumLines, minHeightToShowCollapse: MinimumCrossAxisSize),
         _ when _style == 1 => FlowRowOverflow.ExpandOrCollapseIndicator(
             scope => { Indicator(scope, generation, true).Render(ComposableContext.Current); },
             scope => { Indicator(scope, generation, false).Render(ComposableContext.Current); }),
@@ -138,11 +146,15 @@ public class FlowOverflowTestActivity : ComponentActivity
     {
         0 => null,
         1 => FlowColumnOverflow.Clip,
+        2 when _style is 3 or 4 => FlowColumnOverflow.ExpandIndicator(NodeIndicator(generation, true)),
         2 when _style == 1 => FlowColumnOverflow.ExpandIndicator(scope =>
         {
             Indicator(scope, generation, true).Render(ComposableContext.Current);
         }),
         2 => FlowColumnOverflow.ExpandIndicator(scope => Indicator(scope, generation, true)),
+        _ when _style is 3 or 4 => FlowColumnOverflow.ExpandOrCollapseIndicator(
+            NodeIndicator(generation, true), NodeIndicator(generation, false),
+            minColumnsToShowCollapse: MinimumLines, minWidthToShowCollapse: MinimumCrossAxisSize),
         _ when _style == 1 => FlowColumnOverflow.ExpandOrCollapseIndicator(
             scope => { Indicator(scope, generation, true).Render(ComposableContext.Current); },
             scope => { Indicator(scope, generation, false).Render(ComposableContext.Current); }),
@@ -150,6 +162,39 @@ public class FlowOverflowTestActivity : ComponentActivity
             scope => Indicator(scope, generation, true),
             scope => Indicator(scope, generation, false)),
     };
+
+    int? MinimumLines => ThresholdPhase.Value switch { 0 => null, 1 => 4, _ => 2 };
+    Dp? MinimumCrossAxisSize => ThresholdPhase.Value switch
+    {
+        0 => null,
+        2 => new Dp(200),
+        _ => new Dp(96),
+    };
+
+    ComposableNode NodeIndicator(int generation, bool expand) => new Composed(composer =>
+    {
+        var counter = composer.Remember(() => new MutableState<int>(0));
+        int value = counter.Value;
+        var kind = RenderContext.CurrentScopeKind;
+        return new Box
+        {
+            Modifier.Size(48).Background(Color.Blue)
+                .Semantics(expand ? "flow-expand" : "flow-collapse")
+                .Clickable(() =>
+                {
+                    Clicks++;
+                    counter.Value++;
+                    Lines.Value = expand ? 4 : 1;
+                    Generation.Value++;
+                })
+                .DrawWithContent(draw =>
+                {
+                    draw.DrawContent();
+                    NodeIndicators[generation] = (expand, value, kind);
+                }),
+            new Text(expand ? "+" : "-") { Color = Color.White },
+        };
+    });
 
     void Items(int total, int generation)
     {

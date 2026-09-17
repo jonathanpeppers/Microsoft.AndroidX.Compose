@@ -76,6 +76,12 @@ separately verify that five regular items actually composed and retained their
 remembered state; the cached total of eight is not described as fresh.
 The earlier strict-freshness failure evidence remains valid for its original
 source/APK and is not relabeled as a passing run.
+`FlowOverflowOptionsTests` separately covers plain-node indicator overloads in
+both directions and authoring styles. It varies the explicit line threshold
+and the height/width threshold independently, then verifies native collapse
+actions and retained node state. Companion-resolution host regressions cover
+same-peer and different-peer success, null conversion, and throwing conversion:
+temporary peers are disposed on every non-retained path.
 
 ### Verified native parity
 

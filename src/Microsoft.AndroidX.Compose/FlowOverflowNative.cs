@@ -21,10 +21,17 @@ internal static class FlowOverflowNative
             ?? throw new InvalidOperationException($"{className}.Companion field is missing.");
         var peer = field.Get(null)
             ?? throw new InvalidOperationException($"{className}.Companion is null.");
-        var companion = peer.JavaCast<T>()
-            ?? throw new InvalidOperationException($"{className}.Companion has the wrong bound type.");
-        if (!ReferenceEquals(peer, companion))
-            peer.Dispose();
-        return companion;
+        T? companion = null;
+        try
+        {
+            companion = peer.JavaCast<T>()
+                ?? throw new InvalidOperationException($"{className}.Companion has the wrong bound type.");
+            return companion;
+        }
+        finally
+        {
+            if (!ReferenceEquals(peer, companion))
+                peer.Dispose();
+        }
     }
 }
