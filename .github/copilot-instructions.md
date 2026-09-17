@@ -307,7 +307,7 @@ helpers, operators.
 | `IntPtr` + `[PainterResource]`                                                | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally                                                                                                    |
 | `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]`               | State-holder (Phase 4): exposes wrapper as defaulted ctor slot (`StateType? state = null`), calls `RememberXxxState(composer)` on first render, populates `state.Jvm`, forwards JNI handle |
 | Primitive (`string`/`int`/`long`/`bool`/`float`/`double`)                     | Ctor parameter, stored in `_<name>`                                                                                                                                                        |
-| Registered nullable managed value (`FloatRange?`)                             | Optional property; wrapper-passthrough method converts to the platform type at the binding boundary                                                                                        |
+| Registered nullable managed value/configuration (`FloatRange?`, `FlowRowOverflow?`, `FlowColumnOverflow?`) | Optional property; wrapper-passthrough method converts to the platform type at the binding boundary |
 | Anything else                                                                 | Rejected with CN3002                                                                                                                                                                       |
 
 ### Class-level options
@@ -358,6 +358,13 @@ slots surface as `Action` instead of `Action<IComposer>`.
   defaults set and suppresses changed masks; it never supplies explicit null
   for an added slot. Only defaultable optional values on a primary,
   non-painter route are supported (CN3014). Constructors are unchanged.
+  Set `PreserveArgumentPresence = true` when an added slot must distinguish
+  explicit null from omission even without interception. The generator adds
+  a caller-argument-expression overload and a `_WithArgumentPresence` helper,
+  retaining the old rich CLR overload (with required arguments) and its
+  original direct helper. The compatibility overload treats that argument as supplied; the new fallback
+  uses compiler-captured presence, not its nullable value. Other nullable
+  fallback slots retain their conservative sentinel-based defaults.
 - `[PainterResource]` — annotate `IntPtr` taking the resolved Painter handle.
   Facade exposes synthetic `int painterResourceId` ctor in its place; emits
   `PainterResource(id, composer)` + try/finally + `DeleteLocalRef` preamble.
@@ -520,6 +527,15 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   generates enums (e.g. `AndroidX.Compose.UI.State.ToggleableState`) as
   `Java.Lang.Object` subclasses; surface as ctor primitives forwarded to
   bridge — no JNI lowering (see `TriStateCheckbox`).
+
+  **Managed optional configurations**: `ComposeFacadeManagedTypes` explicitly
+  registers nullable managed values and nullable managed reference options.
+  `FlowRowOverflow?` / `FlowColumnOverflow?` are not Java peers; their bound
+  factory lowering belongs in the wrapper-passthrough method, not a JNI bridge.
+  Use `[FacadeAdded]` when adding these options to existing facades. Keep native
+  overflow counts deferred until drawing/post-layout; the pinned runtime throws
+  before measurement and caches each native scope's first read. Do not turn
+  those getters into eager managed snapshots or silent defaults.
 
   **Hybrid container + named slots**: a bridge with exactly one non-nullable,
   unannotated `IFunction2`/`IFunction3` body plus one or more named slots is
