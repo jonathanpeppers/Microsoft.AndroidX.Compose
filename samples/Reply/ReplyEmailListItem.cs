@@ -25,14 +25,14 @@ public static class ReplyEmailListItem
             {
                 Shape = Shape.RoundedCorners(16),
                 Color = bg,
+                Modifier = Modifier
+                    .Padding(horizontal: 16, vertical: 4)
+                    .Semantics(s => s.Selected(isSelected))
+                    .Clip(Shape.RoundedCorners(16))
+                    .CombinedClickable(
+                        onClick:     () => navigateToDetail(email.Id),
+                        onLongClick: () => toggleSelection(email.Id)),
             };
-            surface.Add(Modifier
-                .Padding(horizontal: 16, vertical: 4)
-                .Semantics(s => s.Selected(isSelected))
-                .Clip(Shape.RoundedCorners(16))
-                .CombinedClickable(
-                    onClick:     () => navigateToDetail(email.Id),
-                    onLongClick: () => toggleSelection(email.Id)));
             surface.Add(new Column
             {
                 Modifier.FillMaxWidth().Padding(20),

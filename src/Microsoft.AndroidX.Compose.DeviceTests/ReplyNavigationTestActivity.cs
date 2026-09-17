@@ -18,6 +18,8 @@ public class ReplyNavigationTestActivity : ComponentActivity
     internal NavController Controller { get; } = new();
     internal ReplyState State => _state ?? throw new InvalidOperationException("Reply state is not initialized.");
     internal ComposeView View => _view ?? throw new InvalidOperationException("Reply ComposeView is not initialized.");
+    internal TaskCompletionSource<NavigationSuiteType> NavigationTypeObserved { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     readonly object _progressLock = new();
     TaskCompletionSource _progress = NewSignal();
     ReplyState? _state;
@@ -38,7 +40,10 @@ public class ReplyNavigationTestActivity : ComponentActivity
         var view = new ComposeView(this) { Id = 0x34701 };
         _view = view;
         view.ViewAttachedToWindow += OnAttached;
-        view.SetContent(() => ReplyApp.Content(Controller, State));
+        view.SetContent(() => ReplyApp.Content(
+            Controller,
+            State,
+            type => NavigationTypeObserved.TrySetResult(type)));
         SetContentView(view);
         Started.TrySetResult(this);
     }

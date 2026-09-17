@@ -104,13 +104,10 @@ public class ReplyNavigationTests
     [TestMethod]
     public async Task AdaptiveNavigationMatchesWindowWidth()
     {
-        var observed = new TaskCompletionSource<NavigationSuiteType>(
-            TaskCreationOptions.RunContinuationsAsynchronously);
-        ReplyApp.NavigationTypeObserver = type => observed.TrySetResult(type);
         var activity = await Start();
         try
         {
-            var actual = await observed.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            var actual = await activity.NavigationTypeObserved.Task.WaitAsync(TimeSpan.FromSeconds(15));
             float density = 0;
             int width = 0;
             int height = 0;
@@ -148,7 +145,6 @@ public class ReplyNavigationTests
         }
         finally
         {
-            ReplyApp.NavigationTypeObserver = null;
             await Finish(activity);
         }
     }
@@ -157,23 +153,20 @@ public class ReplyNavigationTests
     [TestMethod]
     public async Task CompactFabCollapsesOnForwardScroll_ExpandsOnBackwardScroll_AndRemainsOnDetail()
     {
-        var observed = new TaskCompletionSource<NavigationSuiteType>(
-            TaskCreationOptions.RunContinuationsAsynchronously);
-        ReplyApp.NavigationTypeObserver = type => observed.TrySetResult(type);
         var activity = await Start();
         try
         {
-            if (await observed.Task.WaitAsync(TimeSpan.FromSeconds(15)) != NavigationSuiteType.NavigationBar)
+            if (await activity.NavigationTypeObserved.Task.WaitAsync(TimeSpan.FromSeconds(15)) != NavigationSuiteType.NavigationBar)
             {
                 Assert.Inconclusive("Scroll-responsive FAB is intentionally limited to compact bottom navigation.");
                 return;
             }
 
-            int expandedWidth = FabBounds(activity).Width();
+            int expandedWidth = FabWidth(activity);
             using (var list = ScrollableRoot(activity))
                 Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollForward));
             await activity.AtNativeIdle();
-            int collapsedWidth = FabBounds(activity).Width();
+            int collapsedWidth = FabWidth(activity);
             Assert.IsTrue(collapsedWidth < expandedWidth,
                 $"Forward scroll did not collapse the FAB: expanded={expandedWidth}, collapsed={collapsedWidth}.");
 
@@ -181,12 +174,12 @@ public class ReplyNavigationTests
             long visibleEmailId = await ClickFirstVisibleEmail(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
             await AssertDetailId(activity, visibleEmailId);
-            Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
+            Assert.AreEqual(collapsedWidth, FabWidth(activity),
                 "Compact detail did not preserve the collapsed inbox FAB state.");
             activity = await Recreate(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
             await AssertDetailId(activity, visibleEmailId);
-            Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
+            Assert.AreEqual(collapsedWidth, FabWidth(activity),
                 "Compact detail did not restore the collapsed inbox FAB state.");
             await Back(activity);
             await AssertRoute(activity, Route.Inbox);
@@ -194,7 +187,7 @@ public class ReplyNavigationTests
             using (var list = ScrollableRoot(activity))
                 Assert.IsTrue(list.PerformAction(global::Android.Views.Accessibility.Action.ScrollBackward));
             await activity.AtNativeIdle();
-            int restoredWidth = FabBounds(activity).Width();
+            int restoredWidth = FabWidth(activity);
             Assert.IsTrue(restoredWidth > collapsedWidth,
                 $"Backward scroll did not expand the FAB: collapsed={collapsedWidth}, restored={restoredWidth}.");
 
@@ -202,17 +195,16 @@ public class ReplyNavigationTests
             long expandedEmailId = await ClickFirstVisibleEmail(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
             await AssertDetailId(activity, expandedEmailId);
-            Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
+            Assert.AreEqual(restoredWidth, FabWidth(activity),
                 "Compact detail did not preserve the expanded inbox FAB state.");
             activity = await Recreate(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
             await AssertDetailId(activity, expandedEmailId);
-            Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
+            Assert.AreEqual(restoredWidth, FabWidth(activity),
                 "Compact detail did not restore the expanded inbox FAB state.");
         }
         finally
         {
-            ReplyApp.NavigationTypeObserver = null;
             await Finish(activity);
         }
     }
@@ -229,7 +221,7 @@ public class ReplyNavigationTests
             await AssertRoute(activity, Route.EmailDetailPattern);
             using var root = Root(activity);
             using var title = Find(root, n => n.VisibleToUser &&
-                n.ContentDescription == String(Resource.String.reply_email_detail_title))
+                n.ViewIdResourceName?.EndsWith("reply-email-detail-title", StringComparison.Ordinal) == true)
                 ?? throw new InvalidOperationException("Reply detail toolbar title is missing.");
             using var list = ScrollableRoot(activity);
             using var titleBounds = new Rect();
@@ -243,7 +235,7 @@ public class ReplyNavigationTests
             await activity.AtNativeIdle();
             using var after = Root(activity);
             using var scrolledTitle = Find(after, n => n.VisibleToUser &&
-                n.ContentDescription == String(Resource.String.reply_email_detail_title));
+                n.ViewIdResourceName?.EndsWith("reply-email-detail-title", StringComparison.Ordinal) == true);
             Assert.IsNull(scrolledTitle, "Reply detail toolbar remained pinned instead of scrolling with the thread.");
         }
         finally { await Finish(activity); }
@@ -700,7 +692,7 @@ public class ReplyNavigationTests
         bool exactLabel) =>
         visible && exactLabel && (clickable || selected);
 
-    static Rect FabBounds(ReplyNavigationTestActivity activity)
+    static int FabWidth(ReplyNavigationTestActivity activity)
     {
         using var root = Root(activity);
         using var edit = Find(root, n => n.VisibleToUser &&
@@ -716,9 +708,9 @@ public class ReplyNavigationTests
                 current.Dispose();
                 current = parent;
             }
-            var bounds = new Rect();
+            using var bounds = new Rect();
             current.GetBoundsInScreen(bounds);
-            return bounds;
+            return bounds.Width();
         }
         finally { current.Dispose(); }
     }

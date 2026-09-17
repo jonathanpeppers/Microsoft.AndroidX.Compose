@@ -14,7 +14,6 @@
     <string name="reply_twenty_minutes_ago">20 mins ago</string>
     <string name="reply_back">Back</string>
     <string name="reply_more_options">More options</string>
-    <string name="reply_email_detail_title">Email detail title</string>
     <string name="reply_messages">%1$d Messages</string>
     <string name="reply_search_emails">Search emails</string>
     <string name="reply_no_item_found">No item found</string>

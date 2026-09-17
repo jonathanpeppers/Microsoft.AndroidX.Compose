@@ -21,7 +21,8 @@ public static class ReplyInboxScreen
         {
             var listState = c.RememberLazyListState();
             bool expanded = listState.LastScrolledBackward || !listState.CanScrollBackward;
-            c.SideEffect(() => composeFabExpanded.Value = expanded);
+            if (composeFabExpanded.Value != expanded)
+                c.SideEffect(() => composeFabExpanded.Value = expanded);
             var list = new LazyColumn<Email>(
                 items: emails,
                 itemContent: email =>

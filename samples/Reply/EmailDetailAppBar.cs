@@ -44,8 +44,9 @@ public static class EmailDetailAppBar
             title.Add(new Text(email.Subject)
             {
                 Color = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Semantics(
-                    c.StringResource(Resource.String.reply_email_detail_title)),
+                Modifier = Modifier
+                    .TestTag("reply-email-detail-title")
+                    .Semantics(s => s.TestTagsAsResourceId(true)),
             }.WithTypography(ReplyTypography.TitleMedium));
             title.Add(new Text(c.StringResource(
                 Resource.String.reply_messages,

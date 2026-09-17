@@ -10,28 +10,28 @@ namespace AndroidX.Compose.Samples.Reply;
 /// </remarks>
 public static class ReplyApp
 {
-    internal static Action<NavigationSuiteType>? NavigationTypeObserver { get; set; }
-
     /// <summary>Compose the Reply app at the same top-level boundary as upstream Kotlin.</summary>
     [Composable]
     public static void Content(
         NavController nav,
-        ReplyState state)
+        ReplyState state,
+        Action<NavigationSuiteType>? navigationTypeObserver = null)
     {
         var actions = new ReplyNavigationActions(nav);
-        ReplyTheme.Build(BuildNavHost(nav, actions, state)).Render();
+        ReplyTheme.Build(BuildNavHost(nav, actions, state, navigationTypeObserver)).Render();
     }
 
     static NavHost BuildNavHost(
         NavController nav,
         ReplyNavigationActions actions,
-        ReplyState state)
+        ReplyState state,
+        Action<NavigationSuiteType>? navigationTypeObserver)
     {
         return new NavHost(startDestination: Route.Inbox, navController: nav)
         {
             new NavDestination(Route.Inbox)
             {
-                BuildNavigation(Route.Inbox, actions, compact =>
+                BuildNavigation(Route.Inbox, actions, navigationTypeObserver, compact =>
                     ReplyInboxScreen.Build(
                         emails:           LocalEmailsDataProvider.AllEmails,
                         openedEmailId:    state.OpenedEmailId.Value,
@@ -52,11 +52,11 @@ public static class ReplyApp
                         composeFabExpanded: state.ComposeFabExpanded)),
             },
             new NavDestination(Route.Articles)
-                { BuildNavigation(Route.Articles, actions, _ => EmptyComingSoon.Build()) },
+                { BuildNavigation(Route.Articles, actions, navigationTypeObserver, _ => EmptyComingSoon.Build()) },
             new NavDestination(Route.DirectMessages)
-                { BuildNavigation(Route.DirectMessages, actions, _ => EmptyComingSoon.Build()) },
+                { BuildNavigation(Route.DirectMessages, actions, navigationTypeObserver, _ => EmptyComingSoon.Build()) },
             new NavDestination(Route.Groups)
-                { BuildNavigation(Route.Groups, actions, _ => EmptyComingSoon.Build()) },
+                { BuildNavigation(Route.Groups, actions, navigationTypeObserver, _ => EmptyComingSoon.Build()) },
             new NavDestination(Route.EmailDetailPattern, entry =>
             {
                 var idStr = entry.Arguments?.GetString("emailId");
@@ -65,7 +65,7 @@ public static class ReplyApp
                 var email = LocalEmailsDataProvider.Get(id)
                     ?? throw new InvalidOperationException($"Reply email {id} was not found.");
                 Action close = () => actions.CloseEmail(state);
-                return BuildNavigation(Route.Inbox, actions, compact => new Box
+                return BuildNavigation(Route.Inbox, actions, navigationTypeObserver, compact => new Box
                     {
                         new BackHandler(close),
                         ReplyEmailDetail.Build(
@@ -81,6 +81,7 @@ public static class ReplyApp
     static ComposableNode BuildNavigation(
         string route,
         ReplyNavigationActions actions,
+        Action<NavigationSuiteType>? navigationTypeObserver,
         Func<bool, ComposableNode> bodyFactory) =>
         new Composed(c =>
         {
@@ -93,7 +94,7 @@ public static class ReplyApp
                     AndroidX.Window.Core.Layout.WindowSizeClass.HeightDpMediumLowerBound),
                 widthAtLeastLarge: size.IsWidthAtLeastBreakpoint(
                     AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpLargeLowerBound));
-            NavigationTypeObserver?.Invoke(navigationType);
+            navigationTypeObserver?.Invoke(navigationType);
 
             var body = bodyFactory(navigationType == NavigationSuiteType.NavigationBar);
             var navigation = new NavigationSuiteScaffold
