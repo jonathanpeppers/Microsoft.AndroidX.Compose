@@ -1,3 +1,14 @@
+# JNI constructs this adapter; Compose calls its suspend interface method.
+-keep class net.compose.PointerInputEventHandlerImpl {
+    public <init>(kotlin.jvm.functions.Function2);
+    public java.lang.Object invoke(androidx.compose.ui.input.pointer.PointerInputScope, kotlin.coroutines.Continuation);
+}
+
+# JNI selects this factory; Java reachability retains its SAM implementation.
+-keep class composenet.compose.MeasurePolicyFactory {
+    static androidx.compose.ui.layout.MeasurePolicy create(kotlin.jvm.functions.Function3);
+}
+
 # The generated JNI bridge and read-only Runtime 1.11.3 compatibility query.
 -keep class composenet.compose.SharedStateLifetime {
     static boolean isLive(androidx.compose.runtime.CompositionImpl, java.lang.Object, androidx.compose.runtime.RecomposeScopeImpl, java.util.concurrent.atomic.AtomicReference, java.util.concurrent.atomic.AtomicReference, androidx.compose.runtime.CompositionImpl);

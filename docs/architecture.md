@@ -692,7 +692,7 @@ class-plus-field retention restores all eleven eager reflection declarations.
 `dotnet run scripts/check-shared-state-dex.cs -- <apk> [<apk> ...]` checks the final APK's
 DEX class-data declarations (not mere field references) against the Java
 helper's actual reflection calls. CI runs it on the NativeAOT template APK.
-It also requires the JNI-only Java entry points retained by `java-helpers.pro`:
+It also requires the JNI-only Java entry points retained by `shared-state-lifetime.pro`:
 `PointerInputEventHandlerImpl`'s `Function2` constructor and public suspend
 `invoke(PointerInputScope, Continuation)`, plus `MeasurePolicyFactory.create(Function3)`.
 These helpers are compiled with `Bind=false`; managed `FindClass`/method lookup
