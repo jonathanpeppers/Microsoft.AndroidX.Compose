@@ -222,6 +222,21 @@ public class ReplyNavigationTests
         finally { await Finish(activity); }
     }
 
+    /// <summary>Selected semantics association rejects viewport-wide and sibling-row nodes.</summary>
+    [TestMethod]
+    public void SelectedBoundsAssociationRejectsViewportAndOtherRows()
+    {
+        using var viewport = new Rect(0, 100, 1080, 2200);
+        using var subject = new Rect(180, 500, 900, 560);
+        using var row = new Rect(40, 320, 1040, 760);
+        using var otherRow = new Rect(40, 780, 1040, 1220);
+        using var oversizedAncestor = new Rect(0, 100, 1080, 2200);
+
+        Assert.IsTrue(IsSelectedEmailBounds(row, subject, viewport));
+        Assert.IsFalse(IsSelectedEmailBounds(otherRow, subject, viewport));
+        Assert.IsFalse(IsSelectedEmailBounds(oversizedAncestor, subject, viewport));
+    }
+
     /// <summary>Saved Inbox detail and native list position restore through tab switching and a new activity.</summary>
     [TestMethod]
     public async Task SavedDetailAndInboxViewportRestoreAfterRecreation()
@@ -407,25 +422,41 @@ public class ReplyNavigationTests
             ?? throw new InvalidOperationException($"Reply email {id} was not visible.");
         using var labelBounds = new Rect();
         label.GetBoundsInScreen(labelBounds);
-        using var selected = Find(root, node =>
-        {
-            if (!node.VisibleToUser || !node.Selected)
-                return false;
-            using var bounds = new Rect();
-            node.GetBoundsInScreen(bounds);
-            return bounds.Contains(labelBounds.CenterX(), labelBounds.CenterY());
-        });
+        using var list = ScrollableRoot(activity);
+        using var viewportBounds = new Rect();
+        list.GetBoundsInScreen(viewportBounds);
+        int candidateCount = Count(root, node =>
+            IsSelectedEmailNode(node, labelBounds, viewportBounds));
         if (expected)
         {
-            if (selected is null)
-            {
-                Assert.Fail(
-                    $"Reply email {id} has no selected semantics node containing its subject center.");
-            }
+            Assert.AreEqual(1, candidateCount,
+                $"Reply email {id} must have exactly one bounded selected semantics node.");
             return;
         }
-        Assert.IsNull(selected, $"Reply email {id} unexpectedly publishes selected semantics.");
+        Assert.AreEqual(0, candidateCount,
+            $"Reply email {id} unexpectedly publishes selected semantics.");
     }
+
+    static bool IsSelectedEmailNode(
+        AccessibilityNodeInfo node,
+        Rect subjectBounds,
+        Rect viewportBounds)
+    {
+        if (!node.VisibleToUser || !node.Selected)
+            return false;
+        using var bounds = new Rect();
+        node.GetBoundsInScreen(bounds);
+        return IsSelectedEmailBounds(bounds, subjectBounds, viewportBounds);
+    }
+
+    static bool IsSelectedEmailBounds(Rect candidate, Rect subject, Rect viewport) =>
+        candidate.Left >= viewport.Left &&
+        candidate.Top >= viewport.Top &&
+        candidate.Right <= viewport.Right &&
+        candidate.Bottom <= viewport.Bottom &&
+        candidate.Width() <= viewport.Width() &&
+        candidate.Height() < viewport.Height() / 2 &&
+        candidate.Contains(subject.CenterX(), subject.CenterY());
 
     static void PerformClick(AccessibilityNodeInfo node, bool longClick)
     {
@@ -574,5 +605,17 @@ public class ReplyNavigationTests
                 return found;
         }
         return null;
+    }
+
+    static int Count(AccessibilityNodeInfo root, Func<AccessibilityNodeInfo, bool> predicate)
+    {
+        int count = predicate(root) ? 1 : 0;
+        for (int i = 0; i < root.ChildCount; i++)
+        {
+            using var child = root.GetChild(i);
+            if (child is not null)
+                count += Count(child, predicate);
+        }
+        return count;
     }
 }
