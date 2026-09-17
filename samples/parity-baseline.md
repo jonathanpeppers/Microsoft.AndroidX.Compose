@@ -155,6 +155,20 @@ initial physical 1080 x 2424 / 420 dpi / font-scale-1.0 values before release.
 These are display overrides on a physical phone, not tablet or foldable
 hardware evidence, and they do not establish whole-app pixel parity.
 
+Review follow-up `7561ee0` added the pinned 16 dp horizontal padding to the
+Send label after zeroing the Material button's content padding. A new
+self-contained APK (SHA-256
+`1AE230C2E6D777E861B11D87F6FAE458833DEEFC5558632527681D0B9070E05E`)
+contained the exact reviewed app/runtime assemblies. On Pixel10, activity-local
+light/dark captures covered disabled-empty and enabled-`pad` states at the
+original 1080 x 2424 / 420 dpi / font-scale-1.0 configuration and the short
+1080 x 1920 / 480 dpi / font-scale-1.3 configuration. The widened control and
+complete label remained inside the selector row without overlap or clipping.
+The device was restored to its exact initial size, density, font, and night
+state before release. This focused rerun supersedes the earlier runtime
+payload only for the Send-padding geometry; all prior bounded evidence and
+limitations remain unchanged.
+
 ### Reply
 
 | ID | Initial state / action | Result |
