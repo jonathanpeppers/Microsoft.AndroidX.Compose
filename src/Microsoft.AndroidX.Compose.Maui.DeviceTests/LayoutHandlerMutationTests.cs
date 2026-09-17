@@ -1,8 +1,10 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Android.Runtime;
 using Microsoft.Maui.Handlers;
 using ComposeLayoutHandler = Microsoft.AndroidX.Compose.Maui.Handlers.LayoutHandler;
 using MauiLayout = Microsoft.Maui.Controls.Layout;
+using Snapshot = AndroidX.Compose.Runtime.Snapshots.Snapshot;
 
 namespace Microsoft.AndroidX.Compose.Maui.DeviceTests;
 
@@ -31,6 +33,7 @@ public class LayoutHandlerMutationTests
         using var applier = new StateOnlyApplier();
         using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
             ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        using var snapshots = GetSnapshotCompanion();
         var composition = CompositionKt.ControlledComposition(applier, recomposer);
         var observed = new Dictionary<string, object>();
         var order = new List<string>();
@@ -59,7 +62,7 @@ public class LayoutHandlerMutationTests
 
             layout.Add(c);
             Invoke(handler, layout, "Add", new LayoutHandlerUpdate(2, c));
-            Recompose(composition, observed, order);
+            Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "B", "C");
             Assert.AreSame(aState, observed["A"]);
             Assert.AreSame(bState, observed["B"]);
@@ -67,7 +70,7 @@ public class LayoutHandlerMutationTests
 
             layout.Insert(1, x);
             Invoke(handler, layout, "Insert", new LayoutHandlerUpdate(1, x));
-            Recompose(composition, observed, order);
+            Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "B", "C");
             Assert.AreSame(aState, observed["A"]);
             Assert.AreSame(bState, observed["B"]);
@@ -76,7 +79,7 @@ public class LayoutHandlerMutationTests
 
             layout.Remove(b);
             Invoke(handler, layout, "Remove", new LayoutHandlerUpdate(2, b));
-            Recompose(composition, observed, order);
+            Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "C");
             Assert.AreSame(aState, observed["A"]);
             Assert.AreSame(xState, observed["X"]);
@@ -85,7 +88,7 @@ public class LayoutHandlerMutationTests
 
             layout[1] = replacement;
             Invoke(handler, layout, "Update", new LayoutHandlerUpdate(1, replacement));
-            Recompose(composition, observed, order);
+            Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "R", "C");
             Assert.AreSame(aState, observed["A"]);
             Assert.AreSame(cState, observed["C"]);
@@ -94,7 +97,7 @@ public class LayoutHandlerMutationTests
 
             layout.Clear();
             Invoke(handler, layout, "Clear", null);
-            Recompose(composition, observed, order);
+            Recompose(composition, snapshots, observed, order);
             Assert.AreEqual(0, order.Count);
             Assert.AreEqual(1, disposals["A"]);
             Assert.AreEqual(1, disposals["C"]);
@@ -121,9 +124,14 @@ public class LayoutHandlerMutationTests
 
     static void Recompose(
         IControlledComposition composition,
+        Snapshot.Companion snapshots,
         IDictionary<string, object> observed,
         IList<string> order)
     {
+        Assert.IsTrue(
+            snapshots.IsApplyObserverNotificationPending,
+            "The layout command did not publish a pending snapshot-state write.");
+        snapshots.SendApplyNotifications();
         Assert.IsTrue(composition.HasInvalidations, "The layout command did not invalidate its composed child snapshot.");
         observed.Clear();
         order.Clear();
@@ -133,4 +141,15 @@ public class LayoutHandlerMutationTests
 
     static void AssertOrder(IList<string> actual, params string[] expected) =>
         CollectionAssert.AreEqual(expected, actual.ToArray());
+
+    static Snapshot.Companion GetSnapshotCompanion()
+    {
+        using var snapshotClass = Java.Lang.Class.FromType(typeof(Snapshot));
+        using var field = snapshotClass.GetField("Companion")
+            ?? throw new InvalidOperationException("Snapshot.Companion field is unavailable.");
+        var singleton = field.Get(null)
+            ?? throw new InvalidOperationException("Snapshot.Companion singleton is unavailable.");
+        return singleton.JavaCast<Snapshot.Companion>()
+            ?? throw new InvalidOperationException("Snapshot.Companion cannot be projected.");
+    }
 }
