@@ -1,7 +1,7 @@
 using AndroidX.Compose;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
 using MauiPage = Microsoft.Maui.Controls.Page;
-using ComposeImage = AndroidX.Compose.Image;
+using ComposeIcon = AndroidX.Compose.Icon;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -35,9 +35,9 @@ internal sealed class TabbedPageIcon : IImageSourcePart
     public ComposableNode BuildNode()
     {
         if (_loader.Painter.Value is { } painter)
-            return new ComposeImage(painter) { Modifier = s_iconSize };
+            return new ComposeIcon(painter, contentDescription: null) { Modifier = s_iconSize };
         if (_loader.DrawableResourceId.Value is int resourceId)
-            return new ComposeImage(resourceId) { Modifier = s_iconSize };
+            return new ComposeIcon(resourceId, contentDescription: null) { Modifier = s_iconSize };
         return new Box { Modifier = s_iconSize };
     }
 

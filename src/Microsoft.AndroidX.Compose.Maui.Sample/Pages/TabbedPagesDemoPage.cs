@@ -128,8 +128,15 @@ public sealed class TabbedPagesDemoPage : ContentPage
         tabs.Children.Add(home);
         tabs.Children.Add(settings);
         tabs.Children.Add(disabled);
+        int selectionChangeCount = 0;
         tabs.CurrentPageChanged += (_, _) =>
+        {
+            selectionChangeCount++;
             status.Text = $"Selected: {tabs.CurrentPage?.Title ?? "(none)"}";
+            System.Diagnostics.Debug.WriteLine(
+                $"[TabbedPagesDemo] CurrentPageChanged #{selectionChangeCount}: " +
+                $"{tabs.CurrentPage?.Title ?? "(none)"}");
+        };
         return tabs;
 
         void ToggleDynamicTab()
