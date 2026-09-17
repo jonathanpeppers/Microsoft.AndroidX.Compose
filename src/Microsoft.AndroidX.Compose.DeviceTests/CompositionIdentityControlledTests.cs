@@ -105,14 +105,12 @@ public class CompositionIdentityControlledTests
         using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
             ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
         var composition = CompositionKt.ControlledComposition(applier, recomposer);
-        var composer = System.Reflection.DispatchProxy.Create<IComposer, FailingIdentityComposer>();
-        var failure = (FailingIdentityComposer)composer;
-        failure.Composition = composition;
+        using var failure = new FailingIdentityComposer { Composition = composition };
         try
         {
             using var identity = new Java.Lang.String("failed-publication");
             var error = Assert.ThrowsExactly<InvalidOperationException>(
-                () => ComposableCallSite.Start(composer, 350, identity));
+                () => ComposableCallSite.Start(failure, 350, identity));
             Assert.AreEqual("Injected occurrence publication failure.", error.Message);
             Assert.AreEqual(1, failure.OwnersAtFailure);
             Assert.AreEqual(0, ComposableCallSite.Occurrences.CompositionCount);

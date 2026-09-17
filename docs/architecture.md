@@ -653,6 +653,29 @@ registration operations and rerun both backend regressions. Consumer keep rules
 in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
 and the JNI-only shared time/sheet entry points through R8.
 
+The reflection declarations need `-keep class ... { <named fields>; }`, not
+just `-keepclassmembers`. In R8 full mode, member-only rules do not make an
+otherwise uninstantiated class count as instantiated. A class literal can
+survive as an empty shell while its instance fields disappear. The helper
+eagerly calls `getDeclaredField` for **both** backends at initialization, even
+when only Gap is instantiated. Consequently, the class and the named fields
+must remain on their original declaring class; an inherited field is not an
+equivalent contract. These rules do not keep every method or field of Compose.
+See the [R8 full-mode compatibility contract](https://r8.googlesource.com/r8/+/refs/heads/main/compatibility-faq.md#r8-full-mode).
+
+On current-main `56076632`, a fresh .NET 11 RC1 NativeAOT Jetchat Release build
+reproduced missing `LinkComposer.changeListWriter`, Link
+`ComposerChangeListWriter.changeList`, and Link `ChangeList.operations`.
+The consumer rules reached the R8 task; R8 9.1.31 ran with shrinking enabled
+and `-dontobfuscate`. Mapping and DEX retained the declaring classes as empty
+shells, not renamed fields or relocated superclass declarations. Explicit
+class-plus-field retention restores all eleven eager reflection declarations.
+`scripts/check-shared-state-dex.py <apk> [<apk> ...]` checks the final APK's
+DEX class-data declarations (not mere field references) against the Java
+helper's actual reflection calls. CI runs it on the NativeAOT template APK.
+This is a new fix/validation population, not a reclassification of the frozen
+`7330d039` NativeAOT admission failure or startup measurements in #346.
+
 Use a clean Release build for R8 validation on the installed .NET for Android
 Windows SDK 36.1.69.
 Its incremental AAR-import path can omit consumer rules from
@@ -662,8 +685,107 @@ the extracted `proguard.txt` remains present. This removed both
 incremental build. A clean build restores collection of the existing narrow
 rules; verify the actual R8 `--pg-conf` inputs and final DEX, not just the AAR.
 The library exports its rules, but this work does not fix the SDK's incremental
-cache behavior. Clean-build native coverage does not establish incremental,
+cache behavior. That historical clean-build coverage did not establish incremental,
 AOT, obfuscated, or full Release UI compatibility.
+
+The `DeviceTests` project always compiles the complete test source set and
+resources, including both the normal MSTest instrumentation and the bounded
+direct-call shared-state runner. Use the standard SDK properties:
+`UseMonoRuntime=false` for CoreCLR, or `PublishAot=true` for NativeAOT.
+Project references set `AdditionalProperties="PublishAot=false"` so app-level
+native publishing does not reach the runtime library or netstandard source
+generator. The test project enables the standard `RestoreUseStaticGraphEvaluation`
+setting so restore honors these per-reference properties too; the default
+restore traversal otherwise forwards the app's global `PublishAot=true` and
+fails on the netstandard generator. No generator-local property override is
+needed. Use separate, clean artifact directories and application IDs when
+comparing the runtimes:
+
+```powershell
+dotnet publish src\Microsoft.AndroidX.Compose.DeviceTests -c Release -r android-arm64 `
+    -p:UseMonoRuntime=false -p:PublishAot=false -p:AndroidLinkTool=r8 `
+    -p:ApplicationId=net.compose.devicetests.coreclr -p:ArtifactsPath=artifacts\state-coreclr
+dotnet publish src\Microsoft.AndroidX.Compose.DeviceTests -c Release -r android-arm64 `
+    -p:PublishAot=true `
+    -p:ApplicationId=net.compose.devicetests.nativeaot -p:ArtifactsPath=artifacts\state-nativeaot
+```
+
+After installation, run
+`adb -s <serial> shell am instrument -w -e composeBackend gap <package>/net.compose.devicetests.SharedStateTestInstrumentation`,
+then repeat with `composeBackend link`. Each invocation reports four tests:
+eager helper initialization, abandoned owner replacement, commit-time veto
+publication, and sibling sharing/removal/reentry/disposal. Require `passed=4`,
+`failed=0`, and instrumentation result code `-1` for each backend/runtime.
+Add `-e aotCompatibility true` to the bounded invocation to also run the
+failed-occurrence-publication regression and three host-probe JSON contract
+tests (`passed=8`, `failed=0`, result code `-1`). This does not run the entire
+MSTest suite. The publication fixture uses a statically implemented composer
+double rather than `DispatchProxy`; process snapshots use source-generated
+JSON metadata while preserving the host scripts' property names and values.
+Both runtime configurations reference `MSTest` 4.4.1 with its build targets
+enabled. Explicit SDK imports let the project restore Android's `Library`
+output after the transitive desktop test SDK resets it to `Exe`.
+Compiling the full suite is not evidence that every test has run under
+NativeAOT. The original device evidence below used 4.3.2 and a bounded compile
+selection, before this full-source configuration.
+The smoke runner's `shared-state-smoke.pro` keeps its JNI-selected
+`ComposeRuntimeFlags.isLinkBufferComposerEnabled` switch and the transaction
+tests' raw-JNI `DrawerState.getConfirmStateChange$material3` inspection getter.
+CoreCLR/R8 otherwise removes these members. These test-only rules are not
+exported by the runtime library or used by the Jetchat APK.
+Use `scripts/check-shared-state-dex.py --smoke-harness <test-apk>` to also check
+the switch's declaring class, boolean type, and public/static flags, and the
+getter's exact instance-method declaration/signature.
+
+Validation on 2026-09-17 used a Pixel 7, Android 17/API 37, SDK
+`11.0.100-rc.1.26425.128`, Android workload `37.0.0-rc.1.2257`, and the exact
+NativeAOT runtime pack `11.0.0-rc.1.26428.117` from the public dotnet11 feed.
+All candidates were arm64 Release, with actual APK compile/target SDK 37 and
+R8 shrinking enabled; no runtime substitution or trimming/R8 disablement.
+
+- Jetchat APK SHA-256
+  `0fac20c990d5126be67c249ba7923d21ddd02a8bc1bc19524f32a40ecf199e82`,
+  native `libJetchat.so` BuildID `2bc0ff8322131b4c603b21951772dbfc187e7427`:
+  installed APK hash matched; native loading, two normal starts in distinct
+  processes, resumed activity, composed content, and drawer open/scrim-close
+  passed. These are correctness checks, **not startup measurements**.
+- The same `DeviceTests` smoke selection passed **4/4 in each of CoreCLR Gap,
+  CoreCLR Link, NativeAOT Gap, and NativeAOT Link** (16 total, zero failures).
+  Each invocation returned `passed=4`, `failed=0`, result code `-1`.
+  Final APK hashes were NativeAOT
+  `d4a7a3415847478cee14424b5c66f9befbd95b118b3dd330539eb9fce6f3a130`
+  and CoreCLR `abac7f460f26d4faa018f6229eeb19aa53b77388d24d111256ca40fffc01b817`.
+  Installed hashes matched; both final DEX filesets passed the complete smoke
+  contract check. The final test run ended at `2026-09-17T14:36:21.754208Z`,
+  with both test packages stopped and their PIDs absent.
+
+The three isolated validation packages were subsequently hash-verified and
+normally uninstalled under a separate cleanup grant, ending at
+`2026-09-17T14:39:40.701139Z`; package paths and retained-data registrations
+were absent.
+
+Earlier diagnostic runs remain failures, not retroactive passes: the first
+UI driver used system Back (which left the sample) instead of its native
+close-menu scrim; the first sibling fixture changed the owner's lexical
+remember location; CoreCLR then exposed missing test-only backend-selector
+and veto-getter retention. The corrected fixture keeps one owner call site
+and toggles only the borrower, without weakening identity, retirement, or
+reentry assertions. The final test-only rules do not contribute to the
+independent Jetchat startup result. This does not establish full-suite NativeAOT,
+incremental-build, obfuscated-build, or performance coverage; #346 stays open.
+
+The subsequent MSTest 4.4.1 full-source configuration compiled all 154 project
+C# files (199 inputs including linked sample sources) identically for CoreCLR
+and NativeAOT. Default Debug build and both clean Release publishes passed.
+With `aotCompatibility=true`, the bounded runner passed **8/8 for each runtime
+and backend** (32 total), including the static composer double and exact JSON
+contracts. This is focused execution of a fully compiled suite, not execution
+of every test. Final R8 APK hashes were NativeAOT
+`a2b1eaceb231ac64158cab27d0924dc7ceb5dcddd55b19b85f01dfe18fb28ee6`
+and CoreCLR `38a7b38793eeca15882c1c67d26eebccf19bc4f8da4aef9c3f99ecab8f1a17f6`;
+installed hashes and final DEX contracts matched. The separate validation and
+normal uninstall of both new isolated packages ended at
+`2026-09-17T15:27:33.164250Z`, with no retained package data or owned processes.
 
 Concurrent compositions can already hold their own native monitor when
 borrowing another composition's state. The query registers a transient

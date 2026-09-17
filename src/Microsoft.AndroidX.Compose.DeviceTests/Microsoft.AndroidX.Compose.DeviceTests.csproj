@@ -1,9 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
     <TargetFramework>net11.0-android</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Honor per-reference properties during restore as well as build. -->
+    <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
+    <EnablePreviewFeatures Condition="'$(PublishAot)' == 'true'">true</EnablePreviewFeatures>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
@@ -41,10 +46,14 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <ProguardConfiguration Include="shared-state-smoke.pro" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Microsoft.AndroidX.Compose.DeviceTests.Resource" Alias="Resource" />
     <Compile Include="..\..\samples\Jetchat\JetchatFonts.cs" Link="Samples\JetchatFonts.cs" />
     <Compile Include="..\..\samples\Jetchat\RecordButton.cs" Link="Samples\RecordButton.cs" />
@@ -89,9 +98,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+    <!-- Native publishing is an application setting, not a dependency/analyzer setting. -->
+    <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj"
+                      AdditionalProperties="PublishAot=false" />
     <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
-                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false"
+                      AdditionalProperties="PublishAot=false" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- Restore Android's library output after the desktop test SDK resets it to Exe. -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
 
 </Project>
