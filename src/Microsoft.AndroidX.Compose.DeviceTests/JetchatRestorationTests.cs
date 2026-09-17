@@ -214,6 +214,49 @@ public class JetchatRestorationTests
         finally { await Finish(activity); }
     }
 
+    /// <summary>Attachment/error insertion preserves editor state and preview interaction.</summary>
+    [TestMethod]
+    public async Task VideoAttachment_ChangesPreserveFocusedEditorIdentity()
+    {
+        var activity = await Start("light");
+        try
+        {
+            await Click(activity, node => node.Editable, "editor");
+            await SetText(activity, "caption");
+            await SetSelection(activity, 3, 3);
+            var picker = activity.VideoPickerState
+                ?? throw new InvalidOperationException("Video picker view model is unavailable.");
+            await activity.OnUi(() =>
+            {
+                Assert.IsTrue(picker.Begin());
+                picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            });
+            await Settle(activity);
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+            await Click(
+                activity,
+                node => node.ContentDescription == "Attached video preview",
+                "attached video preview");
+            await Click(activity, node => node.ContentDescription == "Close video", "close video");
+            await Click(
+                activity,
+                node => node.ContentDescription == "Remove attached video",
+                "remove attached video");
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+
+            await activity.OnUi(() =>
+            {
+                Assert.IsTrue(picker.Begin());
+                picker.Complete(VideoPickResult.Failed("Controlled picker error."));
+            });
+            await Settle(activity);
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+            using var error = Find(activity, node => node.Text == "Controlled picker error.");
+            Assert.IsNotNull(error);
+        }
+        finally { await Finish(activity); }
+    }
+
     static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
         _ = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
