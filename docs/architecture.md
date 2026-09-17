@@ -1862,8 +1862,11 @@ class.
   Kotlin flow. `MutableStateList<T>`, `MutableStateMap<K,V>`,
   `ComposeExtensions.DerivedStateOf<T>(Func<T>)`, and
   `composer.ProduceState<T>(initialValue, [keys…], producer)` are
-  available. `ProduceState` is implemented purely in C# via an
-  `IRememberObserver` JCW — the producer is a plain
+  available. `ProduceState` keeps its observable state in a stable slot and
+  gives each keyed producer lifetime a separate `IRememberObserver` JCW.
+  Compose therefore starts replacements only after successful apply, leaves
+  committed work running when a replacement is abandoned, and fences writes
+  from retired producers. The producer is a plain
   `Func<MutableState<T>, CancellationToken, Task>`, not a Kotlin
   suspend lambda. `composer.SnapshotFlow<T>(Func<T>)` bridges Compose's
   `snapshotFlow { producer() }` to `IAsyncEnumerable<T>`. The separate real

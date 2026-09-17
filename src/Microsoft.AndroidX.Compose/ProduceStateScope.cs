@@ -5,8 +5,7 @@ namespace AndroidX.Compose;
 
 /// <summary>
 /// Slot value used by <see cref="ComposeExtensions.ProduceState{T}(T, Func{MutableState{T}, CancellationToken, Task}, int, string)"/>:
-/// holds the <see cref="MutableState{T}"/> the caller writes to,
-/// plus the producer task / cancellation lifecycle. Implements
+/// owns one keyed producer task / cancellation lifecycle. Implements
 /// <see cref="IRememberObserver"/> so it starts the producer when
 /// Compose adds the value to the composition
 /// (<see cref="OnRemembered"/>) and cancels it when the value is
@@ -21,21 +20,25 @@ namespace AndroidX.Compose;
 [Register("net/compose/ProduceStateScope")]
 internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
 {
-    public readonly MutableState<T> State;
-    public object?[]? Keys;
-
-    readonly Func<MutableState<T>, CancellationToken, Task> _producer;
+    readonly object _gate = new();
+    readonly Func<MutableState<T>, CancellationToken, Task>? _producer;
+    readonly MutableState<T>? _state;
+    readonly ProduceStateWriter<T>? _writer;
     CancellationTokenSource? _cts;
+    bool _active;
     bool _started;
     bool _disposed;
 
+    internal object?[]? Keys { get; }
+
     public ProduceStateScope(
-        T initial,
+        MutableState<T> state,
         Func<MutableState<T>, CancellationToken, Task> producer,
         object?[]? keys)
     {
-        State = new MutableState<T>(initial);
+        _state = state;
         _producer = producer;
+        _writer = new ProduceStateWriter<T>(state, TrySetValue);
         Keys = keys is null ? null : (object?[])keys.Clone();
     }
 
@@ -48,24 +51,6 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
     internal ProduceStateScope(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer)
     {
-        // Make non-nullable fields satisfied; this peer will never be
-        // used by managed callers — only the slot-table identity is.
-        State = null!;
-        _producer = null!;
-    }
-
-    /// <summary>
-    /// Replace the active producer task — used when caller keys
-    /// change between compositions: cancel the running task and
-    /// kick off a fresh one with the new keys recorded.
-    /// </summary>
-    public void Restart(object?[]? newKeys)
-    {
-        Stop();
-        Keys = newKeys is null ? null : (object?[])newKeys.Clone();
-        _disposed = false;
-        _started = false;
-        Start();
     }
 
     public void OnRemembered() => Start();
@@ -76,11 +61,38 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
 
     void Start()
     {
-        if (_started || _disposed) return;
-        _started = true;
-        _cts = new CancellationTokenSource();
-        var token = _cts.Token;
-        var task = _producer(State, token);
+        Func<MutableState<T>, CancellationToken, Task> producer;
+        ProduceStateWriter<T> writer;
+        CancellationToken token;
+        lock (_gate)
+        {
+            if (_started || _disposed)
+                return;
+            producer = _producer
+                ?? throw new InvalidOperationException(
+                    "ProduceState producer is unavailable on a rehydrated peer.");
+            writer = _writer
+                ?? throw new InvalidOperationException(
+                    "ProduceState writer is unavailable on a rehydrated peer.");
+            _started = true;
+            _active = true;
+            _cts = new CancellationTokenSource();
+            token = _cts.Token;
+        }
+
+        Task task;
+        try
+        {
+            task = producer(writer, token)
+                ?? Task.FromException(
+                    new InvalidOperationException(
+                        "ProduceState producer returned a null Task."));
+        }
+        catch (Exception ex)
+        {
+            task = Task.FromException(ex);
+        }
+
         // Surface producer faults to logcat instead of leaving them
         // as unobserved task exceptions. Match ComposeExtensions'
         // logging tag so all our diagnostics share a single filter.
@@ -97,11 +109,38 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
 
     void Stop()
     {
-        if (_disposed) return;
-        _disposed = true;
-        try { _cts?.Cancel(); }
-        catch { /* token source may already be disposed */ }
-        _cts?.Dispose();
-        _cts = null;
+        CancellationTokenSource? cts;
+        lock (_gate)
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            _active = false;
+            cts = _cts;
+            _cts = null;
+        }
+
+        try
+        {
+            cts?.Cancel();
+        }
+        finally
+        {
+            cts?.Dispose();
+        }
+    }
+
+    void TrySetValue(T value)
+    {
+        lock (_gate)
+        {
+            if (_active)
+            {
+                var state = _state
+                    ?? throw new InvalidOperationException(
+                        "ProduceState state is unavailable on a rehydrated peer.");
+                state.Value = value;
+            }
+        }
     }
 }

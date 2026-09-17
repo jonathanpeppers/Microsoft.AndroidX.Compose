@@ -4,7 +4,7 @@ namespace AndroidX.Compose;
 
 public static partial class Composables
 {
-    /// <summary>Produces state for the lifetime of the current composition.</summary>
+    /// <summary>Produces state for the lifetime of the successfully applied composition.</summary>
     public static MutableState<T> ProduceState<T>(
         T initialValue,
         Func<MutableState<T>, CancellationToken, Task> producer,
@@ -13,7 +13,7 @@ public static partial class Composables
         ComposeExtensions.ProduceState(
             ComposableContext.Current, initialValue, producer, line, file);
 
-    /// <summary>Produces state and restarts when <paramref name="key1"/> changes.</summary>
+    /// <summary>Produces state and restarts after a <paramref name="key1"/> change is applied.</summary>
     public static MutableState<T> ProduceState<T>(
         T initialValue,
         object? key1,

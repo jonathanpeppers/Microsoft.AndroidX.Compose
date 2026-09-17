@@ -10,7 +10,7 @@ public static partial class ComposeExtensions
     /// <c>produceState(initialValue, vararg keys) { producer }</c>:
     /// remembers a <see cref="MutableState{T}"/> seeded with
     /// <paramref name="initialValue"/>. Starts <paramref name="producer"/>
-    /// the first time this call site enters the composition. The
+    /// after this call site is successfully applied to the composition. The
     /// producer receives the state to write to plus a
     /// <see cref="CancellationToken"/> that fires when this call site
     /// leaves the composition.
@@ -25,8 +25,10 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Keyed <c>produceState(initial, key1) { producer }</c>: cancels
-    /// the running producer and starts a fresh one whenever
-    /// <paramref name="key1"/> changes (structural equality).
+    /// the running producer and starts the current delegate after a
+    /// <paramref name="key1"/> change is successfully applied (structural
+    /// equality). An abandoned recomposition leaves the committed producer
+    /// running.
     /// </summary>
     public static MutableState<T> ProduceState<T>(
         this IComposer composer,
@@ -35,7 +37,7 @@ public static partial class ComposeExtensions
         Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => ProduceStateCore(composer, initialValue, producer, new[] { key1 }, line, file);
+        => ProduceStateCore(composer, initialValue, producer, [key1], line, file);
 
     /// <summary>Keyed <c>produceState(initial, key1, key2) { producer }</c>.</summary>
     public static MutableState<T> ProduceState<T>(
@@ -46,7 +48,7 @@ public static partial class ComposeExtensions
         Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => ProduceStateCore(composer, initialValue, producer, new[] { key1, key2 }, line, file);
+        => ProduceStateCore(composer, initialValue, producer, [key1, key2], line, file);
 
     /// <summary>Keyed <c>produceState(initial, key1, key2, key3) { producer }</c>.</summary>
     public static MutableState<T> ProduceState<T>(
@@ -58,7 +60,7 @@ public static partial class ComposeExtensions
         Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => ProduceStateCore(composer, initialValue, producer, new[] { key1, key2, key3 }, line, file);
+        => ProduceStateCore(composer, initialValue, producer, [key1, key2, key3], line, file);
 
     /// <summary>
     /// Array-form keyed <c>produceState(initial, vararg keys) { producer }</c>.
@@ -86,20 +88,30 @@ public static partial class ComposeExtensions
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
-            // The slot value MUST be the IRememberObserver itself —
-            // Compose only inspects what UpdateRememberedValue is
-            // handed for the IRememberObserver interface. Nesting it
-            // inside RememberHolder would silently break the
-            // OnRemembered/OnForgotten/OnAbandoned hooks.
-            if (composer.RememberedValue() is ProduceStateScope<T> existing)
+            MutableState<T> state;
+            if (composer.RememberedValue() is RememberHolder holder
+                && holder.Value is MutableState<T> rememberedState)
             {
-                if (!RememberHolder.KeysEqual(existing.Keys, keys))
-                    existing.Restart(keys);
-                return existing.State;
+                state = rememberedState;
             }
-            var scope = new ProduceStateScope<T>(initialValue, producer, keys);
-            composer.UpdateRememberedValue(scope);
-            return scope.State;
+            else
+            {
+                state = new MutableState<T>(initialValue);
+                composer.UpdateRememberedValue(new RememberHolder(state));
+            }
+
+            // Keep each producer lifetime as a direct slot value so Compose
+            // commits replacement before forgetting the old observer and
+            // remembering the new one. An abandoned render therefore cannot
+            // cancel committed work or start speculative work.
+            if (composer.RememberedValue() is not ProduceStateScope<T> existing
+                || !RememberHolder.KeysEqual(existing.Keys, keys))
+            {
+                composer.UpdateRememberedValue(
+                    new ProduceStateScope<T>(state, producer, keys));
+            }
+
+            return state;
         }
         finally
         {
