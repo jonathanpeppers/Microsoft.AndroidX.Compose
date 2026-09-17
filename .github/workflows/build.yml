@@ -74,7 +74,7 @@ jobs:
             -warnaserror:XA4301 \
             -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.NativeAOT.binlog"
 
-      - name: Verify NativeAOT shared-state reflection declarations
+      - name: Verify NativeAOT JNI helpers and shared-state reflection declarations
         run: |
           dotnet run scripts/check-shared-state-dex.cs -- --self-test
           dotnet run scripts/check-shared-state-dex.cs -- \

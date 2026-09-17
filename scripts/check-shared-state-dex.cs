@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FieldMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, (string Type, uint Access)>>;
-using MethodMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string Name, string Signature, uint Access)>>;
+using MethodMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string Name, string Signature, uint Access, bool Direct, uint CodeOffset)>>;
 
 if (args is ["--self-test"])
 {
@@ -130,7 +130,7 @@ static FieldMap DeclaredFields(byte[] data, MethodMap? methods = null)
             {
                 methodIndex = checked(methodIndex + (int)Uleb(ref position));
                 uint access = Uleb(ref position);
-                _ = Uleb(ref position);
+                uint codeOffset = Uleb(ref position);
                 int method = checked(Index(92) + methodIndex * 8);
                 if (types[U16(method)] != owner)
                     throw new InvalidDataException("DEX method is declared on a different class.");
@@ -143,7 +143,7 @@ static FieldMap DeclaredFields(byte[] data, MethodMap? methods = null)
                         signature.Append(types[U16(checked(parametersOffset + 4 + parameter * 2))]);
                 }
                 signature.Append(')').Append(types[Index(proto + 4)]);
-                declared.Add((strings[Index(method + 4)], signature.ToString(), access));
+                declared.Add((strings[Index(method + 4)], signature.ToString(), access, group == 2, codeOffset));
             }
         }
     }
@@ -180,6 +180,24 @@ static bool ConfirmGetterIsPreserved(MethodMap methods) =>
     declared.Any(method => method.Name == "getConfirmStateChange$material3" &&
         method.Signature == "()Lkotlin/jvm/functions/Function1;" && (method.Access & 8) == 0);
 
+static (string Owner, string Name, string Signature, uint Access, bool Direct)[] JniHelperContract() =>
+[
+    ("Lnet/compose/PointerInputEventHandlerImpl;", "<init>", "(Lkotlin/jvm/functions/Function2;)V", 0x10001, true),
+    ("Lnet/compose/PointerInputEventHandlerImpl;", "invoke",
+        "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", 1, false),
+    ("Lcomposenet/compose/MeasurePolicyFactory;", "create",
+        "(Lkotlin/jvm/functions/Function3;)Landroidx/compose/ui/layout/MeasurePolicy;", 8, true)
+];
+
+static bool JniHelperIsPreserved(MethodMap methods,
+    (string Owner, string Name, string Signature, uint Access, bool Direct) entry) =>
+    methods.TryGetValue(entry.Owner, out var declared) &&
+    declared.Any(method => method.Name == entry.Name && method.Signature == entry.Signature &&
+        (method.Access & entry.Access) == entry.Access &&
+        // Static/constructor shape must match; native/abstract methods have no implementation here.
+        (method.Access & 0x10508) == (entry.Access & 0x10508) &&
+        method.Direct == entry.Direct && method.CodeOffset != 0);
+
 static bool Inspect(string apkPath, IReadOnlyList<(string Owner, string Field)> contract,
     bool smokeHarness, Utf8JsonWriter writer)
 {
@@ -197,7 +215,7 @@ static bool Inspect(string apkPath, IReadOnlyList<(string Owner, string Field)> 
             using var input = entry.Open();
             using var dex = new MemoryStream();
             input.CopyTo(dex);
-            foreach (var (owner, fields) in DeclaredFields(dex.ToArray(), smokeHarness ? methods : null))
+            foreach (var (owner, fields) in DeclaredFields(dex.ToArray(), methods))
             {
                 if (!classes.TryAdd(owner, fields))
                     throw new InvalidDataException($"Duplicate DEX class: {owner}");
@@ -238,6 +256,19 @@ static bool Inspect(string apkPath, IReadOnlyList<(string Owner, string Field)> 
         }
         else
             writer.WriteNull("declaration");
+        writer.WriteEndObject();
+    }
+    writer.WriteEndArray();
+    writer.WriteStartArray("jni_helpers");
+    foreach (var entry in JniHelperContract())
+    {
+        bool present = JniHelperIsPreserved(methods, entry);
+        passed &= present;
+        writer.WriteStartObject();
+        writer.WriteString("class", entry.Owner);
+        writer.WriteString("method", entry.Name);
+        writer.WriteString("signature", entry.Signature);
+        writer.WriteBoolean("present", present);
         writer.WriteEndObject();
     }
     writer.WriteEndArray();
@@ -301,7 +332,7 @@ static void RunSelfTests()
              ("()Ljava/lang/Object;", 1, false)];
         foreach (var (signature, access, expected) in cases)
         {
-            MethodMap methods = new() { [drawer] = [("getConfirmStateChange$material3", signature, access)] };
+            MethodMap methods = new() { [drawer] = [("getConfirmStateChange$material3", signature, access, false, 1)] };
             Check(ConfirmGetterIsPreserved(methods) == expected);
         }
     });
@@ -313,6 +344,34 @@ static void RunSelfTests()
             MethodMap methods = [];
             DeclaredFields(DexFixture(drawer, false, declared), methods);
             Check(ConfirmGetterIsPreserved(methods) == declared);
+        }
+    });
+    Test("JNI helpers require exact concrete direct/virtual method declarations", () =>
+    {
+        foreach (var entry in JniHelperContract())
+        {
+            Check(!JniHelperIsPreserved([], entry));
+            MethodMap methods = [];
+            DeclaredFields(HelperDexFixture(entry.Owner, declareMethods: false), methods);
+            Check(!JniHelperIsPreserved(methods, entry));
+            DeclaredFields(HelperDexFixture(entry.Owner), methods);
+            Check(JniHelperIsPreserved(methods, entry));
+            var original = methods[entry.Owner].Single(method => method.Name == entry.Name);
+            (string Name, string Signature, uint Access, bool Direct, uint CodeOffset)[] invalid =
+            [
+                original with { Name = "renamed" },
+                original with { Signature = "()V" },
+                original with { Access = original.Access ^ 8 },
+                original with { Access = original.Access | 0x100 },
+                original with { Access = original.Access | 0x400 },
+                original with { Direct = !original.Direct },
+                original with { CodeOffset = 0 }
+            ];
+            foreach (var method in invalid)
+            {
+                methods[entry.Owner] = [method];
+                Check(!JniHelperIsPreserved(methods, entry));
+            }
         }
     });
     Test("Multidex APK results preserve the JSON contract", () =>
@@ -330,6 +389,12 @@ static void RunSelfTests()
                         entry.Write(DexFixture("Lcomposenet/compose/SharedStateLifetime;", false));
                     using (var entry = zip.CreateEntry("classes2.dex").Open())
                         entry.Write(DexFixture(owner, declared));
+                    int index = 3;
+                    foreach (string helper in JniHelperContract().Select(entry => entry.Owner).Distinct())
+                    {
+                        using var entry = zip.CreateEntry($"classes{index++}.dex").Open();
+                        entry.Write(HelperDexFixture(helper));
+                    }
                 }
                 using var output = new MemoryStream();
                 using (var writer = new Utf8JsonWriter(output))
@@ -337,7 +402,9 @@ static void RunSelfTests()
                 using var json = JsonDocument.Parse(output.ToArray());
                 var result = json.RootElement;
                 Check(result.GetProperty("passed").GetBoolean() == declared);
-                Check(result.GetProperty("dex").GetArrayLength() == 2);
+                Check(result.GetProperty("dex").GetArrayLength() == 4);
+                Check(result.GetProperty("jni_helpers").GetArrayLength() == 3);
+                Check(result.GetProperty("jni_helpers").EnumerateArray().All(helper => helper.GetProperty("present").GetBoolean()));
                 Check(result.GetProperty("sha256").GetString() ==
                     Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(apkPath))));
                 Check(result.GetProperty("helper_present").GetBoolean());
@@ -350,6 +417,38 @@ static void RunSelfTests()
                     Check(field.GetProperty("declaration").GetProperty("access").GetUInt32() == 18);
                 else
                     Check(field.GetProperty("declaration").ValueKind == JsonValueKind.Null);
+            }
+        }
+        finally
+        {
+            File.Delete(apkPath);
+        }
+    });
+    Test("Final APK fails if any JNI helper method is only a reference", () =>
+    {
+        string apkPath = Path.GetTempFileName();
+        try
+        {
+            foreach (var missing in JniHelperContract())
+            {
+                using (var file = File.Create(apkPath))
+                using (var zip = new ZipArchive(file, ZipArchiveMode.Create))
+                {
+                    using (var entry = zip.CreateEntry("classes.dex").Open())
+                        entry.Write(DexFixture("Lcomposenet/compose/SharedStateLifetime;", false));
+                    int index = 2;
+                    foreach (string helper in JniHelperContract().Select(entry => entry.Owner).Distinct())
+                    {
+                        using var entry = zip.CreateEntry($"classes{index++}.dex").Open();
+                        entry.Write(HelperDexFixture(helper, omitMethod: helper == missing.Owner ? missing.Name : null));
+                    }
+                }
+                using var output = new MemoryStream();
+                using (var writer = new Utf8JsonWriter(output))
+                    Check(!Inspect(apkPath, [], false, writer));
+                using var json = JsonDocument.Parse(output.ToArray());
+                Check(json.RootElement.GetProperty("jni_helpers").EnumerateArray()
+                    .Count(helper => !helper.GetProperty("present").GetBoolean()) == 1);
             }
         }
         finally
@@ -381,6 +480,101 @@ static void RunSelfTests()
             return;
         }
         throw new InvalidOperationException($"Expected InvalidDataException containing '{message}'.");
+    }
+}
+
+static byte[] HelperDexFixture(string owner, bool declareMethods = true, string? omitMethod = null)
+{
+    var methods = JniHelperContract().Where(entry => entry.Owner == owner).ToArray();
+    var parameters = methods.Select(entry => Regex.Matches(
+        entry.Signature[..entry.Signature.IndexOf(')')], @"L[^;]+;").Select(match => match.Value).ToArray()).ToArray();
+    var returns = methods.Select(entry => entry.Signature[(entry.Signature.IndexOf(')') + 1)..]).ToArray();
+    string[] types = [.. parameters.SelectMany(value => value).Concat(returns).Prepend(owner).Distinct()];
+    string[] strings = [.. types.Concat(methods.Select(entry => entry.Name)).Distinct()];
+    const int stringIds = 112;
+    int typeIds = stringIds + strings.Length * 4;
+    int protoIds = typeIds + types.Length * 4;
+    int methodIds = protoIds + methods.Length * 12;
+    int classDefs = methodIds + methods.Length * 8;
+    using var stream = new MemoryStream();
+    using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+    stream.SetLength(classDefs + 32);
+    writer.Write("dex\n039\0"u8);
+    U32(40, 0x12345678);
+    U32(56, strings.Length);
+    U32(60, stringIds);
+    U32(64, types.Length);
+    U32(68, typeIds);
+    U32(72, methods.Length);
+    U32(76, protoIds);
+    U32(88, methods.Length);
+    U32(92, methodIds);
+    U32(96, 1);
+    U32(100, classDefs);
+    for (int i = 0; i < strings.Length; i++)
+    {
+        int offset = checked((int)stream.Length);
+        U32(stringIds + i * 4, offset);
+        stream.Position = offset;
+        Uleb((uint)strings[i].Length);
+        writer.Write(Encoding.ASCII.GetBytes(strings[i]));
+        writer.Write((byte)0);
+    }
+    for (int i = 0; i < types.Length; i++)
+        U32(typeIds + i * 4, Array.IndexOf(strings, types[i]));
+    for (int i = 0; i < methods.Length; i++)
+    {
+        int offset = checked((int)stream.Length);
+        U32(protoIds + i * 12 + 4, Array.IndexOf(types, returns[i]));
+        U32(protoIds + i * 12 + 8, offset);
+        stream.Position = offset;
+        writer.Write(parameters[i].Length);
+        foreach (string parameter in parameters[i])
+            writer.Write((ushort)Array.IndexOf(types, parameter));
+        stream.Position = methodIds + i * 8;
+        writer.Write((ushort)0);
+        writer.Write((ushort)i);
+        writer.Write(Array.IndexOf(strings, methods[i].Name));
+    }
+    if (declareMethods)
+    {
+        int offset = checked((int)stream.Length);
+        U32(classDefs + 24, offset);
+        stream.Position = offset;
+        Uleb(0);
+        Uleb(0);
+        Uleb((uint)methods.Count(entry => entry.Direct && entry.Name != omitMethod));
+        Uleb((uint)methods.Count(entry => !entry.Direct && entry.Name != omitMethod));
+        bool[] groups = [true, false];
+        foreach (bool direct in groups)
+        {
+            int previous = 0;
+            for (int i = 0; i < methods.Length; i++)
+            {
+                if (methods[i].Direct != direct || methods[i].Name == omitMethod)
+                    continue;
+                Uleb((uint)(i - previous));
+                Uleb(methods[i].Access);
+                Uleb(1); // Synthetic nonzero code marker; this fixture tests metadata decoding, not execution.
+                previous = i;
+            }
+        }
+    }
+    return stream.ToArray();
+
+    void U32(int offset, int value)
+    {
+        stream.Position = offset;
+        writer.Write(value);
+    }
+    void Uleb(uint value)
+    {
+        do
+        {
+            byte part = (byte)(value & 127);
+            value >>= 7;
+            writer.Write((byte)(part | (value != 0 ? 128 : 0)));
+        } while (value != 0);
     }
 }
 

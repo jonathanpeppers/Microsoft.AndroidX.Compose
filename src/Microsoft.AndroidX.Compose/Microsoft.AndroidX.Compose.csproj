@@ -81,6 +81,7 @@
     <PackageReference Include="Xamarin.AndroidX.Navigation.Compose.Android" />
   </ItemGroup>
   <ItemGroup>
+    <ProguardConfiguration Include="java-helpers.pro" />
     <ProguardConfiguration Include="shared-state-lifetime.pro" />
     <AndroidJavaSource Include="Java\PointerInputEventHandlerImpl.java">
       <Bind>false</Bind>
