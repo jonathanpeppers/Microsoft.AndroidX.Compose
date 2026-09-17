@@ -133,6 +133,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     // off the top of BuildNode so a single Compose dependency edge fans
     // out to the whole list subtree.
     readonly MutableState<int> _itemsVersion = new(0);
+    readonly MutableState<int> _virtualViewVersion = new(0);
     readonly LazyListState _linearListState = new();
     readonly CollectionViewportObserver _viewportObserver = new();
 
@@ -149,6 +150,13 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     /// <summary>Construct a handler with custom mappers.</summary>
     public CollectionViewHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
+
+    /// <inheritdoc/>
+    public override void SetVirtualView(IView view)
+    {
+        base.SetVirtualView(view);
+        _virtualViewVersion.Value++;
+    }
 
     /// <inheritdoc/>
     protected override void DisconnectHandler(ComposeView platformView)
@@ -305,6 +313,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         composer.LaunchedEffect(
             "CollectionViewViewportObserver",
             horizontal.Value,
+            _virtualViewVersion.Value,
             async cancellationToken =>
             {
                 _viewportObserver.ResetTracking();
