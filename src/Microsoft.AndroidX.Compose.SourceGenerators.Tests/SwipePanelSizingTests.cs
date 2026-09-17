@@ -30,14 +30,16 @@ public sealed class SwipePanelSizingTests
     }
 
     [Theory]
-    [InlineData(-1d, 100f)]
+    [InlineData(-1d, null)]
     [InlineData(60d, 100f)]
     [InlineData(180d, 180f)]
-    public void CustomWidth_HonorsRootRequestAboveMinimum(
+    public void RequestedCustomWidth_HonorsRootRequestAboveMinimum(
         double request,
-        float expected)
+        float? expected)
     {
-        Assert.Equal(expected, SwipePanelSizing.CustomWidth(request, 100f));
+        Assert.Equal(
+            expected,
+            SwipePanelSizing.RequestedCustomWidth(request, 100f));
     }
 
     [Theory]

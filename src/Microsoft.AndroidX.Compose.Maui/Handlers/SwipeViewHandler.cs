@@ -253,21 +253,32 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             Modifier itemModifier;
             if (horizontal)
             {
-                itemModifier = executionWidth
-                    ? Modifier.Companion
+                if (executionWidth)
+                {
+                    itemModifier = Modifier.Companion
                         .Weight(1f)
-                        .FillMaxHeight()
-                    : item is ISwipeItemView
-                    ? Modifier.Companion
-                        .Width(new Dp(SwipePanelSizing.CustomWidth(
-                            item is Microsoft.Maui.Controls.VisualElement custom
-                                ? custom.WidthRequest
-                                : -1d,
-                            DefaultMenuItemExtentDp)))
-                        .FillMaxHeight()
-                    : Modifier.Companion
+                        .FillMaxHeight();
+                }
+                else if (item is ISwipeItemView)
+                {
+                    float? requestedWidth =
+                        item is Microsoft.Maui.Controls.VisualElement custom
+                            ? SwipePanelSizing.RequestedCustomWidth(
+                                custom.WidthRequest,
+                                DefaultMenuItemExtentDp)
+                            : null;
+                    itemModifier = requestedWidth is float width
+                        ? Modifier.Companion.Width(new Dp(width))
+                        : Modifier.Companion.WidthIn(
+                            min: new Dp(DefaultMenuItemExtentDp));
+                    itemModifier = itemModifier.FillMaxHeight();
+                }
+                else
+                {
+                    itemModifier = Modifier.Companion
                         .Width(new Dp(DefaultMenuItemExtentDp))
                         .FillMaxHeight();
+                }
             }
             else if (intrinsicVertical)
             {
