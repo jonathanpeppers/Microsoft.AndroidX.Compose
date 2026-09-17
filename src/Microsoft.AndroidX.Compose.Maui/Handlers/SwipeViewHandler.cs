@@ -178,6 +178,8 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     {
         bool horizontal = IsHorizontal(direction);
         var visibleItems = items.Where(IsVisible).ToArray();
+        if (SwipePanelOrder.ShouldReverse((int)direction))
+            Array.Reverse(visibleItems);
         var row = new Row(
             horizontalArrangement: Arrangement.Start,
             verticalAlignment: Alignment.Vertical.CenterVertically)
@@ -213,9 +215,13 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             Modifier itemModifier;
             if (horizontal)
             {
-                itemModifier = Modifier.Companion
-                    .Width(new Dp(DefaultMenuItemWidthDp))
-                    .FillMaxHeight();
+                itemModifier = item is ISwipeItemView
+                    ? Modifier.Companion
+                        .WidthIn(min: new Dp(DefaultMenuItemWidthDp))
+                        .FillMaxHeight()
+                    : Modifier.Companion
+                        .Width(new Dp(DefaultMenuItemWidthDp))
+                        .FillMaxHeight();
             }
             else
             {
@@ -226,7 +232,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
             var clickable = new Box
             {
-                Modifier = isActive
+                Modifier = isActive && IsEnabled(item)
                     ? itemModifier.Clickable(() => InvokeItem(item, items))
                     : itemModifier,
             };
@@ -319,6 +325,29 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         _rightExtent = Extent(view.RightItems, rightWidth, contentWidth, horizontal: true);
         _topExtent = Extent(view.TopItems, topHeight, contentHeight, horizontal: false);
         _bottomExtent = Extent(view.BottomItems, bottomHeight, contentHeight, horizontal: false);
+        ReconcileOpenExtent(view);
+    }
+
+    void ReconcileOpenExtent(ISwipeView view)
+    {
+        if (!view.IsOpen || _activeDirection is not { } direction)
+            return;
+        float extent = ExtentFor(direction);
+        if (extent <= 0f)
+        {
+            Close(animated: false);
+            return;
+        }
+        if (IsHorizontal(direction))
+        {
+            _offsetX.Value = SignedExtent(direction);
+            _offsetY.Value = 0f;
+        }
+        else
+        {
+            _offsetX.Value = 0f;
+            _offsetY.Value = SignedExtent(direction);
+        }
     }
 
     static float Extent(
@@ -429,16 +458,19 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
     static bool InvokeEnabledItem(MauiSwipeItem item)
     {
-        bool enabled = item switch
+        bool enabled = IsEnabled(item);
+        if (enabled)
+            item.OnInvoked();
+        return enabled;
+    }
+
+    static bool IsEnabled(MauiSwipeItem item) =>
+        item switch
         {
             ISwipeItemMenuItem menuItem => menuItem.IsEnabled,
             ISwipeItemView itemView => itemView.IsEnabled,
             _ => true,
         };
-        if (enabled)
-            item.OnInvoked();
-        return enabled;
-    }
 
     void SetOpen(MauiSwipeDirection direction, bool open, bool animated)
     {

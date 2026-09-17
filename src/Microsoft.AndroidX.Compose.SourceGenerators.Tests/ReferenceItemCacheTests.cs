@@ -107,6 +107,31 @@ public sealed class ReferenceItemCacheTests
         Assert.False(reference.IsAlive);
     }
 
+    [Fact]
+    public void ConditionalRemove_DoesNotRemoveReplacement()
+    {
+        var cache = new ReferenceItemCache<CachedValue>();
+        var key = new object();
+        var oldValue = cache.GetOrReplace(
+            key,
+            _ => true,
+            () => new CachedValue(new object()));
+        var newTemplate = new object();
+        var newValue = cache.GetOrReplace(
+            key,
+            value => ReferenceEquals(value.Template, newTemplate),
+            () => new CachedValue(newTemplate));
+
+        cache.Remove(key, value => ReferenceEquals(value, oldValue));
+
+        Assert.Same(
+            newValue,
+            cache.GetOrReplace(
+                key,
+                _ => true,
+                () => new CachedValue(new object())));
+    }
+
     sealed record CachedValue(object Template);
 
     sealed record EqualItem(int Value);

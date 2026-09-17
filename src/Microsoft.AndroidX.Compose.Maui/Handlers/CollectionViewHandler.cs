@@ -186,7 +186,6 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
 
         var items    = Snapshot(view.ItemsSource);
         var occurrenceKeys = _occurrenceKeys.GetKeys(items);
-        _templateCache.Prune(occurrenceKeys);
         var rows = new ItemEntry[items.Count];
         for (int i = 0; i < items.Count; i++)
             rows[i] = new ItemEntry(items[i], occurrenceKeys[i]);
@@ -486,7 +485,14 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
                         "Collection viewport context not set while materializing an item.");
                 return new CachedTemplate(
                     resolved,
-                    new DeferredViewNode(contentView, context, observer));
+                    new DeferredViewNode(
+                        contentView,
+                        context,
+                        observer,
+                        cacheKey.Value,
+                        node => _templateCache.Remove(
+                            cacheKey,
+                            cached => ReferenceEquals(cached.Node, node))));
             }).Node;
     }
 
@@ -503,19 +509,31 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         readonly IView _view;
         readonly IMauiContext _context;
         readonly CollectionViewportObserver? _observer;
+        readonly long? _cacheKey;
+        readonly Action<ComposableNode>? _onReleased;
 
         public DeferredViewNode(
             IView view,
             IMauiContext context,
-            CollectionViewportObserver? observer = null)
+            CollectionViewportObserver? observer = null,
+            long? cacheKey = null,
+            Action<ComposableNode>? onReleased = null)
         {
             _view    = view;
             _context = context;
             _observer = observer;
+            _cacheKey = cacheKey;
+            _onReleased = onReleased;
         }
 
         public override void Render(IComposer composer)
         {
+            if (_cacheKey is long cacheKey && _onReleased is { } onReleased)
+            {
+                composer.DisposableEffect(
+                    cacheKey,
+                    () => () => onReleased(this));
+            }
             if (_observer is null)
             {
                 ComposeWalker.Render(_view, composer, _context).Render(composer);

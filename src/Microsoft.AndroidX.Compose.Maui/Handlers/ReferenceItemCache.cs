@@ -43,4 +43,14 @@ internal sealed class ReferenceItemCache<TValue>
     }
 
     public void Clear() => _values.Clear();
+
+    public void Remove(
+        object key,
+        System.Func<TValue, bool> matches)
+    {
+        System.ArgumentNullException.ThrowIfNull(key);
+        System.ArgumentNullException.ThrowIfNull(matches);
+        if (_values.TryGetValue(key, out var value) && matches(value))
+            _values.Remove(key);
+    }
 }
