@@ -166,7 +166,11 @@ public class JetchatRestorationTests
                 ?? throw new InvalidOperationException("Video picker view model is unavailable.");
             Assert.IsTrue(picker.Begin());
             picker.Disconnect();
-            picker.Complete(VideoPickResult.Selected("file:///video.mp4"));
+            picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity)));
+            using (var stalePreview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview"))
+                Assert.IsNull(stalePreview, "The disconnected old composition must not consume the result.");
             activity = await Recreate(activity);
             Assert.AreSame(picker, activity.VideoPickerState);
             using var preview = Find(
