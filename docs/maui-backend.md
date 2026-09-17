@@ -2001,6 +2001,8 @@ composition instead of falling back to MAUI's AppCompat
   The threshold controls only release recognition; the full measured panel
   remains the open target. `SwipeBehaviorOnInvoked.Auto` closes Reveal mode
   and remains open in Execute mode, matching MAUI's mode-dependent contract.
+  Horizontal menu-only Execute panels measure to the same 80%-content extent
+  used by drag/release logic, with actions sharing that width.
 - `SwipeItemMenuItemHandler` maps text, icon source, background, text
   contrast, font, spacing, enabled state, and visibility into a Compose
   action tile. `SwipeItemViewHandler` walks arbitrary custom content
@@ -2011,7 +2013,7 @@ composition instead of falling back to MAUI's AppCompat
   `SwipeItemView` backgrounds are painted on their folded Compose roots;
   non-solid paints remain unsupported. Custom top/bottom items preserve
   their requested or intrinsic height instead of expanding to the full
-  SwipeView height.
+  SwipeView height; custom horizontal items honor root `WidthRequest`.
 - User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
   in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
   the requested side and animation flag without synthesizing user events.

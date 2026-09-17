@@ -28,4 +28,32 @@ public sealed class SwipePanelSizingTests
     {
         Assert.Equal(expected, SwipePanelSizing.RequestedCustomHeight(request));
     }
+
+    [Theory]
+    [InlineData(-1d, 100f)]
+    [InlineData(60d, 100f)]
+    [InlineData(180d, 180f)]
+    public void CustomWidth_HonorsRootRequestAboveMinimum(
+        double request,
+        float expected)
+    {
+        Assert.Equal(expected, SwipePanelSizing.CustomWidth(request, 100f));
+    }
+
+    [Theory]
+    [InlineData(true, true, false, true)]
+    [InlineData(true, true, true, false)]
+    [InlineData(true, false, false, false)]
+    [InlineData(false, true, false, false)]
+    public void ExecutionWidth_RequiresHorizontalMenuOnlyPanel(
+        bool horizontal,
+        bool executeMode,
+        bool hasCustomItem,
+        bool expected)
+    {
+        Assert.Equal(expected, SwipePanelSizing.UsesExecutionWidth(
+            horizontal,
+            executeMode,
+            hasCustomItem));
+    }
 }

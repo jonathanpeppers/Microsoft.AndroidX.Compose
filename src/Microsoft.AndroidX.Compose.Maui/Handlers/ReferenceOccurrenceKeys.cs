@@ -9,18 +9,30 @@ internal sealed class ReferenceOccurrenceKeys
         System.Collections.Generic.IReadOnlyList<object> items)
     {
         System.ArgumentNullException.ThrowIfNull(items);
-        var available = new System.Collections.Generic.List<Entry>(_entries);
+        var available = new System.Collections.Generic.Dictionary<
+            ItemIdentityKey,
+            System.Collections.Generic.Queue<Entry>>();
+        foreach (var entry in _entries)
+        {
+            var identity = new ItemIdentityKey(entry.Item);
+            if (!available.TryGetValue(identity, out var queue))
+            {
+                queue = new System.Collections.Generic.Queue<Entry>();
+                available.Add(identity, queue);
+            }
+            queue.Enqueue(entry);
+        }
         var next = new System.Collections.Generic.List<Entry>(items.Count);
         var result = new ReferenceOccurrenceKey[items.Count];
         for (int i = 0; i < items.Count; i++)
         {
             var item = items[i];
-            int match = available.FindIndex(entry => SameItem(entry.Item, item));
             Entry entry;
-            if (match >= 0)
+            var identity = new ItemIdentityKey(item);
+            if (available.TryGetValue(identity, out var queue) &&
+                queue.Count > 0)
             {
-                entry = available[match];
-                available.RemoveAt(match);
+                entry = queue.Dequeue();
             }
             else
             {
@@ -100,14 +112,29 @@ internal sealed class ReferenceOccurrenceKeys
         _entries.InsertRange(newIndex, moved);
     }
 
-    static bool SameItem(object left, object right)
+    readonly struct ItemIdentityKey : System.IEquatable<ItemIdentityKey>
     {
-        if (ReferenceEquals(left, right))
-            return true;
-        var type = left.GetType();
-        return type.IsValueType &&
-            type == right.GetType() &&
-            left.Equals(right);
+        readonly object _item;
+
+        public ItemIdentityKey(object item) => _item = item;
+
+        public bool Equals(ItemIdentityKey other)
+        {
+            if (ReferenceEquals(_item, other._item))
+                return true;
+            var type = _item.GetType();
+            return type.IsValueType &&
+                type == other._item.GetType() &&
+                _item.Equals(other._item);
+        }
+
+        public override bool Equals(object? obj) =>
+            obj is ItemIdentityKey other && Equals(other);
+
+        public override int GetHashCode() =>
+            _item.GetType().IsValueType
+                ? System.HashCode.Combine(_item.GetType(), _item)
+                : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_item);
     }
 
     sealed record Entry(object Item, ReferenceOccurrenceKey Key);

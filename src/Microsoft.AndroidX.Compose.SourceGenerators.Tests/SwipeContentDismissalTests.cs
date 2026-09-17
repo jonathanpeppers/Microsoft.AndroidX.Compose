@@ -15,6 +15,7 @@ public sealed class SwipeContentDismissalTests
         bool isDragging)
     {
         Assert.False(SwipeContentDismissal.ShouldDismiss(
+            ownerEnabled: true,
             isOpen,
             isSettledOpen,
             isDragging));
@@ -24,6 +25,17 @@ public sealed class SwipeContentDismissalTests
     public void SettledOpenContent_ConsumesTapForDismissal()
     {
         Assert.True(SwipeContentDismissal.ShouldDismiss(
+            ownerEnabled: true,
+            isOpen: true,
+            isSettledOpen: true,
+            isDragging: false));
+    }
+
+    [Fact]
+    public void DisabledOwner_DoesNotInstallDismissalInput()
+    {
+        Assert.False(SwipeContentDismissal.ShouldDismiss(
+            ownerEnabled: false,
             isOpen: true,
             isSettledOpen: true,
             isDragging: false));

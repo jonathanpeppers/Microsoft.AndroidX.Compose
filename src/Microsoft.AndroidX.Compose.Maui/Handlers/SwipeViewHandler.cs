@@ -113,29 +113,34 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             CollectionViewportContext.Current,
             _viewportObserver));
         int activeDirection = _activeDirectionState.Value;
+        bool enabled = _enabled.Value;
 
         var left = BuildPanel(
             view.LeftItems,
             MauiSwipeDirection.Right,
             activeDirection == (int)MauiSwipeDirection.Right,
+            enabled,
             composer,
             context);
         var right = BuildPanel(
             view.RightItems,
             MauiSwipeDirection.Left,
             activeDirection == (int)MauiSwipeDirection.Left,
+            enabled,
             composer,
             context);
         var top = BuildPanel(
             view.TopItems,
             MauiSwipeDirection.Down,
             activeDirection == (int)MauiSwipeDirection.Down,
+            enabled,
             composer,
             context);
         var bottom = BuildPanel(
             view.BottomItems,
             MauiSwipeDirection.Up,
             activeDirection == (int)MauiSwipeDirection.Up,
+            enabled,
             composer,
             context);
         var content = view.PresentedContent is { } presented
@@ -143,6 +148,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             : new Box();
         Modifier dismissModifier = Modifier.Companion.FillMaxSize();
         if (SwipeContentDismissal.ShouldDismiss(
+            enabled,
             view.IsOpen,
             _settledOpen.Value,
             _dragLifecycle.IsDragging))
@@ -166,7 +172,6 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         layout.Add(content);
         layout.Add(dismissOverlay);
 
-        bool enabled = _enabled.Value;
         Modifier modifier = Modifier.Companion.ApplyViewProperties(view);
         if (_background.Value is long background)
             modifier = modifier.Background(ComposeColor.FromPacked(background));
@@ -192,6 +197,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         ISwipeItems items,
         MauiSwipeDirection direction,
         bool isActive,
+        bool ownerEnabled,
         IComposer composer,
         IMauiContext context)
     {
@@ -200,6 +206,10 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         bool intrinsicVertical = SwipePanelSizing.UsesIntrinsicVerticalSize(
             horizontal,
             visibleItems.Any(item => item is ISwipeItemView));
+        bool executionWidth = SwipePanelSizing.UsesExecutionWidth(
+            horizontal,
+            items.Mode == SwipeMode.Execute,
+            visibleItems.Any(item => item is ISwipeItemView));
         if (SwipePanelOrder.ShouldReverse((int)direction))
             Array.Reverse(visibleItems);
         var row = new Row(
@@ -207,7 +217,11 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             Modifier = horizontal
-                ? Modifier.Companion.FillMaxHeight()
+                ? executionWidth
+                    ? Modifier.Companion
+                        .FillMaxWidth(0.8f)
+                        .FillMaxHeight()
+                    : Modifier.Companion.FillMaxHeight()
                 : intrinsicVertical
                     ? Modifier.Companion.FillMaxWidth()
                     : Modifier.Companion.FillMaxSize(),
@@ -239,9 +253,17 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             Modifier itemModifier;
             if (horizontal)
             {
-                itemModifier = item is ISwipeItemView
+                itemModifier = executionWidth
                     ? Modifier.Companion
-                        .WidthIn(min: new Dp(DefaultMenuItemExtentDp))
+                        .Weight(1f)
+                        .FillMaxHeight()
+                    : item is ISwipeItemView
+                    ? Modifier.Companion
+                        .Width(new Dp(SwipePanelSizing.CustomWidth(
+                            item is Microsoft.Maui.Controls.VisualElement custom
+                                ? custom.WidthRequest
+                                : -1d,
+                            DefaultMenuItemExtentDp)))
                         .FillMaxHeight()
                     : Modifier.Companion
                         .Width(new Dp(DefaultMenuItemExtentDp))
@@ -266,7 +288,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
             var clickable = new Box
             {
-                Modifier = isActive && IsEnabled(item)
+                Modifier = isActive && ownerEnabled && IsEnabled(item)
                     ? itemModifier.Clickable(() => InvokeItem(item, items))
                     : itemModifier,
             };
@@ -477,6 +499,12 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
         float current = horizontal ? _offsetX.Value : _offsetY.Value;
         float extent = ExtentFor(direction);
+        if (!_enabled.Value)
+        {
+            view.SwipeEnded(new SwipeViewSwipeEnded(direction, false));
+            SetOpen(direction, open: false, animated: true);
+            return;
+        }
         float openDistance = SwipeThresholdPolicy.ResolveOpenDistancePixels(
             view.Threshold,
             _density,
@@ -500,6 +528,8 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 
     void InvokeItem(MauiSwipeItem item, ISwipeItems items)
     {
+        if (!_enabled.Value)
+            return;
         if (!InvokeEnabledItem(item))
             return;
         if (!SwipeInvocationPolicy.ShouldRemainOpen(
@@ -839,8 +869,12 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         handler._transitionMode.Value = (int)view.SwipeTransitionMode;
 
     /// <summary>Map enabled state to both axis gesture modifiers.</summary>
-    public static void MapIsEnabled(SwipeViewHandler handler, ISwipeView view) =>
+    public static void MapIsEnabled(SwipeViewHandler handler, ISwipeView view)
+    {
         handler._enabled.Value = view.IsEnabled;
+        if (!view.IsEnabled)
+            handler.Close(animated: false);
+    }
 
     /// <summary>
     /// Recompose the root modifier when background changes.

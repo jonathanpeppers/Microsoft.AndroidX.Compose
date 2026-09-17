@@ -54,7 +54,6 @@
                                        BackgroundColor="#AD1457"
                                        Invoked="OnCustomItemInvoked">
                             <Border BackgroundColor="Transparent"
-                                    WidthRequest="180"
                                     Margin="8"
                                     Padding="14">
                                 <Label Text="Custom wide"
