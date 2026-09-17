@@ -5,6 +5,7 @@ using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
 using NavigationSuiteType = AndroidX.Compose.NavigationSuiteType;
+using AndroidProcess = global::Android.OS.Process;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
@@ -176,8 +177,10 @@ public class ReplyNavigationTests
             Assert.IsTrue(collapsedWidth < expandedWidth,
                 $"Forward scroll did not collapse the FAB: expanded={expandedWidth}, collapsed={collapsedWidth}.");
 
+            await WaitForStableInbox(activity);
             long visibleEmailId = await ClickFirstVisibleEmail(activity);
             await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, visibleEmailId);
             Assert.AreEqual(collapsedWidth, FabBounds(activity).Width(),
                 "Compact detail did not preserve the collapsed inbox FAB state.");
             await Back(activity);
@@ -192,6 +195,7 @@ public class ReplyNavigationTests
 
             await ClickEmail(activity, visibleEmailId);
             await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, visibleEmailId);
             Assert.AreEqual(restoredWidth, FabBounds(activity).Width(),
                 "Compact detail did not preserve the expanded inbox FAB state.");
         }
@@ -419,7 +423,14 @@ public class ReplyNavigationTests
             bounds.CenterX(), bounds.CenterY(), 0)
             ?? throw new InvalidOperationException("Could not create the Reply pointer down.");
         down.SetSource(InputSourceType.Touchscreen);
-        Runner.SendPointerSync(down);
+        try
+        {
+            Runner.SendPointerSync(down);
+        }
+        catch (Java.Lang.IllegalArgumentException error)
+        {
+            throw await PointerInjectionFailure(activity, root.WindowId, bounds, "down", error);
+        }
         try
         {
             Runner.WaitForIdleSync();
@@ -430,9 +441,43 @@ public class ReplyNavigationTests
                 bounds.CenterX(), bounds.CenterY(), 0)
                 ?? throw new InvalidOperationException("Could not create the Reply pointer up.");
             up.SetSource(InputSourceType.Touchscreen);
-            Runner.SendPointerSync(up);
+            try
+            {
+                Runner.SendPointerSync(up);
+            }
+            catch (Java.Lang.IllegalArgumentException error)
+            {
+                throw await PointerInjectionFailure(activity, root.WindowId, bounds, "up", error);
+            }
         }
         await activity.AtNativeIdle();
+    }
+
+    static async Task<InvalidOperationException> PointerInjectionFailure(
+        ReplyNavigationTestActivity activity,
+        int ownedWindowId,
+        Rect target,
+        string stage,
+        Exception inner)
+    {
+        string focusedView = "unknown";
+        bool activityFocused = false;
+        int viewWindowId = -1;
+        await activity.OnUi(() =>
+        {
+            activityFocused = activity.View.HasWindowFocus;
+            focusedView = activity.Window?.CurrentFocus?.Class?.Name ?? "none";
+            using var viewInfo = activity.View.CreateAccessibilityNodeInfo()
+                ?? throw new InvalidOperationException("Reply view accessibility node is unavailable.");
+            viewWindowId = viewInfo.WindowId;
+        });
+        using var active = Runner.UiAutomation?.RootInActiveWindow;
+        return new InvalidOperationException(
+            $"Reply pointer {stage} injection failed: pid={AndroidProcess.MyPid()}, " +
+            $"uid={AndroidProcess.MyUid()}, ownedWindow={ownedWindowId}, " +
+            $"viewWindow={viewWindowId}, activityFocused={activityFocused}, focusedView={focusedView}, " +
+            $"activeWindow={active?.WindowId}, activePackage={active?.PackageName}, target={target}.",
+            inner);
     }
 
     static async Task ClickEmail(ReplyNavigationTestActivity activity, long id, bool longClick = false)
@@ -461,6 +506,27 @@ public class ReplyNavigationTests
         }
         throw new InvalidOperationException("Reply inbox has no visible email to open.");
     }
+
+    static async Task WaitForStableInbox(ReplyNavigationTestActivity activity)
+    {
+        var previous = CaptureInbox(activity);
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            await Task.Delay(100);
+            await activity.AtNativeIdle();
+            var current = CaptureInbox(activity);
+            if (previous.SequenceEqual(current))
+                return;
+            previous = current;
+        }
+        throw new InvalidOperationException("Reply inbox viewport did not stabilize before row activation.");
+    }
+
+    static Task AssertDetailId(ReplyNavigationTestActivity activity, long id) =>
+        activity.OnUi(() => Assert.AreEqual(
+            id.ToString(),
+            activity.Controller.CurrentBackStackEntry?.Arguments?.GetString("emailId"),
+            "Reply opened a different email than the row activated from the owned snapshot."));
 
     static async Task ClickAvatar(ReplyNavigationTestActivity activity, long id)
     {
