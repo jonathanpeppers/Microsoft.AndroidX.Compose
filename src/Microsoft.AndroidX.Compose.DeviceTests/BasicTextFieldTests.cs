@@ -75,6 +75,10 @@ public class BasicTextFieldTests
         Assert.IsNull(oldResult);
         Assert.AreEqual("file:///video.mp4", newResult?.VideoUri);
         state.Disconnect(newConnection);
+
+        Assert.IsTrue(state.Begin());
+        state.Complete(VideoPickResult.Failed("No installed app can choose a video."));
+        Assert.IsTrue(state.Begin(), "A launch failure must reset the picker-open gate for retry.");
     }
 
     /// <summary>Diagnoses native admission independently of the editing assertions.</summary>

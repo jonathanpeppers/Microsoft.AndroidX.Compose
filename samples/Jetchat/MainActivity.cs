@@ -1,4 +1,5 @@
 using Android.Views;
+using Android.Content;
 using AndroidX.Activity;
 using AndroidX.Activity.Result;
 using AndroidX.Activity.Result.Contract;
@@ -117,7 +118,15 @@ public class MainActivity : ComponentActivity
         }
 
         using var mimeType = new Java.Lang.String("video/*");
-        picker.Launch(mimeType);
+        try
+        {
+            picker.Launch(mimeType);
+        }
+        catch (ActivityNotFoundException)
+        {
+            state.Complete(VideoPickResult.Failed(
+                "No installed app can choose a video."));
+        }
     }
 
     void OnVideoPicked(Android.Net.Uri? source)
