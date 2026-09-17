@@ -2,11 +2,14 @@ namespace AndroidX.Compose.Samples.Jetchat;
 
 internal static class VideoThumbnail
 {
-    internal static ComposableNode Build(string videoUri, Action onClick, string description) =>
+    internal static ComposableNode Build(
+        string videoUri,
+        Action onClick,
+        string description,
+        Modifier modifier) =>
         new Box
         {
-            Modifier
-                .FillMaxWidth()
+            modifier
                 .Background(Color.FromArgb(255, 20, 20, 30), new RoundedCornerShape(12.Dp()))
                 .Clip(new RoundedCornerShape(12.Dp()))
                 .Clickable(onClick)

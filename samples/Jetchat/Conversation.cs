@@ -440,10 +440,8 @@ public static class Conversation
             var thumbnail = VideoThumbnail.Build(
                 videoUri,
                 () => onVideoClick(videoUri),
-                "Play attached video");
-            thumbnail.Modifier = Modifier
-                .FillMaxWidth()
-                .Height(200);
+                "Play attached video",
+                Modifier.FillMaxWidth().Height(200));
             content.Add(thumbnail);
         }
         return content;
@@ -508,24 +506,12 @@ public static class Conversation
                     });
                     return () => videoPickerState.Disconnect(connection);
                 }),
-                attachedVideoUri.Value is string videoUri
-                    ? BuildAttachedVideoPreview(
-                        videoUri,
-                        () => activeVideoUri.Value = videoUri,
-                        () =>
-                        {
-                            VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
-                            attachedVideoUri.Value = null;
-                            videoError.Value = null;
-                        })
-                    : null,
-                videoError.Value is string error
-                    ? new Text(error)
-                    {
-                        Modifier = Modifier.Padding(horizontal: 16, vertical: 4),
-                        Color = Color.FromPacked(scheme.Error),
-                    }.WithTypography(Typography.BodySmall)
-                    : null,
+                BuildAttachmentArea(
+                    attachedVideoUri,
+                    videoError,
+                    scheme,
+                    activeVideoUri,
+                    context),
                 BuildTextFieldRow(input, scheme, isRecording, swipeOffset, cursorBrush, keyboardActions, focus =>
                 {
                     if (focused.Value == focus.IsFocused)
@@ -550,6 +536,37 @@ public static class Conversation
             });
             return surface;
         });
+
+    static Column BuildAttachmentArea(
+        MutableState<string?> attachedVideoUri,
+        MutableState<string?> videoError,
+        ColorScheme scheme,
+        MutableState<string?> activeVideoUri,
+        Android.Content.Context context)
+    {
+        var area = new Column();
+        if (attachedVideoUri.Value is string videoUri)
+        {
+            area.Add(BuildAttachedVideoPreview(
+                videoUri,
+                () => activeVideoUri.Value = videoUri,
+                () =>
+                {
+                    VideoAttachmentStore.DeleteImported(context, attachedVideoUri.Value);
+                    attachedVideoUri.Value = null;
+                    videoError.Value = null;
+                }));
+        }
+        if (videoError.Value is string error)
+        {
+            area.Add(new Text(error)
+            {
+                Modifier = Modifier.Padding(horizontal: 16, vertical: 4),
+                Color = Color.FromPacked(scheme.Error),
+            }.WithTypography(Typography.BodySmall));
+        }
+        return area;
+    }
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
@@ -798,8 +815,11 @@ public static class Conversation
         Action onPlay,
         Action onRemove)
     {
-        var preview = VideoThumbnail.Build(videoUri, onPlay, "Attached video preview");
-        preview.Modifier = Modifier.FillMaxWidth().Height(180);
+        var preview = VideoThumbnail.Build(
+            videoUri,
+            onPlay,
+            "Attached video preview",
+            Modifier.FillMaxWidth().Height(180));
         return new Box
         {
             Modifier.FillMaxWidth().Padding(start: 16, top: 8, end: 16, bottom: 4),
