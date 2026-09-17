@@ -143,6 +143,29 @@ linked sample data.
 
 ### Device validation
 
+On 2026-09-17, source `60916c3` passed all seven
+`ReplyNavigationTests` and all three `ReplySearchTests` on a Pixel 10
+(Android 16 / API 36) at its original 1080 x 2424, 420 dpi viewport
+(411 x 923.4 dp), font scale 1.0. The exact fresh-install APKs were
+`97F8A615409F4604B128745A7A15F18357E4433069116E67232DE455DC5D18F7`
+(Reply) and
+`1D9C330BCAD8C7DE83CCCBE2146F33CF7851D7A2CEFDC6EB79BB940C4A3023B4`
+(tests), both target/compile SDK 37 and signed by certificate
+`32e84c1bd44dde6fa8157c10affd36d0dfa9d0a2400e2278f599d441e91b9d30`.
+Fresh installation removed fast-deployment overrides; the installed APK
+hashes matched and both override directories were absent.
+
+The native navigation suite covers selected avatar tap, long press, exact
+bounded checked-state accessibility publication and deselection, forward /
+backward FAB expansion, compact detail FAB presence, centered toolbar scroll,
+top-level navigation, list/detail restoration and activity recreation.
+Search remains 3/3 across prefix matching, popup/IME/Back ownership and
+composition re-entry. Fresh light/dark inbox screenshots and accessibility
+hierarchies were captured after toggling only the authorized system night
+mode; the original dark mode and unset raw secure key were restored.
+Medium/expanded captures are a separate acceptance pass and are not implied
+by these compact results.
+
 On 2026-09-15, source `8da2c4f` passed all four focused checks on the attached
 Pixel 7: the numeric-padding regression and all three `ReplySearchTests`
 (zero failures or skips). This includes no-result-to-match recovery, exact
@@ -257,6 +280,10 @@ Back/Up, and activity recreation; saved-detail restoration also passed.
 Host builds alone are not native proof. These runs do not establish
 process-death restoration or matched Kotlin/C# visual parity, and the separate
 search implementation remains outside this navigation test suite.
+
+The 2026-09-17 Pixel 10 run supersedes those historical focused test counts
+for the integrated #383 UI. It does not supersede the paired Kotlin/C# visual
+baseline or establish fold-aware dual-pane behavior.
 
 ## What's missing (and why)
 

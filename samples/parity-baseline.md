@@ -112,6 +112,19 @@ for that behavior, not an absent product feature or a successful comparison.
 
 ### Reply
 
+Post-baseline integration evidence for #383 was recorded separately on
+2026-09-17 at C# source `60916c3dbbcd5c9fa3258bfad856d61872aec78c`.
+On a physical Pixel 10 (Android 16 / API 36), original 1080 x 2424 at
+420 dpi (411 x 923.4 dp), font scale 1.0, all seven linked
+`ReplyNavigationTests` and all three `ReplySearchTests` passed from exact
+fresh-installed, embedded-assembly APKs. The run exercised avatar selection,
+strict Android checked-state semantics, forward/back FAB behavior and detail
+presence, scrolling/centered detail toolbar, navigation/restoration and
+search ownership. Fresh compact light/dark screenshots and accessibility
+hierarchies are session artifacts. This is source-specific C# acceptance,
+not a new matched Kotlin comparison; the R01-R12 observations below remain
+the fixed #349 baseline.
+
 | ID | Initial state / action | Result |
 | --- | --- | --- |
 | R01 | Fresh Inbox, collapsed empty search | Paired light/dark states, including short window. Visual theme/card/FAB differences remain. |
