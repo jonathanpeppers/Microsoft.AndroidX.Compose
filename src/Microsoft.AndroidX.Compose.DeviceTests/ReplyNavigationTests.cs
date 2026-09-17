@@ -222,7 +222,7 @@ public class ReplyNavigationTests
         finally { await Finish(activity); }
     }
 
-    /// <summary>Selected semantics association rejects viewport-wide and sibling-row nodes.</summary>
+    /// <summary>Selected-row semantics association rejects viewport-wide and sibling-row nodes.</summary>
     [TestMethod]
     public void SelectedBoundsAssociationRejectsViewportAndOtherRows()
     {
@@ -232,9 +232,9 @@ public class ReplyNavigationTests
         using var otherRow = new Rect(40, 780, 1040, 1220);
         using var oversizedAncestor = new Rect(0, 100, 1080, 2200);
 
-        Assert.IsTrue(IsSelectedEmailBounds(row, subject, viewport));
-        Assert.IsFalse(IsSelectedEmailBounds(otherRow, subject, viewport));
-        Assert.IsFalse(IsSelectedEmailBounds(oversizedAncestor, subject, viewport));
+        Assert.IsTrue(IsEmailSelectionBounds(row, subject, viewport));
+        Assert.IsFalse(IsEmailSelectionBounds(otherRow, subject, viewport));
+        Assert.IsFalse(IsEmailSelectionBounds(oversizedAncestor, subject, viewport));
     }
 
     /// <summary>Saved Inbox detail and native list position restore through tab switching and a new activity.</summary>
@@ -426,30 +426,37 @@ public class ReplyNavigationTests
         using var viewportBounds = new Rect();
         list.GetBoundsInScreen(viewportBounds);
         int candidateCount = Count(root, node =>
-            IsSelectedEmailNode(node, labelBounds, viewportBounds));
+            IsCheckedEmailNode(node, labelBounds, viewportBounds));
         if (expected)
         {
             Assert.AreEqual(1, candidateCount,
-                $"Reply email {id} must have exactly one bounded selected semantics node.");
+                $"Reply email {id} must have exactly one bounded checked accessibility node.");
             return;
         }
         Assert.AreEqual(0, candidateCount,
-            $"Reply email {id} unexpectedly publishes selected semantics.");
+            $"Reply email {id} unexpectedly publishes checked accessibility state.");
     }
 
-    static bool IsSelectedEmailNode(
+    static bool IsCheckedEmailNode(
         AccessibilityNodeInfo node,
         Rect subjectBounds,
         Rect viewportBounds)
     {
-        if (!node.VisibleToUser || !node.Selected)
+        // Compose maps SemanticsProperties.Selected to Android's checked state
+        // for non-tab roles; only Role.Tab maps to AccessibilityNodeInfo.Selected.
+        if (!node.VisibleToUser || !node.Checkable || !IsChecked(node))
             return false;
         using var bounds = new Rect();
         node.GetBoundsInScreen(bounds);
-        return IsSelectedEmailBounds(bounds, subjectBounds, viewportBounds);
+        return IsEmailSelectionBounds(bounds, subjectBounds, viewportBounds);
     }
 
-    static bool IsSelectedEmailBounds(Rect candidate, Rect subject, Rect viewport) =>
+    static bool IsChecked(AccessibilityNodeInfo node) =>
+        OperatingSystem.IsAndroidVersionAtLeast(36)
+            ? node.CheckedState == CheckedState.True
+            : node.Checked;
+
+    static bool IsEmailSelectionBounds(Rect candidate, Rect subject, Rect viewport) =>
         candidate.Left >= viewport.Left &&
         candidate.Top >= viewport.Top &&
         candidate.Right <= viewport.Right &&
