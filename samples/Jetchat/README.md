@@ -72,7 +72,7 @@ palette extra for a system-theme change.
 | J10 — Profile history | Open one profile; use drawer gesture to choose the other; press Back. | C# normalizes to home before navigating, so Back returns to conversation. Pinned Kotlin directly navigates and can retain the preceding profile. Record the intentional routing difference. |
 | J11 — Links/drop | Scroll to `@aliconors` and URL messages; tap each and return. Drag one plain-text payload over/out/onto the conversation; separately try an image URI. | Mention opens Ali; URL uses the platform handler. Both provide red drag feedback and insert the first text item. C# additionally accepts image MIME types/URI text and animates to item 0; it does not render a dropped URI as an image attachment. |
 | J12 — Recreation | Type an unsent draft, open emoji, recreate the activity without clearing app data. | Both now save editor text/selection and the input selector. The historical #349 baseline observed the earlier C# loss; see the restoration contract below. Process-death, navigation/scroll restoration and TalkBack are not established by activity recreation. |
-| J13 — Video | Fresh launch with the same local playable fixture: open the seeded C# video, use playback controls, Back; choose the fixture from each picker, remove preview, choose again and Send with caption. | Pixel 10/API 36 acceptance at `bb63887` verified exact installed payloads, four focused regressions, changing nonblack frames, actual PlayerView pause/resume/seek controls, repeated same-URI reopen/dismiss, background/resume, real-picker preview/remove and UI caption send. The modified pinned reference selected the same local fixture through its real picker, rendered preview/remove and sent a second video node. Neither path relied on the Kotlin remote HLS seed. |
+| J13 — Video | Fresh launch with the same local playable fixture: open the seeded C# video, use playback controls, Back; choose the fixture from each picker, remove preview, choose again and Send with caption. | Pixel 10/API 36 acceptance through `efc5f88` verified exact installed payloads, four focused regressions, changing nonblack frames, actual PlayerView pause/resume/seek controls, repeated same-URI reopen/dismiss, background/resume with a retained visible thumbnail, real-picker preview/remove and UI caption send. The modified pinned reference selected the same local fixture through its real picker, rendered preview/remove and sent a second video node. Neither path relied on the Kotlin remote HLS seed. |
 
 ### Completed reusable work versus remaining integration
 
@@ -692,7 +692,10 @@ caption, in-flight picker recreation, scoped discard-versus-retained storage,
 and positional thumbnail URI updates. Player screenshots proved changing
 nonblack fixture frames, pause stability, and seek/resume changes; the same sent
 URI reopened twice, background/resume retained a live process, and targeted
-logs contained no fatal/playback error. The bounded run used coordinate
+logs contained no fatal/playback error. A final reattachment regression and
+matched before/after background screenshots verified that the hosted thumbnail
+restarts an interrupted load while retaining an already-rendered frame. The
+bounded run used coordinate
 interaction for native PlayerView controls because they were not exposed
 through accessibility, and did not toggle the reference between system themes.
 It makes no timing or performance claim.
