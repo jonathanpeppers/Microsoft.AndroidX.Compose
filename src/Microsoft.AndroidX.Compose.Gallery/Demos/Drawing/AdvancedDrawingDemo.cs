@@ -105,7 +105,10 @@ public static class AdvancedDrawingDemo
             new BasicTextField("Measured text source", _ => { }, readOnly: true)
             {
                 OnTextLayout = layout => textLayout.Value = layout,
-                TextStyle = new TextStyle { Color = Color.White },
+                TextStyle = new TextStyle
+                {
+                    Color = Color.FromPacked(composer.ColorScheme().OnSurface),
+                },
             },
             advanced,
         };
