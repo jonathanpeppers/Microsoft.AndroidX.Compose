@@ -128,7 +128,7 @@ public sealed class TabbedPagesDemoPage : ContentPage
 
     static void AddDynamicTab(TabbedPage tabs)
     {
-        var existing = tabs.Children.FirstOrDefault(page => page.Title == "Dynamic");
+        var existing = tabs.Children.FirstOrDefault(page => page.Title is "Dynamic" or "Renamed");
         if (existing is not null)
         {
             tabs.Children.Remove(existing);

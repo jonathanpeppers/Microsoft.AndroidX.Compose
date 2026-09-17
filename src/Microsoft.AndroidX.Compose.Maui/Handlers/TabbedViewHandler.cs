@@ -209,7 +209,10 @@ public partial class TabbedViewHandler : ViewHandler<ITabbedView, ComposeView>, 
 
     ComposableNode BuildTopBar(IReadOnlyList<MauiPage> pages, int selectedIndex)
     {
-        var row = new TabRow(selectedIndex);
+        var row = new TabRow(selectedIndex)
+        {
+            Modifier = Modifier.StatusBarsPadding(),
+        };
         for (int i = 0; i < pages.Count; i++)
         {
             int index = i;
