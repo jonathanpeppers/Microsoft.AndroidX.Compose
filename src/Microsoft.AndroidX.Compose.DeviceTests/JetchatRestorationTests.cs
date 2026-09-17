@@ -267,26 +267,17 @@ public class JetchatRestorationTests
             await Click(activity, node => node.Editable, "editor");
             await SetText(activity, "caption");
             await SetSelection(activity, 3, 3);
-            using var mood = Find(
-                activity,
-                node => node.ContentDescription == "Show Emoji selector")
-                ?? throw new InvalidOperationException("Emoji selector is unavailable.");
-            using var attach = Find(
-                activity,
-                node => node.ContentDescription == "Attach video")
-                ?? throw new InvalidOperationException("Video selector is unavailable.");
-            using var send = Find(
-                activity,
-                node => node.Text == "Send")
-                ?? throw new InvalidOperationException("Send action is unavailable.");
             var density = activity.Resources?.DisplayMetrics?.Density
                 ?? throw new InvalidOperationException("Display density is unavailable.");
-            using var moodBounds = new global::Android.Graphics.Rect();
-            using var attachBounds = new global::Android.Graphics.Rect();
-            using var sendBounds = new global::Android.Graphics.Rect();
-            mood.GetBoundsInScreen(moodBounds);
-            attach.GetBoundsInScreen(attachBounds);
-            send.GetBoundsInScreen(sendBounds);
+            var moodBounds = ClickableBounds(
+                activity,
+                node => node.ContentDescription == "Show Emoji selector");
+            var attachBounds = ClickableBounds(
+                activity,
+                node => node.ContentDescription == "Attach video");
+            var sendBounds = ClickableBounds(
+                activity,
+                node => node.Text == "Send");
             int edgeError = Math.Abs(moodBounds.Left - (int)Math.Round(16 * density));
             int weightedGap = sendBounds.Left - attachBounds.Right;
             int minimumGap = (int)Math.Round(40 * density);
@@ -406,6 +397,34 @@ public class JetchatRestorationTests
         using var node = Find(activity, predicate)
             ?? throw new InvalidOperationException("Expected accessibility node is missing.");
         return node.Enabled;
+    }
+
+    static (int Left, int Top, int Right, int Bottom) ClickableBounds(
+        JetchatRestorationTestActivity activity,
+        Func<AccessibilityNodeInfo, bool> predicate)
+    {
+        using var node = Find(activity, predicate)
+            ?? throw new InvalidOperationException("Expected accessibility node is missing.");
+        var target = node;
+        try
+        {
+            while (!target.Clickable)
+            {
+                var parent = target.Parent
+                    ?? throw new InvalidOperationException("Accessibility node has no clickable ancestor.");
+                if (!ReferenceEquals(target, node))
+                    target.Dispose();
+                target = parent;
+            }
+            using var bounds = new global::Android.Graphics.Rect();
+            target.GetBoundsInScreen(bounds);
+            return (bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
+        }
+        finally
+        {
+            if (!ReferenceEquals(target, node))
+                target.Dispose();
+        }
     }
 
     static async Task SetText(JetchatRestorationTestActivity activity, string text)
