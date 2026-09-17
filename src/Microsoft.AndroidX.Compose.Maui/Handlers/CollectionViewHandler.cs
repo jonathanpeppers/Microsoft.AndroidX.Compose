@@ -303,7 +303,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             ?? throw new InvalidOperationException(
                 "Dispatcher not set on CollectionView.");
         composer.LaunchedEffect(
-            _linearListState,
+            "CollectionViewViewportObserver",
             horizontal.Value,
             async cancellationToken =>
             {
