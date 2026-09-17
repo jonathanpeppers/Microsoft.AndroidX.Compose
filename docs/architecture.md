@@ -120,6 +120,41 @@ logs are retained in the session's `flow-parity-native-171131` evidence folder.
 The earlier failed device runs and rejected host-JVM observer prototype remain
 historical evidence under their original source identities.
 
+### Review follow-up verification
+
+Source tree `ee5275c66e28a3bf6bcd916aba1f2f94d254f756` additionally verifies
+the plain `ComposableNode` overloads and explicit collapse thresholds. The
+original 18 cases were rerun alongside eight new node-route cases, without
+changing the approved native-parity contract.
+
+| Suite | Passed | Native PID | TRX run ID | Device UTC start / finish (2026-09-17) |
+| --- | --- | --- | --- | --- |
+| Native characterization | 2 | 16503 | `571ae00e-3950-4dc5-a43e-4742730b427e` | 02:04:29.9556219 / 02:04:33.2879147 |
+| Original 16 managed cases plus 8 node/threshold cases | 24 | 16646 | `59759e3b-232f-4766-9b22-47d9c63c719f` | 02:04:36.3263983 / 02:04:56.6134726 |
+
+All 26 cases passed with zero failures, errors or skips. Both directions and
+authoring styles exercised plain-node expand-only and expand/collapse factories.
+The latter independently suppressed collapse below four lines and below 200dp,
+then displayed it above the two-line/96dp thresholds. Real native actions and
+retained node state were verified. The same source passed 468 host tests,
+including deterministic companion-peer cleanup for same-peer, different-peer,
+null and throwing cast paths.
+
+The installed/pulled APK SHA-256 was
+`CDC1A4CF2B6FF51F12D692968A33AD212AF035221E35A5B9AFAC7C51740A1C92`;
+the embedded app/runtime DLL hashes were
+`D64A98CED5CA9CB3658BA9B91F94AA320298534CDAAE6DFD1CE72310761B8200`
+and `84ECC6C59C1E4808B9AFFF0F8C0EB3F6FF74DF75CCD525C9AED2FCE737BE49EA`.
+Both runs reverified those identities and absence of override files. Both
+processes were stopped and PID absence verified. Host all-commands-ended time
+was `2026-09-17T02:04:55.2593844Z`; TRX times use the device clock, which was
+slightly ahead of the host clock.
+
+The native/managed TRX hashes are
+`7840CFF09A48B5FF24330E9D2473CBA79EE10D9DF412481635BB00FD45E8747F`
+and `60696B03644261715E9A6455821446C8A75C4DA1F6EEE9609AF4D4D905035412`.
+Raw evidence is retained in the session's `flow-review-native-210400` folder.
+
 ## Typed transition values
 
 `composer.UpdateTransition<T>(targetState)` and
