@@ -16,6 +16,26 @@ public sealed class CollectionViewportObserverTests
             Snapshot((0, 0), (1, 100)), 2f));
     }
 
+    [Fact]
+    public void SnapshotString_RoundTripsVisibleGeometry()
+    {
+        var snapshot = LazyListScrollSnapshot.Parse("3,-17,120;4,103,80");
+
+        Assert.Equal(
+            [
+                new LazyListVisibleItemSnapshot(3, -17, 120),
+                new LazyListVisibleItemSnapshot(4, 103, 80),
+            ],
+            snapshot.VisibleItems);
+    }
+
+    [Fact]
+    public void SnapshotString_RejectsMalformedEntry()
+    {
+        Assert.Throws<FormatException>(() =>
+            LazyListScrollSnapshot.Parse("3,-17"));
+    }
+
     [Theory]
     [InlineData(-24, true)]
     [InlineData(24, true)]

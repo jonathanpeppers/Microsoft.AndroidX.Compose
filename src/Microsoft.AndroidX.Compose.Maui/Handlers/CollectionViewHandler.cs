@@ -318,10 +318,12 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             {
                 _viewportObserver.ResetTracking();
                 await foreach (var snapshot in ComposeExtensions
-                    .SnapshotFlow(CaptureLinearScrollSnapshot)
+                    .SnapshotFlow(CaptureLinearScrollSnapshotKey)
                     .WithCancellation(cancellationToken))
                 {
-                    if (_viewportObserver.HasSignificantChange(snapshot, density))
+                    if (_viewportObserver.HasSignificantChange(
+                        LazyListScrollSnapshot.Parse(snapshot),
+                        density))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         await dispatcher.DispatchAsync(() =>
@@ -334,20 +336,30 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             });
     }
 
-    LazyListScrollSnapshot CaptureLinearScrollSnapshot()
+    string CaptureLinearScrollSnapshotKey()
     {
         var layoutInfo = _linearListState.Jvm.LayoutInfo;
         var visible = layoutInfo.VisibleItemsInfo;
-        var snapshot = new LazyListVisibleItemSnapshot[visible.Count];
+        if (visible.Count == 0)
+            return string.Empty;
+
+        var snapshot = new System.Text.StringBuilder(visible.Count * 24);
         for (int i = 0; i < visible.Count; i++)
         {
             var item = visible[i];
-            snapshot[i] = new LazyListVisibleItemSnapshot(
-                item.Index,
-                item.Offset,
-                item.Size);
+            if (i > 0)
+                snapshot.Append(';');
+            snapshot
+                .Append(item.Index.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture))
+                .Append(',')
+                .Append(item.Offset.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture))
+                .Append(',')
+                .Append(item.Size.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture));
         }
-        return new LazyListScrollSnapshot(snapshot);
+        return snapshot.ToString();
     }
 
     static ComposableNode BuildVerticalGrid(
