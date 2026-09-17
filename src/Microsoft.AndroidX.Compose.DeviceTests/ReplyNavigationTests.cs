@@ -228,7 +228,7 @@ public class ReplyNavigationTests
     {
         using var viewport = new Rect(0, 100, 1080, 2200);
         using var subject = new Rect(180, 500, 900, 560);
-        using var row = new Rect(40, 320, 1040, 760);
+        using var row = new Rect(40, 80, 1040, 760);
         using var otherRow = new Rect(40, 780, 1040, 1220);
         using var oversizedAncestor = new Rect(0, 100, 1080, 2200);
 
@@ -479,10 +479,10 @@ public class ReplyNavigationTests
             : node.Checked;
 
     static bool IsEmailSelectionBounds(Rect candidate, Rect subject, Rect viewport) =>
-        candidate.Left >= viewport.Left &&
-        candidate.Top >= viewport.Top &&
-        candidate.Right <= viewport.Right &&
-        candidate.Bottom <= viewport.Bottom &&
+        candidate.Left < viewport.Right &&
+        candidate.Right > viewport.Left &&
+        candidate.Top < viewport.Bottom &&
+        candidate.Bottom > viewport.Top &&
         candidate.Width() <= viewport.Width() &&
         candidate.Height() < viewport.Height() / 2 &&
         candidate.Contains(subject.CenterX(), subject.CenterY());
