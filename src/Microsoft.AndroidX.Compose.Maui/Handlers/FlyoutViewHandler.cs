@@ -294,9 +294,15 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
         }
         catch (OperationCanceledException)
         {
-            // DrawerState cancels an in-flight animateTo when a competing
-            // request or user drag takes ownership. The settled observer
-            // publishes the actual result; non-cancellation failures below
+            // A caller token was cancelled. The settled observer publishes
+            // the actual result.
+        }
+        catch (Java.Util.Concurrent.CancellationException)
+        {
+            // Kotlin's MutatorMutex resumes a preempted animateTo with its
+            // native CancellationException, which SuspendBridge preserves as
+            // the Java Throwable. Competing requests and user drags are
+            // expected ownership changes; non-cancellation failures below
             // remain visible.
         }
         catch (Exception ex)
