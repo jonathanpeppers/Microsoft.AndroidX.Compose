@@ -25,6 +25,11 @@
                 <Button Text="Add left item" Clicked="OnAddLeftItem" />
                 <Button Text="Toggle item" Clicked="OnToggleItem" />
             </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Remove last" Clicked="OnRemoveLeftItem" />
+                <Button Text="Clear left" Clicked="OnClearLeftItems" />
+                <Button Text="Restore left" Clicked="OnRestoreLeftItems" />
+            </HorizontalStackLayout>
 
             <Label Text="Reveal: all four directions"
                    FontAttributes="Bold" />
@@ -41,19 +46,29 @@
                                    BackgroundColor="#1565C0"
                                    IconImageSource="dotnet_bot.png"
                                    Invoked="OnItemInvoked" />
-                        <SwipeItemView Invoked="OnCustomItemInvoked">
-                            <Border BackgroundColor="#00897B" Padding="14">
-                                <Label Text="Custom"
+                        <SwipeItemView WidthRequest="180"
+                                       Invoked="OnCustomItemInvoked">
+                            <Border BackgroundColor="#00897B"
+                                    WidthRequest="180"
+                                    Padding="14">
+                                <Label Text="Custom wide"
                                        TextColor="White"
                                        VerticalOptions="Center" />
                             </Border>
                         </SwipeItemView>
+                        <SwipeItem Text="Disabled"
+                                   IsEnabled="False"
+                                   BackgroundColor="#757575"
+                                   Invoked="OnDisabledItemInvoked" />
                     </SwipeItems>
                 </SwipeView.LeftItems>
                 <SwipeView.RightItems>
                     <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="RemainOpen">
                         <SwipeItem Text="Delete"
                                    BackgroundColor="#C62828"
+                                   Invoked="OnItemInvoked" />
+                        <SwipeItem Text="Share"
+                                   BackgroundColor="#283593"
                                    Invoked="OnItemInvoked" />
                     </SwipeItems>
                 </SwipeView.RightItems>

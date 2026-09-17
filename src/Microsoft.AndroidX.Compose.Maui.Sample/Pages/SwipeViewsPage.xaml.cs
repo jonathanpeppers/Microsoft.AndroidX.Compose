@@ -60,6 +60,35 @@ public partial class SwipeViewsPage : ContentPage
             : "Archive item hidden";
     }
 
+    void OnRemoveLeftItem(object? sender, EventArgs e)
+    {
+        if (FourDirectionSwipe.LeftItems.Count > 0)
+            FourDirectionSwipe.LeftItems.RemoveAt(
+                FourDirectionSwipe.LeftItems.Count - 1);
+        StatusLabel.Text =
+            $"LeftItems count: {FourDirectionSwipe.LeftItems.Count}";
+    }
+
+    void OnClearLeftItems(object? sender, EventArgs e)
+    {
+        FourDirectionSwipe.LeftItems.Clear();
+        StatusLabel.Text = "LeftItems cleared";
+    }
+
+    void OnRestoreLeftItems(object? sender, EventArgs e)
+    {
+        if (FourDirectionSwipe.LeftItems.Count != 0)
+            return;
+        FourDirectionSwipe.LeftItems.Add(new SwipeItem
+        {
+            Text = "Restored",
+            BackgroundColor = Colors.DarkBlue,
+            Command = new Command(() =>
+                StatusLabel.Text = "Invoked restored action"),
+        });
+        StatusLabel.Text = "LeftItems restored";
+    }
+
     void OnSwipeStarted(object? sender, SwipeStartedEventArgs e) =>
         StatusLabel.Text = $"Started: {e.SwipeDirection}";
 
@@ -74,6 +103,9 @@ public partial class SwipeViewsPage : ContentPage
 
     void OnCustomItemInvoked(object? sender, EventArgs e) =>
         StatusLabel.Text = "Invoked custom SwipeItemView";
+
+    void OnDisabledItemInvoked(object? sender, EventArgs e) =>
+        StatusLabel.Text = "ERROR: disabled item invoked";
 
     void OnExecuteInvoked(object? sender, EventArgs e) =>
         StatusLabel.Text = "Execute-mode action invoked at threshold";
