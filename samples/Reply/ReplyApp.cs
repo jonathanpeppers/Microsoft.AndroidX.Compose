@@ -94,7 +94,8 @@ public static class ReplyApp
                     AndroidX.Window.Core.Layout.WindowSizeClass.HeightDpMediumLowerBound),
                 widthAtLeastLarge: size.IsWidthAtLeastBreakpoint(
                     AndroidX.Window.Core.Layout.WindowSizeClass.WidthDpLargeLowerBound));
-            navigationTypeObserver?.Invoke(navigationType);
+            if (navigationTypeObserver is not null)
+                c.SideEffect(() => navigationTypeObserver(navigationType));
 
             var body = bodyFactory(navigationType == NavigationSuiteType.NavigationBar);
             var navigation = new NavigationSuiteScaffold

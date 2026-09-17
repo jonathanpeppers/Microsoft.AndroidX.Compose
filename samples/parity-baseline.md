@@ -116,8 +116,8 @@ Post-baseline integration evidence for #383 was recorded separately on
 2026-09-17, with the final compact reviewer-fix validation at executable
 source `0edae7729af64010ac5a361e99d6030ab8d80207`.
 On a physical Pixel 10 (Android 16 / API 36), original 1080 x 2424 at
-420 dpi (411 x 923.4 dp), font scale 1.0, all seven linked
-all nine `ReplyNavigationTests` and all three `ReplySearchTests` passed from exact
+420 dpi (411 x 923.4 dp), font scale 1.0, all nine
+`ReplyNavigationTests` and all three `ReplySearchTests` passed from exact
 fresh-installed, embedded-assembly APKs. The run exercised avatar selection,
 strict Android checked-state semantics, forward/back FAB behavior and detail
 presence, scrolling/centered detail toolbar, navigation/restoration and

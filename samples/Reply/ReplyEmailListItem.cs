@@ -36,7 +36,7 @@ public static class ReplyEmailListItem
             surface.Add(new Column
             {
                 Modifier.FillMaxWidth().Padding(20),
-                BuildHeaderRow(email, isSelected, toggleSelection, scheme),
+                BuildHeaderRow(email, isSelected, toggleSelection, scheme, c),
                 new Text(email.Subject)
                 {
                     Modifier = Modifier.Padding(top: 12, bottom: 8),
@@ -49,7 +49,12 @@ public static class ReplyEmailListItem
             return surface;
         });
 
-    static Row BuildHeaderRow(Email email, bool isSelected, Action<long> toggleSelection, AndroidX.Compose.Material3.ColorScheme scheme)
+    static Row BuildHeaderRow(
+        Email email,
+        bool isSelected,
+        Action<long> toggleSelection,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        AndroidX.Compose.Runtime.IComposer composer)
     {
         var avatar = new AnimatedContent<bool>(
             targetState: isSelected,
@@ -82,7 +87,9 @@ public static class ReplyEmailListItem
                 Modifier
                     .Clip(Shape.Circle())
                     .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new Icon(Resource.Drawable.ic_star_border, "Favorite")
+                new Icon(
+                    Resource.Drawable.ic_star_border,
+                    composer.StringResource(Resource.String.reply_favorite))
                 {
                     Tint = Color.FromPacked(scheme.Outline),
                 },
