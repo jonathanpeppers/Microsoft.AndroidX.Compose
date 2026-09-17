@@ -5,11 +5,9 @@ using AndroidX.Compose.UI.Platform;
 using AndroidX.DrawerLayout.Widget;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
-using Microsoft.Maui.Platform;
 using AView = Android.Views.View;
 using AViewGroup = Android.Views.ViewGroup;
 using DrawerValue = AndroidX.Compose.Material3.DrawerValue;
-using FrameLayout = Android.Widget.FrameLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -44,11 +42,18 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
     /// Property mapper for the two child pages, effective layout behavior,
     /// presentation, adaptive width, gestures, and inherited view properties.
     /// </summary>
-    public static IPropertyMapper<IFlyoutView, FlyoutViewHandler> Mapper =
-        new PropertyMapper<IFlyoutView, FlyoutViewHandler>(ViewHandler.ViewMapper)
+    static readonly IPropertyMapper<IFlyoutView, FlyoutViewHandler> FlyoutLayoutMapper =
+        new PropertyMapper<IFlyoutView, FlyoutViewHandler>
         {
             [nameof(IFlyoutView.Flyout)]          = MapFlyout,
             [nameof(IFlyoutView.Detail)]          = MapDetail,
+        };
+
+    public static IPropertyMapper<IFlyoutView, FlyoutViewHandler> Mapper =
+        new PropertyMapper<IFlyoutView, FlyoutViewHandler>(
+            ViewHandler.ViewMapper,
+            FlyoutLayoutMapper)
+        {
             [nameof(IFlyoutView.IsPresented)]     = MapIsPresented,
             [nameof(IFlyoutView.FlyoutBehavior)]  = MapFlyoutBehavior,
             [nameof(IFlyoutView.FlyoutWidth)]     = MapFlyoutWidth,
@@ -65,7 +70,6 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
     ComposeView? _composeView;
     ThemeManager? _theme;
     bool _publishingPresentation;
-    int _presentationOperation;
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public FlyoutViewHandler() : base(Mapper, CommandMapper) { }
@@ -120,7 +124,6 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
     /// <inheritdoc/>
     protected override void DisconnectHandler(DrawerLayout platformView)
     {
-        _presentationOperation++;
         _composeView?.DisposeComposition();
         _composeView = null;
         _theme = null;
@@ -208,14 +211,17 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
     static Modifier DrawerSheetModifier(double width)
     {
         var modifier = Modifier.FillMaxHeight();
-        return width > 0
-            ? modifier.Width(new Dp((float)width))
-            : modifier;
+        return width switch
+        {
+            < 0 => modifier.FillMaxWidth(),
+            > 0 => modifier.Width(new Dp((float)width)),
+            _   => modifier,
+        };
     }
 
-    static ComposableNode BuildPageHost(IView page, IMauiContext context) =>
+    static ComposableNode BuildPageHost(IView? page, IMauiContext context) =>
         new AndroidView(
-            factory: androidContext => new FrameLayout(androidContext)
+            factory: androidContext => new FlyoutPageHost(androidContext)
             {
                 LayoutParameters = new AViewGroup.LayoutParams(
                     AViewGroup.LayoutParams.MatchParent,
@@ -223,18 +229,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
             },
             update: host =>
             {
-                var frame = (FrameLayout)host;
-                var platform = page.ToPlatform(context);
-                if (frame.ChildCount == 1 && ReferenceEquals(frame.GetChildAt(0), platform))
-                    return;
-
-                frame.RemoveAllViews();
-                if (platform.Parent is AViewGroup oldParent)
-                    oldParent.RemoveView(platform);
-
-                frame.AddView(platform, new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MatchParent,
-                    FrameLayout.LayoutParams.MatchParent));
+                ((FlyoutPageHost)host).UpdatePage(page, context);
             })
         {
             Modifier = Modifier.FillMaxSize(),
@@ -273,17 +268,17 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
             return;
         }
 
-        if ((isPresented && _drawerState.IsOpen) ||
-            (!isPresented && _drawerState.IsClosed))
+        var target = _drawerState.TargetValue;
+        if ((isPresented && target == DrawerValue.Open) ||
+            (!isPresented && target == DrawerValue.Closed))
         {
             return;
         }
 
-        var operation = ++_presentationOperation;
-        _ = ApplyRequestedPresentationAsync(isPresented, operation);
+        _ = ApplyRequestedPresentationAsync(isPresented);
     }
 
-    async Task ApplyRequestedPresentationAsync(bool isPresented, int operation)
+    async Task ApplyRequestedPresentationAsync(bool isPresented)
     {
         try
         {
@@ -292,7 +287,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
             else
                 await _drawerState.CloseAsync();
         }
-        catch (OperationCanceledException) when (operation != _presentationOperation)
+        catch (OperationCanceledException)
         {
         }
         catch (Exception ex)
@@ -352,7 +347,9 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
     /// Preserve MAUI's toolbar propagation and refresh a Compose-backed
     /// detail <see cref="Microsoft.Maui.Controls.NavigationPage"/> so its
     /// root top bar shows or removes the drawer button as the effective
-    /// adaptive behavior changes.
+    /// adaptive behavior changes. The Compose navigation bar owns the drawer
+    /// affordance; binding a native <c>ToolbarHandler</c> to the compatibility
+    /// <see cref="DrawerLayout"/> would incorrectly compete with Material 3.
     /// </summary>
     public static void MapToolbar(FlyoutViewHandler handler, IFlyoutView view)
     {
@@ -362,7 +359,7 @@ public partial class FlyoutViewHandler : ViewHandler<IFlyoutView, DrawerLayout>,
 
     static void InvalidateDetailChrome(IFlyoutView view)
     {
-        if (view.Detail.Handler is NavigationPageHandler navigation)
+        if (view.Detail?.Handler is NavigationPageHandler navigation)
             navigation.InvalidateParentChrome();
     }
 }

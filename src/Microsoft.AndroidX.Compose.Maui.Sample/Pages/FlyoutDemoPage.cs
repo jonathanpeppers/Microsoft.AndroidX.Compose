@@ -96,6 +96,20 @@ public sealed class FlyoutDemoPage : ContentPage
             host.IsPresented = false;
         };
 
+        var reverse = new Button { Text = "Open then close immediately" };
+        reverse.Clicked += (_, _) =>
+        {
+            host.IsPresented = true;
+            host.IsPresented = false;
+        };
+
+        var reverseAgain = new Button { Text = "Close then open immediately" };
+        reverseAgain.Clicked += (_, _) =>
+        {
+            host.IsPresented = false;
+            host.IsPresented = true;
+        };
+
         var gestures = new Switch { IsToggled = true };
         gestures.Toggled += (_, e) => host.IsGestureEnabled = e.Value;
 
@@ -160,6 +174,8 @@ public sealed class FlyoutDemoPage : ContentPage
                         presentation,
                         open,
                         close,
+                        reverse,
+                        reverseAgain,
                         new HorizontalStackLayout
                         {
                             Spacing = 12,

@@ -2139,8 +2139,10 @@ visual chrome:
   `ModalNavigationDrawer`, `Locked` renders
   `PermanentNavigationDrawer`, and `Disabled` renders detail only.
   `IsPresented` synchronizes in both directions after settled drawer
-  transitions, `IsGestureEnabled` controls edge swipe, and positive
-  adaptive `FlyoutWidth` values size the sheet. A Compose-backed
+  transitions (including reversing an in-flight request),
+  `IsGestureEnabled` controls edge swipe, positive adaptive
+  `FlyoutWidth` values size the sheet, and MAUI's `-1` sentinel fills
+  the available width. A Compose-backed
   `NavigationPage` detail shows the drawer button at its root and
   replaces it with normal back navigation on pushed pages. The Android
   platform root remains an otherwise-empty `DrawerLayout` containing
