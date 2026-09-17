@@ -17,6 +17,7 @@ using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiIndicatorView = Microsoft.Maui.Controls.IndicatorView;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiNavigationPage = Microsoft.Maui.Controls.NavigationPage;
+using MauiFlyoutPage = Microsoft.Maui.Controls.FlyoutPage;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
@@ -103,9 +104,13 @@ public static class AppHostBuilderExtensions
     ///     <see cref="NavigationPageHandler"/> renders the stack
     ///     through Material 3 <see cref="Scaffold"/> +
     ///     <see cref="TopAppBar"/> chrome, with hardware-back
-    ///     and back-arrow pop. <c>TabbedPage</c>, <c>FlyoutPage</c>,
-    ///     and <c>Shell</c> remain on stock until later Phase 4
-    ///     slices.</description></item>
+    ///     and back-arrow pop.</description></item>
+    ///   <item><description><see cref="MauiFlyoutPage"/> →
+    ///     <see cref="FlyoutViewHandler"/> renders MAUI's effective
+    ///     modal or locked-open layout with Material 3 navigation
+    ///     drawers while preserving the child page handlers.
+    ///     <c>TabbedPage</c> and <c>Shell</c> remain on stock until
+    ///     later Phase 4 slices.</description></item>
     /// </list>
     ///
     /// <para>Layout types not in the list above (Grid, AbsoluteLayout,
@@ -206,10 +211,14 @@ public static class AppHostBuilderExtensions
             // NavigationViewHandler (which hosts pushed pages in
             // fragments under FragmentContainerView + AppCompat
             // toolbar) with a Scaffold + TopAppBar shell whose body
-            // hosts the current page via AndroidView. Stock
-            // TabbedPage, FlyoutPage, and Shell still win their
-            // concrete-type registrations until later slices ship.
+            // hosts the current page via AndroidView.
             handlers.AddHandler<MauiNavigationPage,         NavigationPageHandler>();
+
+            // Phase 4 Slice 3 — two-pane FlyoutPage. MAUI resolves
+            // FlyoutLayoutBehavior into an effective modal or locked
+            // mode; the handler renders that contract with Material 3
+            // navigation drawers and stable child-page AndroidView hosts.
+            handlers.AddHandler<MauiFlyoutPage,             FlyoutViewHandler>();
 
             // Phase 5 Slice — embed the platform Android WebView in
             // the page composition via AndroidView interop. Subclasses
