@@ -9,7 +9,7 @@ internal static class VideoPlayer
             return new Box
             {
                 Modifier.FillMaxSize().Background(Color.Black),
-                new DisposableEffect(session, () =>
+                new DisposableEffect(videoUri, () =>
                 {
                     VideoPlaybackCoordinator.Activate(session);
                     return () =>
