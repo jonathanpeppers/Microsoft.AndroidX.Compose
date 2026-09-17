@@ -30,5 +30,7 @@
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelPlacement.cs" Link="Maui\SwipePanelPlacement.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ReferenceItemCache.cs" Link="Maui\ReferenceItemCache.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\ReferenceOccurrenceKeys.cs" Link="Maui\ReferenceOccurrenceKeys.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeThresholdPolicy.cs" Link="Maui\SwipeThresholdPolicy.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipeInvocationPolicy.cs" Link="Maui\SwipeInvocationPolicy.cs" />
   </ItemGroup>
 </Project>

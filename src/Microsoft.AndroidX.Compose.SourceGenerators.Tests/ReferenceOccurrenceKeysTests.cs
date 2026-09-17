@@ -15,6 +15,7 @@ public sealed class ReferenceOccurrenceKeysTests
         var second = cache.GetKeys([item, item]);
 
         Assert.NotSame(first[0], first[1]);
+        Assert.NotEqual(first[0].Value, first[1].Value);
         Assert.Same(first[0], second[0]);
         Assert.Same(first[1], second[1]);
     }
@@ -46,5 +47,6 @@ public sealed class ReferenceOccurrenceKeysTests
 
         Assert.Same(first[0], restored[0]);
         Assert.NotSame(first[1], restored[1]);
+        Assert.NotEqual(first[1].Value, restored[1].Value);
     }
 }

@@ -1996,9 +1996,11 @@ composition instead of falling back to MAUI's AppCompat
   translated content. `SwipeTransitionMode.Drag` translates that panel
   in from the corresponding edge.
 - `SwipeItems.Mode=Reveal` exposes independently clickable actions.
-  `Mode=Execute` invokes every visible enabled action after the same 60%
-  threshold used by stock MAUI. `SwipeBehaviorOnInvoked` controls whether
-  the row closes.
+  `Mode=Execute` invokes every visible enabled action after the configured
+  `SwipeView.Threshold` distance (or 60% of the measured panel when unset).
+  The threshold controls only release recognition; the full measured panel
+  remains the open target. `SwipeBehaviorOnInvoked.Auto` closes Reveal mode
+  and remains open in Execute mode, matching MAUI's mode-dependent contract.
 - `SwipeItemMenuItemHandler` maps text, icon source, background, text
   contrast, font, spacing, enabled state, and visibility into a Compose
   action tile. `SwipeItemViewHandler` walks arbitrary custom content
@@ -2073,7 +2075,9 @@ CollectionView rows.
   composition-owned node; after Compose releases it, normal GC collects
   the view/handler cycle, and the viewport observer's weak callback cannot
   retain it. Equal-but-distinct row objects and duplicate occurrences of
-  the same reference never share state.
+  the same reference never share state. Each occurrence also receives a
+  stable, Bundle-saveable `long` key in the Compose lazy facade so inserts
+  and moves preserve the correct remembered/saveable subtree.
 - **Investigation discipline matters more than ever at Phase 3 scope.**
   Three of the original Phase 3 candidates (`ListView`, `TableView`,
   `SwipeView`) are deferred outright, and one (`CarouselView`) is its

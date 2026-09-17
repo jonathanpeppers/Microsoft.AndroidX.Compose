@@ -28,7 +28,6 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// </remarks>
 public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
 {
-    const float OpenThresholdFraction = 0.6f;
     const int AnimationDurationMilliseconds = 200;
     const float DefaultMenuItemWidthDp = 100f;
 
@@ -214,9 +213,8 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             Modifier itemModifier;
             if (horizontal)
             {
-                float width = viewThresholdOrDefault();
                 itemModifier = Modifier.Companion
-                    .Width(new Dp(width))
+                    .Width(new Dp(DefaultMenuItemWidthDp))
                     .FillMaxHeight();
             }
             else
@@ -237,14 +235,6 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         }
 
         return row;
-
-        float viewThresholdOrDefault()
-        {
-            var threshold = VirtualView?.Threshold ?? 0d;
-            return threshold > DefaultMenuItemWidthDp
-                ? (float)threshold
-                : DefaultMenuItemWidthDp;
-        }
     }
 
     MeasureResult MeasureSwipeLayout(
@@ -325,24 +315,20 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         if (view is null)
             return;
 
-        float requested = view.Threshold > 0 ? (float)view.Threshold * _density : 0f;
-        _leftExtent = Extent(view.LeftItems, requested, leftWidth, contentWidth, horizontal: true);
-        _rightExtent = Extent(view.RightItems, requested, rightWidth, contentWidth, horizontal: true);
-        _topExtent = Extent(view.TopItems, requested, topHeight, contentHeight, horizontal: false);
-        _bottomExtent = Extent(view.BottomItems, requested, bottomHeight, contentHeight, horizontal: false);
+        _leftExtent = Extent(view.LeftItems, leftWidth, contentWidth, horizontal: true);
+        _rightExtent = Extent(view.RightItems, rightWidth, contentWidth, horizontal: true);
+        _topExtent = Extent(view.TopItems, topHeight, contentHeight, horizontal: false);
+        _bottomExtent = Extent(view.BottomItems, bottomHeight, contentHeight, horizontal: false);
     }
 
     static float Extent(
         ISwipeItems items,
-        float requested,
         int measured,
         int contentSize,
         bool horizontal)
     {
         if (!items.Any(IsVisible))
             return 0f;
-        if (requested > 0f)
-            return Math.Min(requested, contentSize);
         if (items.Mode == SwipeMode.Execute &&
             !items.Any(item => item is ISwipeItemView))
         {
@@ -408,8 +394,12 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         _isDragging = false;
         float current = horizontal ? _offsetX.Value : _offsetY.Value;
         float extent = ExtentFor(direction);
+        float openDistance = SwipeThresholdPolicy.ResolveOpenDistancePixels(
+            view.Threshold,
+            _density,
+            extent);
         bool shouldOpen = extent > 0f &&
-            Math.Abs(current) >= extent * OpenThresholdFraction;
+            Math.Abs(current) >= openDistance;
         view.SwipeEnded(new SwipeViewSwipeEnded(direction, shouldOpen));
 
         var items = ItemsFor(view, direction);
@@ -417,7 +407,9 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         {
             foreach (var item in items.Where(IsVisible))
                 InvokeEnabledItem(item);
-            shouldOpen = items.SwipeBehaviorOnInvoked == SwipeBehaviorOnInvoked.RemainOpen;
+            shouldOpen = SwipeInvocationPolicy.ShouldRemainOpen(
+                items.Mode,
+                items.SwipeBehaviorOnInvoked);
         }
 
         SetOpen(direction, shouldOpen, animated: true);
@@ -427,8 +419,12 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     {
         if (!InvokeEnabledItem(item))
             return;
-        if (items.SwipeBehaviorOnInvoked != SwipeBehaviorOnInvoked.RemainOpen)
+        if (!SwipeInvocationPolicy.ShouldRemainOpen(
+            items.Mode,
+            items.SwipeBehaviorOnInvoked))
+        {
             Close(animated: true);
+        }
     }
 
     static bool InvokeEnabledItem(MauiSwipeItem item)

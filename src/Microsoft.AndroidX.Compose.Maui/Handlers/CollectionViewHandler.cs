@@ -290,6 +290,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         {
             Modifier            = outer,
             State               = _linearListState,
+            Key                 = static row => row.CacheKey.Value,
             VerticalArrangement = spacing,
         };
     }
@@ -304,6 +305,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         {
             Modifier              = outer,
             State                 = _linearListState,
+            Key                   = static row => row.CacheKey.Value,
             HorizontalArrangement = spacing,
         };
     }
@@ -393,6 +395,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return new LazyVerticalGrid<ItemEntry>(GridCells.Fixed(span), items, itemContent)
         {
             Modifier              = outer,
+            Key                   = static row => row.CacheKey.Value,
             VerticalArrangement   = ItemSpacingOf(grid.VerticalItemSpacing),
             HorizontalArrangement = ItemSpacingOf(grid.HorizontalItemSpacing),
         };
@@ -453,7 +456,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     ComposableNode BuildFromTemplate(
         MauiDataTemplate template,
         object item,
-        object cacheKey,
+        ReferenceOccurrenceKey cacheKey,
         MauiCollectionView view,
         IMauiContext context)
     {
@@ -530,7 +533,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         MauiDataTemplate Template,
         ComposableNode Node);
 
-    sealed record ItemEntry(object Item, object CacheKey);
+    sealed record ItemEntry(object Item, ReferenceOccurrenceKey CacheKey);
 
     static object? MaterialiseTemplate(MauiDataTemplate template, object item)
     {
