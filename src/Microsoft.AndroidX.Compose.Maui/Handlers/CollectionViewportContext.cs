@@ -9,10 +9,10 @@ internal static class CollectionViewportContext
 
     public static T BuildItem<T>(
         CollectionViewportObserver observer,
-        Func<T> factory)
+        System.Func<T> factory)
     {
-        ArgumentNullException.ThrowIfNull(observer);
-        ArgumentNullException.ThrowIfNull(factory);
+        System.ArgumentNullException.ThrowIfNull(observer);
+        System.ArgumentNullException.ThrowIfNull(factory);
         var previous = s_current.Value;
         s_current.Value = observer;
         try
@@ -27,10 +27,10 @@ internal static class CollectionViewportContext
 
     public static void RenderItem(
         CollectionViewportObserver observer,
-        Action render)
+        System.Action render)
     {
-        ArgumentNullException.ThrowIfNull(observer);
-        ArgumentNullException.ThrowIfNull(render);
+        System.ArgumentNullException.ThrowIfNull(observer);
+        System.ArgumentNullException.ThrowIfNull(render);
         BuildItem(
             observer,
             () =>

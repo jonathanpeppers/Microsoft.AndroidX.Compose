@@ -2011,7 +2011,9 @@ composition instead of falling back to MAUI's AppCompat
   weak close callback with that viewport observer. A shared item's
   cumulative displacement from the last acknowledged viewport position
   moving more than 10dp closes the row; a viewport discontinuity with no
-  shared visible item also closes it. No approximate public
+  shared visible item also closes it. Viewport-triggered close snaps to
+  the resting offset before an item can leave composition; it does not
+  depend on an offscreen animation completing. No approximate public
   `ItemsView.Scrolled` offsets or deltas are emitted.
 
 `SwipeViewsPage` exercises every direction, both transition modes,

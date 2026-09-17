@@ -24,6 +24,7 @@
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrencePool.cs" Link="Runtime\CompositionOccurrencePool.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrenceRegistry.cs" Link="Runtime\CompositionOccurrenceRegistry.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionViewportObserver.cs" Link="Maui\CollectionViewportObserver.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\CollectionViewportContext.cs" Link="Maui\CollectionViewportContext.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListScrollSnapshot.cs" Link="Maui\LazyListScrollSnapshot.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\LazyListVisibleItemSnapshot.cs" Link="Maui\LazyListVisibleItemSnapshot.cs" />
     <Compile Include="..\Microsoft.AndroidX.Compose.Maui\Handlers\SwipePanelPlacement.cs" Link="Maui\SwipePanelPlacement.cs" />

@@ -90,7 +90,10 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
     {
         _horizontalDrag = new DraggableState(delta => OnDrag(horizontal: true, delta));
         _verticalDrag = new DraggableState(delta => OnDrag(horizontal: false, delta));
-        _closeForParentScroll = () => Close(animated: true);
+        // A row may leave composition immediately after the viewport
+        // changes. Snap synchronously so offscreen animation lifecycle
+        // cannot preserve an open offset when the cached row returns.
+        _closeForParentScroll = () => Close(animated: false);
     }
 
     /// <inheritdoc/>
