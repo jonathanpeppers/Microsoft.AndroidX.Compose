@@ -35,9 +35,9 @@ internal sealed class TabbedPageIcon : IImageSourcePart
     public ComposableNode BuildNode()
     {
         if (_loader.Painter.Value is { } painter)
-            return new ComposeImage(painter, _page.Title) { Modifier = s_iconSize };
+            return new ComposeImage(painter) { Modifier = s_iconSize };
         if (_loader.DrawableResourceId.Value is int resourceId)
-            return new ComposeImage(resourceId, _page.Title) { Modifier = s_iconSize };
+            return new ComposeImage(resourceId) { Modifier = s_iconSize };
         return new Box { Modifier = s_iconSize };
     }
 

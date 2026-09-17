@@ -209,8 +209,8 @@ public static class AppHostBuilderExtensions
             // NavigationViewHandler (which hosts pushed pages in
             // fragments under FragmentContainerView + AppCompat
             // toolbar) with a Scaffold + TopAppBar shell whose body
-            // hosts the current page via AndroidView. Stock
-            // TabbedPage, FlyoutPage, and Shell still win their
+            // hosts the current page via AndroidView. Stock FlyoutPage
+            // and Shell still win their
             // concrete-type registrations until later slices ship.
             handlers.AddHandler<MauiNavigationPage,         NavigationPageHandler>();
             handlers.AddHandler<MauiTabbedPage,             TabbedViewHandler>();

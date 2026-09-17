@@ -184,10 +184,11 @@ public partial class TabbedViewHandler : ViewHandler<ITabbedView, ComposeView>, 
         int requestedIndex = Math.Clamp(_selectedIndex.Value, 0, pages.Count - 1);
         var state = _pagerState ??= new PagerState(() => _pages.Count, requestedIndex);
         int pagerIndex = Math.Clamp(state.CurrentPage, 0, pages.Count - 1);
+        int settledIndex = Math.Clamp(state.SettledPage, 0, pages.Count - 1);
         bool swipeEnabled = _userScrollEnabled.Value;
         int offscreenLimit = _offscreenPageLimit.Value;
 
-        composer.SideEffect(() => SynchronizeCurrentPage(pagerIndex, pages));
+        composer.SideEffect(() => SynchronizeCurrentPage(settledIndex, pages));
 
         var pager = new HorizontalPager<MauiPage>(pages, page => BuildPage(page))
         {
@@ -318,12 +319,14 @@ public partial class TabbedViewHandler : ViewHandler<ITabbedView, ComposeView>, 
                     primary: selected,
                     onSurface: selected,
                     onSurfaceVariant: unselected,
+                    onSecondaryContainer: selected,
                     surface: background,
                     surfaceContainer: background)
                 : MaterialTheme.LightColorScheme(
                     primary: selected,
                     onSurface: selected,
                     onSurfaceVariant: unselected,
+                    onSecondaryContainer: selected,
                     surface: background,
                     surfaceContainer: background),
             [dark, _barBackground.Value, _selectedTab.Value, _unselectedTab.Value, _barText.Value]);
