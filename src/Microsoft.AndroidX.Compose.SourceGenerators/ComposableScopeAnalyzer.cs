@@ -60,10 +60,20 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             || IsImplicitTransitionAnimation(method);
     }
 
-    static bool IsImplicitTransitionAnimation(IMethodSymbol method) =>
-        !method.IsStatic
-        && method.Name is "AnimateFloat" or "AnimateColor"
-        && method.ContainingType.OriginalDefinition.ToDisplayString() == "AndroidX.Compose.Transition<T>";
+    static bool IsImplicitTransitionAnimation(IMethodSymbol method)
+    {
+        if (method.IsStatic)
+            return false;
+
+        var containingType = method.ContainingType.OriginalDefinition.ToDisplayString();
+        return method.Name switch
+        {
+            "AnimateFloat" => containingType is "AndroidX.Compose.Transition<T>"
+                or "AndroidX.Compose.InfiniteTransition",
+            "AnimateColor" => containingType == "AndroidX.Compose.Transition<T>",
+            _ => false,
+        };
+    }
 
     static bool IsImplicitWindowInsetsRead(IMethodSymbol method) =>
         method.Name == "AsPaddingValues"

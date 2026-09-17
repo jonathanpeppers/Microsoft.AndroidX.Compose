@@ -3,7 +3,7 @@ namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Seed conversation data for the demo. Same <em>structural</em> shape
-/// as upstream's <c>FakeData</c>: nine messages, four authors
+/// as upstream's <c>FakeData</c>: ten messages, four authors
 /// (<c>me</c>, <c>Taylor Brooks</c>, <c>John Glenn</c>,
 /// <c>Shangeeth Sivan</c>), distributed across two visual "days" so the
 /// hardcoded day headers ("Today" at index 2, "20 Aug" above the
@@ -21,9 +21,10 @@ internal static class FakeData
     const string PointRight   = "\uD83D\uDC49";
     const string PinkHeart    = "\uD83E\uDE77";
 
-    public static List<Message> InitialMessages() =>
+    public static List<Message> InitialMessages(string seedVideoUri) =>
     [
         new Message("me",              "Take a look at this!",                                                                                                                                  "8:07 PM"),
+        new Message("Taylor Brooks",   "Here's the local video fixture in action!",                                                                                                             "8:06 PM", VideoUri: seedVideoUri),
         new Message("me",              $"Appreciate it {PinkHeart}",                                                                                                                            "8:06 PM", Resource.Drawable.sticker),
         new Message("Taylor Brooks",   "Everything composable carries over.",                                                                                                                   "8:05 PM"),
         new Message("Taylor Brooks",   "@aliconors give `Flow.collectAsStateWithLifecycle()` a try.",                                                                                           "8:05 PM"),

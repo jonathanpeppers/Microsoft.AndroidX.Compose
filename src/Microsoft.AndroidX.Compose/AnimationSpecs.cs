@@ -3,9 +3,22 @@ using CoreSpring = AndroidX.Compose.Animation.Core.Spring;
 
 namespace AndroidX.Compose;
 
-/// <summary>Finite Compose animation specifications usable for both float and color transitions.</summary>
+/// <summary>Compose animation specifications usable for finite and infinite transitions.</summary>
 public static class AnimationSpecs
 {
+    /// <summary>Creates an infinite repetition of a duration-based animation.</summary>
+    /// <param name="animation">The finite animation to repeat.</param>
+    /// <param name="repeatMode">Whether each iteration restarts or reverses. Null uses restart.</param>
+    public static InfiniteRepeatableSpec InfiniteRepeatable(
+        IDurationBasedAnimationSpec animation,
+        RepeatMode? repeatMode = null)
+    {
+        ArgumentNullException.ThrowIfNull(animation);
+        var mode = repeatMode ?? RepeatMode.Restart
+            ?? throw new InvalidOperationException("Compose RepeatMode.Restart was unavailable.");
+        return AnimationSpecKt.InfiniteRepeatable(animation, mode, 0);
+    }
+
     /// <summary>
     /// Creates a spring with Compose's default damping and stiffness. Lower damping allows
     /// more bounce; stiffness controls how quickly the spring converges.

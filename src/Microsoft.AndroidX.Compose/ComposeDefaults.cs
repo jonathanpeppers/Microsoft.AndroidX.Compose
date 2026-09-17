@@ -34,6 +34,11 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults<AndroidX.Compose.Animation.Core.TransitionKt>("UpdateTransition", "UpdateTransitionDefault")]
 // Extension receivers are excluded from Kotlin's default-bit positions.
 [assembly: ComposeDefaults("TransitionAnimationDefault", "transitionSpec", "label", "!targetValueByState")]
+[assembly: ComposeDefaults<AndroidX.Compose.Animation.Core.InfiniteTransitionKt>(
+    "RememberInfiniteTransition", "RememberInfiniteTransitionDefault")]
+// Extension receivers are excluded from Kotlin's default-bit positions.
+[assembly: ComposeDefaults("InfiniteFloatAnimationDefault",
+    "!initialValue", "!targetValue", "!animationSpec", "label")]
 
 // Hand-rolled declarative form (instead of generic form) so the
 // ComposeFacadeGenerator can see the bit names — generic-form enums
@@ -782,6 +787,11 @@ using AndroidX.Compose;
 // (`initialIsVisible`, `mutatorMutex`) are defaulted.
 [assembly: ComposeDefaults("RememberTooltipStateDefault",
     "initialIsVisible", "!isPersistent", "mutatorMutex")]
+
+// androidx.compose.material3.TooltipState.show$default:
+// The TooltipState receiver is excluded; mutatePriority uses its default.
+[assembly: ComposeDefaults("TooltipStateShowDefault",
+    "mutatePriority")]
 
 // androidx.compose.material3.TooltipDefaults.rememberPlainTooltipPositionProvider-kHDZbjc:
 // 1 user param (`spacing`), defaulted by the wrapper.

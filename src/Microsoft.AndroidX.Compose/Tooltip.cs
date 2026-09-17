@@ -1,5 +1,4 @@
 using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose;
 
 /// <summary>
@@ -15,7 +14,27 @@ namespace AndroidX.Compose;
 public sealed class Tooltip : ComposableNode
 {
     readonly bool _isPersistent;
+    readonly TooltipState? _state;
+
+    /// <summary>Creates a tooltip with internally remembered state.</summary>
+    /// <param name="isPersistent">
+    /// <c>true</c> to keep the tooltip visible until Compose dismisses it;
+    /// otherwise use the default timed behavior.
+    /// </param>
     public Tooltip(bool isPersistent = false) => _isPersistent = isPersistent;
+
+    /// <summary>Creates a tooltip controlled by caller-supplied state.</summary>
+    /// <param name="state">
+    /// State remembered by the caller and shared with event handlers that call
+    /// <see cref="TooltipState.ShowAsync(CancellationToken)"/> or
+    /// <see cref="TooltipState.Dismiss"/>.
+    /// </param>
+    public Tooltip(TooltipState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        _state = state;
+        _isPersistent = state.IsPersistent;
+    }
 
     /// <summary>Required: the popup body shown on long-press / hover.</summary>
     public required ComposableNode Tip { get; set; }
@@ -36,7 +55,14 @@ public sealed class Tooltip : ComposableNode
                 "Tooltip requires both Tip (popup body) and Anchor (visible content).");
 
         var positionProvider = ComposeBridges.RememberPlainTooltipPositionProvider(composer);
-        var stateHandle      = ComposeBridges.RememberTooltipState(_isPersistent, composer);
+        var state = ComposeBridges.RememberTooltipState(_isPersistent, composer);
+        if (_state is not null)
+        {
+            var holder = _state;
+            var binding = composer.Remember(() => new TooltipStateBinding());
+            composer.SideEffect(() => binding.Publish(holder, state));
+            composer.DisposableEffect(state, binding.CreateCleanup);
+        }
 
         var tooltip = ComposableLambdas.Wrap3(composer, c => Tip.Render(c));
         var anchor  = ComposableLambdas.Wrap2(composer, c => Anchor.Render(c));
@@ -50,10 +76,11 @@ public sealed class Tooltip : ComposableNode
         ComposeBridges.TooltipBox(
             positionProvider: positionProvider,
             tooltip:          tooltip,
-            state:            stateHandle,
+            state:            state.Handle,
             modifier:         modifier,
             content:          anchor,
             defaults:         defaults,
             composer:         composer);
+        GC.KeepAlive(state);
     }
 }

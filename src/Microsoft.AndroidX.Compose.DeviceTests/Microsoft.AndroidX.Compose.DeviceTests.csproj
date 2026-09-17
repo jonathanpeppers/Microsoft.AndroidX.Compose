@@ -46,6 +46,8 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" />
+    <PackageReference Include="Xamarin.AndroidX.Media3.ExoPlayer" />
+    <PackageReference Include="Xamarin.AndroidX.Media3.UI" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
@@ -87,6 +89,8 @@
                      Link="Resources\drawable-night\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\values\strings.xml"
                      Link="Resources\values\jetchat_strings.xml" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\raw\jetchat_video_fixture.mp4"
+                     Link="Resources\raw\jetchat_video_fixture.mp4" />
     <AndroidResource Include="..\..\samples\Reply\Resources\drawable\*"
                      Link="Resources\drawable\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Reply\Resources\drawable-nodpi\*"

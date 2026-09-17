@@ -5,6 +5,13 @@ namespace AndroidX.Compose;
 
 public static partial class Composables
 {
+    /// <summary>Remembers a composition-owned native infinite transition in the implicit composition.</summary>
+    public static InfiniteTransition RememberInfiniteTransition(
+        string? label = null,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "") =>
+        ComposeExtensions.RememberInfiniteTransition(ComposableContext.Current, label, line, file);
+
     /// <summary>Remembers a native typed transition and updates its target in the implicit composition.</summary>
     public static Transition<T> UpdateTransition<T>(
         T targetState,
