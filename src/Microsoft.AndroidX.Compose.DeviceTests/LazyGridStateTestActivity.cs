@@ -5,7 +5,7 @@ using AndroidX.Compose.Runtime;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
-/// <summary>Hosts real lazy grids for managed-state and default-mask device tests.</summary>
+/// <summary>Hosts lazy-state and grid surfaces for initialization and default-mask device tests.</summary>
 [Activity(Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 [Register("net/compose/devicetests/LazyGridStateTestActivity")]
 public class LazyGridStateTestActivity : ComponentActivity
@@ -14,7 +14,10 @@ public class LazyGridStateTestActivity : ComponentActivity
     internal const int StaticStaggeredExplicitState = 2;
     internal const int StaticDefaults = 3;
     internal const int RememberIdentity = 4;
+    internal const int RememberInitialValues = 5;
     internal const int InitialIndex = 40;
+    internal const int RememberedInitialIndex = 5;
+    internal const int RememberedInitialOffset = 17;
 
     static readonly IReadOnlyList<int> Items = Enumerable.Range(0, 100).ToList();
     static int s_scenario;
@@ -30,6 +33,10 @@ public class LazyGridStateTestActivity : ComponentActivity
     internal static int RenderedItems => Volatile.Read(ref s_renderedItems);
 
     internal static MutableNumberState<int>? RecompositionTrigger { get; private set; }
+
+    internal static LazyListState? FirstRememberedListState { get; private set; }
+
+    internal static LazyListState? LastRememberedListState { get; private set; }
 
     internal static LazyGridState? FirstRememberedGridState { get; private set; }
 
@@ -47,6 +54,8 @@ public class LazyGridStateTestActivity : ComponentActivity
         GridState = new LazyGridState(InitialIndex);
         StaggeredState = new LazyStaggeredGridState(InitialIndex);
         RecompositionTrigger = null;
+        FirstRememberedListState = null;
+        LastRememberedListState = null;
         FirstRememberedGridState = null;
         LastRememberedGridState = null;
         FirstRememberedStaggeredState = null;
@@ -82,6 +91,9 @@ public class LazyGridStateTestActivity : ComponentActivity
             case RememberIdentity:
                 this.SetContent(BuildRememberIdentity);
                 break;
+            case RememberInitialValues:
+                this.SetContent(BuildRememberInitialValues);
+                break;
             default:
                 throw new InvalidOperationException("Lazy-grid test scenario was not configured.");
         }
@@ -116,9 +128,36 @@ public class LazyGridStateTestActivity : ComponentActivity
     static ComposableNode BuildRememberIdentity(IComposer composer)
     {
         var trigger = composer.MutableStateOf(0);
+        var listState = composer.RememberLazyListState();
         var gridState = composer.RememberLazyGridState();
         var staggeredState = composer.RememberLazyStaggeredGridState();
+        return CaptureRememberedStates(trigger, listState, gridState, staggeredState);
+    }
+
+    static ComposableNode BuildRememberInitialValues(IComposer composer)
+    {
+        var trigger = composer.MutableStateOf(0);
+        var listState = composer.RememberLazyListState(
+            RememberedInitialIndex,
+            RememberedInitialOffset);
+        var gridState = composer.RememberLazyGridState(
+            RememberedInitialIndex,
+            RememberedInitialOffset);
+        var staggeredState = composer.RememberLazyStaggeredGridState(
+            RememberedInitialIndex,
+            RememberedInitialOffset);
+        return CaptureRememberedStates(trigger, listState, gridState, staggeredState);
+    }
+
+    static ComposableNode CaptureRememberedStates(
+        MutableNumberState<int> trigger,
+        LazyListState listState,
+        LazyGridState gridState,
+        LazyStaggeredGridState staggeredState)
+    {
         RecompositionTrigger = trigger;
+        FirstRememberedListState ??= listState;
+        LastRememberedListState = listState;
         FirstRememberedGridState ??= gridState;
         LastRememberedGridState = gridState;
         FirstRememberedStaggeredState ??= staggeredState;

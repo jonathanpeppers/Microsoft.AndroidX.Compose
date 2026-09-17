@@ -62,15 +62,25 @@ public static partial class ComposeExtensions
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
+            // Binding names are shifted; the native order is index, offset, composer, changed, defaults.
             var jvm = AndroidX.Compose.Foundation.Lazy.LazyListStateKt.RememberLazyListState(
-                p0:                                  0,
-                initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                p0:                                  initialFirstVisibleItemIndex,
+                initialFirstVisibleItemIndex:        initialFirstVisibleItemScrollOffset,
                 _composer:                           composer,
-                initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                initialFirstVisibleItemScrollOffset: 0,
                 _changed:                            0)
                 ?? throw new InvalidOperationException(
                     "LazyListStateKt.RememberLazyListState returned null.");
-            return new LazyListState(jvm);
+            if (composer.RememberedValue() is RememberHolder holder
+                && holder.Value is LazyListState existing
+                && ReferenceEquals(existing.Jvm, jvm))
+            {
+                return existing;
+            }
+
+            var state = new LazyListState(jvm);
+            composer.UpdateRememberedValue(new RememberHolder(state));
+            return state;
         }
         finally
         {
@@ -93,11 +103,12 @@ public static partial class ComposeExtensions
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
+            // Binding names are shifted; the native order is index, offset, composer, changed, defaults.
             var jvm = AndroidX.Compose.Foundation.Lazy.Grid.LazyGridStateKt.RememberLazyGridState(
-                p0:                                  0,
-                initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                p0:                                  initialFirstVisibleItemIndex,
+                initialFirstVisibleItemIndex:        initialFirstVisibleItemScrollOffset,
                 _composer:                           composer,
-                initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                initialFirstVisibleItemScrollOffset: 0,
                 _changed:                            0)
                 ?? throw new InvalidOperationException(
                     "LazyGridStateKt.RememberLazyGridState returned null.");
@@ -133,12 +144,13 @@ public static partial class ComposeExtensions
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
+            // Binding names are shifted; the native order is index, offset, composer, changed, defaults.
             var jvm = AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridStateKt
                 .RememberLazyStaggeredGridState(
-                    p0:                                  0,
-                    initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                    p0:                                  initialFirstVisibleItemIndex,
+                    initialFirstVisibleItemIndex:        initialFirstVisibleItemScrollOffset,
                     _composer:                           composer,
-                    initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                    initialFirstVisibleItemScrollOffset: 0,
                     _changed:                            0)
                 ?? throw new InvalidOperationException(
                     "LazyStaggeredGridStateKt.RememberLazyStaggeredGridState returned null.");
