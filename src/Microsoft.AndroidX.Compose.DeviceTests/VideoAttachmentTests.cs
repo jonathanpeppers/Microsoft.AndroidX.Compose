@@ -123,4 +123,18 @@ public class VideoAttachmentTests
                 cancellation.Token));
         Assert.AreEqual(initialCount, Directory.EnumerateFiles(importRoot).Count());
     }
+
+    /// <summary>The Media3 error pair retains fresh boxed values after provider temporaries are disposed.</summary>
+    [TestMethod]
+    public void ErrorMessageProvider_ReturnsUsableOwnedPair()
+    {
+        using var provider = new VideoErrorMessageProvider();
+        using var pair = provider.GetErrorMessage(null);
+        var code = pair.First as Java.Lang.Integer
+            ?? throw new InvalidOperationException("Error code was not a java.lang.Integer.");
+        var message = pair.Second as Java.Lang.String
+            ?? throw new InvalidOperationException("Error message was not a java.lang.String.");
+        Assert.AreEqual(0, code.IntValue());
+        Assert.AreEqual("Unable to play this video.", message.ToString());
+    }
 }

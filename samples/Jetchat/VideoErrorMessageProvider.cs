@@ -8,8 +8,9 @@ internal sealed class VideoErrorMessageProvider : Java.Lang.Object, IErrorMessag
 {
     public Pair GetErrorMessage(Java.Lang.Object? error)
     {
-        using var code = Java.Lang.Integer.ValueOf(0)
-            ?? throw new InvalidOperationException("Could not create the Media3 error code.");
+#pragma warning disable CS0618, CA1422 // A fresh peer avoids Integer.valueOf()'s shared cache.
+        using var code = new Java.Lang.Integer(0);
+#pragma warning restore CS0618, CA1422
         using var message = new Java.Lang.String("Unable to play this video.");
         return new Pair(code, message);
     }
