@@ -2015,8 +2015,10 @@ composition instead of falling back to MAUI's AppCompat
 - User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
   in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
   the requested side and animation flag without synthesizing user events.
-  Tapping shifted content on a settled-open row consumes that tap and closes
-  the row; closed content retains its normal interaction behavior.
+  An always-present sibling hit layer stays above the content at the same
+  translated coordinates. While settled open it consumes a content tap and
+  closes the row; while closed it has no pointer modifier, so content keeps
+  normal interaction and its composition parent/index never changes.
 - Item and visibility changes remeasure the active panel. An empty active
   side closes immediately; a changed non-empty side snaps a settled open
   offset to its new measured extent so content cannot remain translated

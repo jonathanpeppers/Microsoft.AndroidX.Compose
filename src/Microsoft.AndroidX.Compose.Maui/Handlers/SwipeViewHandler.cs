@@ -138,25 +138,20 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
             activeDirection == (int)MauiSwipeDirection.Up,
             composer,
             context);
-        ComposableNode content = view.PresentedContent is { } presented
+        var content = view.PresentedContent is { } presented
             ? ComposeWalker.Render(presented, composer, context)
             : new Box();
+        Modifier dismissModifier = Modifier.Companion.FillMaxSize();
         if (SwipeContentDismissal.ShouldDismiss(
             view.IsOpen,
             _isSettledOpen,
             _dragLifecycle.IsDragging))
         {
-            var dismiss = new Box
-            {
-                Modifier = Modifier.Companion
-                    .FillMaxSize()
-                    .DetectTapGestures(
-                        onTap: _ => Close(animated: true),
-                        key: "SwipeViewContentDismiss"),
-            };
-            dismiss.Add(content);
-            content = dismiss;
+            dismissModifier = dismissModifier.DetectTapGestures(
+                onTap: _ => Close(animated: true),
+                key: "SwipeViewContentDismiss");
         }
+        var dismissOverlay = new Box { Modifier = dismissModifier };
 
         var layout = new ComposeLayout((scope, measurables, constraints) =>
             MeasureSwipeLayout(
@@ -169,6 +164,7 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         layout.Add(top);
         layout.Add(bottom);
         layout.Add(content);
+        layout.Add(dismissOverlay);
 
         bool enabled = _enabled.Value;
         Modifier modifier = Modifier.Companion.ApplyViewProperties(view);
@@ -287,11 +283,13 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
         Constraints constraints,
         int activeDirection)
     {
-        if (measurables.Count != 5)
+        if (measurables.Count != 6)
             throw new InvalidOperationException(
-                $"SwipeView layout expected 5 children but received {measurables.Count}.");
+                $"SwipeView layout expected 6 children but received {measurables.Count}.");
 
-        var content = measurables[4].Measure(constraints);
+        var content = measurables[SwipePanelPlacement.Content].Measure(constraints);
+        var dismissOverlay = measurables[SwipePanelPlacement.DismissOverlay]
+            .Measure(constraints);
         int width = content.Width;
         int height = content.Height;
         var horizontalConstraints = Constraints.Create(0, width, height, height);
@@ -344,6 +342,11 @@ public partial class SwipeViewHandler : ComposeElementHandler<ISwipeView>
                 (int)Math.Round(offsetX),
                 (int)Math.Round(offsetY),
                 zIndex: 1f);
+            placement.Place(
+                dismissOverlay,
+                (int)Math.Round(offsetX),
+                (int)Math.Round(offsetY),
+                zIndex: 2f);
         });
     }
 

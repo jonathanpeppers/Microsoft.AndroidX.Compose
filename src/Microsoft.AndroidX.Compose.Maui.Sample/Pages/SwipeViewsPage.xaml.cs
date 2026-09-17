@@ -10,6 +10,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Sample.Pages;
 public partial class SwipeViewsPage : ContentPage
 {
     int _addedItems;
+    int _contentTaps;
 
     /// <summary>Rows used by the nested CollectionView gesture-arbitration sample.</summary>
     public ObservableCollection<SwipeRow> Rows { get; } =
@@ -109,4 +110,10 @@ public partial class SwipeViewsPage : ContentPage
 
     void OnExecuteInvoked(object? sender, EventArgs e) =>
         StatusLabel.Text = "Execute-mode action invoked at threshold";
+
+    void OnContentTapped(object? sender, EventArgs e)
+    {
+        _contentTaps++;
+        ContentTapButton.Text = $"Content taps: {_contentTaps}";
+    }
 }

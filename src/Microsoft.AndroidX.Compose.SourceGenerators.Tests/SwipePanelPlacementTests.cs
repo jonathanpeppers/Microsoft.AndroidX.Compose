@@ -34,4 +34,11 @@ public sealed class SwipePanelPlacementTests
         Assert.Equal(SwipePanelPlacement.LeftItems, placed);
         Assert.NotEqual(SwipePanelPlacement.BottomItems, placed);
     }
+
+    [Fact]
+    public void ContentAndDismissOverlay_KeepStableSiblingIndices()
+    {
+        Assert.Equal(4, SwipePanelPlacement.Content);
+        Assert.Equal(5, SwipePanelPlacement.DismissOverlay);
+    }
 }

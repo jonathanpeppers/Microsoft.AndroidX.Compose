@@ -6,6 +6,8 @@ internal static class SwipePanelPlacement
     public const int RightItems = 1;
     public const int TopItems = 2;
     public const int BottomItems = 3;
+    public const int Content = 4;
+    public const int DismissOverlay = 5;
     public const int None = -1;
 
     public static int ActivePanelIndex(int swipeDirection) => swipeDirection switch

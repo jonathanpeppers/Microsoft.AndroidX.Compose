@@ -97,8 +97,9 @@
                 <Border BackgroundColor="#E8EAF6" Stroke="#3F51B5" Margin="6" Padding="18">
                     <VerticalStackLayout>
                         <Label Text="Four-direction reveal" FontAttributes="Bold" TextColor="#1A237E" />
-                        <Label Text="Right/left reveal actions; down/up reveal top/bottom actions."
-                               TextColor="#1A237E" />
+                        <Button x:Name="ContentTapButton"
+                                Text="Content taps: 0"
+                                Clicked="OnContentTapped" />
                     </VerticalStackLayout>
                 </Border>
             </SwipeView>
