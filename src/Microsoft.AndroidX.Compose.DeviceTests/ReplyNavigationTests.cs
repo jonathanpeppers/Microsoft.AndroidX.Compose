@@ -127,8 +127,7 @@ public class ReplyNavigationTests
             Assert.AreEqual(expected, actual, $"Reply width was {widthDp:F1}dp ({width}px at {density:F2}x).");
             using var root = Root(activity);
             string inboxLabel = Label(TopLevelDestinations.All[0]);
-            using var inbox = Find(root, n => n.VisibleToUser &&
-                (n.ContentDescription == inboxLabel || n.Text == inboxLabel))
+            using var inbox = FindNavigationItem(root, inboxLabel)
                 ?? throw new InvalidOperationException("Reply Inbox navigation item is missing.");
             using var itemBounds = new Rect();
             using var windowBounds = new Rect();
@@ -221,6 +220,16 @@ public class ReplyNavigationTests
             Assert.IsNull(scrolledTitle, "Reply detail toolbar remained pinned instead of scrolling with the thread.");
         }
         finally { await Finish(activity); }
+    }
+
+    /// <summary>Adaptive navigation matching rejects identical non-interactive content labels.</summary>
+    [TestMethod]
+    public void NavigationItemMatchRejectsContentHeading()
+    {
+        Assert.IsTrue(IsNavigationItemMatch(visible: true, clickable: true, selected: false, exactLabel: true));
+        Assert.IsTrue(IsNavigationItemMatch(visible: true, clickable: false, selected: true, exactLabel: true));
+        Assert.IsFalse(IsNavigationItemMatch(visible: true, clickable: false, selected: false, exactLabel: true));
+        Assert.IsFalse(IsNavigationItemMatch(visible: true, clickable: true, selected: false, exactLabel: false));
     }
 
     /// <summary>Selected-row semantics association rejects viewport-wide and sibling-row nodes.</summary>
@@ -523,6 +532,46 @@ public class ReplyNavigationTests
         return Find(root, n => n.VisibleToUser && n.Scrollable)
             ?? throw new InvalidOperationException("Reply has no native scrollable node.");
     }
+
+    static AccessibilityNodeInfo? FindNavigationItem(AccessibilityNodeInfo root, string label)
+    {
+        if (root.VisibleToUser &&
+            (root.ContentDescription == label || root.Text == label) &&
+            FindNavigationAncestor(root) is { } candidate)
+            return candidate;
+        for (int i = 0; i < root.ChildCount; i++)
+        {
+            using var child = root.GetChild(i);
+            if (child is not null && FindNavigationItem(child, label) is { } found)
+                return found;
+        }
+        return null;
+    }
+
+    static AccessibilityNodeInfo? FindNavigationAncestor(AccessibilityNodeInfo labelNode)
+    {
+        var current = Copy(labelNode);
+        while (!IsNavigationItemMatch(
+            current.VisibleToUser,
+            current.Clickable,
+            current.Selected,
+            exactLabel: true))
+        {
+            var parent = current.Parent;
+            current.Dispose();
+            if (parent is null)
+                return null;
+            current = parent;
+        }
+        return current;
+    }
+
+    static bool IsNavigationItemMatch(
+        bool visible,
+        bool clickable,
+        bool selected,
+        bool exactLabel) =>
+        visible && exactLabel && (clickable || selected);
 
     static Rect FabBounds(ReplyNavigationTestActivity activity)
     {
