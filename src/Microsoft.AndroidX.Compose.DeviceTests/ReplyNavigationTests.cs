@@ -223,6 +223,10 @@ public class ReplyNavigationTests
             using var title = Find(root, n => n.VisibleToUser &&
                 n.ViewIdResourceName?.EndsWith("reply-email-detail-title", StringComparison.Ordinal) == true)
                 ?? throw new InvalidOperationException("Reply detail toolbar title is missing.");
+            Assert.AreEqual(email.Subject, title.Text,
+                "Reply detail title tag must retain the actual subject text.");
+            Assert.IsTrue(string.IsNullOrEmpty(title.ContentDescription),
+                "Reply detail title tag must not replace the subject with a generic content description.");
             using var list = ScrollableRoot(activity);
             using var titleBounds = new Rect();
             using var contentBounds = new Rect();
