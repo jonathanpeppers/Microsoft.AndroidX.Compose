@@ -4,27 +4,29 @@
     static int dependencyCount();
     static java.util.concurrent.atomic.AtomicReference pausedOrigin(androidx.compose.runtime.CompositionImpl);
 }
--keepnames class androidx.compose.runtime.CompositionImpl
 -keepnames class androidx.compose.runtime.RecomposeScopeImpl
--keepclassmembers class androidx.compose.runtime.CompositionImpl {
+# These declarations are reflected eagerly, even for an uninstantiated backend.
+# R8 full mode can discard instance fields under keepclassmembers alone.
+# Keep the declaring classes and only the named fields, not all their members.
+-keep class androidx.compose.runtime.CompositionImpl {
     java.lang.Object lock;
     androidx.compose.runtime.Changes changes;
     androidx.compose.runtime.Changes lateChanges;
     androidx.compose.runtime.PausedCompositionImpl pendingPausedComposition;
 }
--keepclassmembers class androidx.compose.runtime.PausedCompositionImpl {
+-keep class androidx.compose.runtime.PausedCompositionImpl {
     java.util.concurrent.atomic.AtomicReference state;
 }
--keepclassmembers class androidx.compose.runtime.GapComposer {
+-keep class androidx.compose.runtime.GapComposer {
     *** changeListWriter;
 }
--keepclassmembers class androidx.compose.runtime.LinkComposer {
+-keep class androidx.compose.runtime.LinkComposer {
     *** changeListWriter;
 }
--keepclassmembers class androidx.compose.runtime.composer.*.changelist.ComposerChangeListWriter {
+-keep class androidx.compose.runtime.composer.*.changelist.ComposerChangeListWriter {
     *** changeList;
 }
--keepclassmembers class androidx.compose.runtime.composer.*.changelist.ChangeList {
+-keep class androidx.compose.runtime.composer.*.changelist.ChangeList {
     *** operations;
 }
 -keepnames class androidx.compose.runtime.composer.*.changelist.Operation$Remember

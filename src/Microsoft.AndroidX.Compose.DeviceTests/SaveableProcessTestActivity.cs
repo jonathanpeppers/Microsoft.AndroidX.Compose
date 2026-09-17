@@ -87,16 +87,11 @@ public class SaveableProcessTestActivity : ComponentActivity
         string directory = FilesDir?.AbsolutePath
             ?? throw new InvalidOperationException("Saveable process probe has no files directory.");
         string path = Path.Combine(directory, "saveable-process.json");
-        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(new
-        {
-            RunId = _runId,
-            ProcessId = Process.MyPid(),
-            PreviousProcessId = _previousProcessId,
-            TaskId,
-            Restored = _restored,
-            Saved = _saved,
-            Values = _values,
-        }));
+        var snapshot = new SaveableProcessSnapshot(
+            _runId, Process.MyPid(), _previousProcessId, TaskId,
+            _restored, _saved, _values);
+        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(snapshot,
+            ProcessSnapshotJsonContext.Default.SaveableProcessSnapshot));
         File.Move(path + ".tmp", path, overwrite: true);
     }
 

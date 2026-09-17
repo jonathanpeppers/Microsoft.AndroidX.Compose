@@ -92,7 +92,8 @@ public class CompositionIdentityProcessActivity : CompositionIdentityTestActivit
         string directory = FilesDir?.AbsolutePath
             ?? throw new InvalidOperationException("Identity process probe FilesDir is unavailable.");
         string path = Path.Combine(directory, "composition-identity-process.json");
-        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(snapshot));
+        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(snapshot,
+            ProcessSnapshotJsonContext.Default.CompositionIdentityProcessSnapshot));
         File.Move(path + ".tmp", path, overwrite: true);
     }
 }

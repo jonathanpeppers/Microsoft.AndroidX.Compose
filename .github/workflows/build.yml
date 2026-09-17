@@ -74,6 +74,12 @@ jobs:
             -warnaserror:XA4301 \
             -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.NativeAOT.binlog"
 
+      - name: Verify NativeAOT shared-state reflection declarations
+        run: |
+          dotnet run scripts/check-shared-state-dex.cs -- --self-test
+          dotnet run scripts/check-shared-state-dex.cs -- \
+            "$RUNNER_TEMP/template-smoke-output/nativeaot/bin/Release/net11.0-android/net.compose.template.smoke-Signed.apk"
+
       - name: Publish packages to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |

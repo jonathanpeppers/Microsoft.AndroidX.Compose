@@ -98,18 +98,11 @@ public class NavSaveableProcessTestActivity : ComponentActivity
         string directory = FilesDir?.AbsolutePath
             ?? throw new InvalidOperationException("Navigation process probe has no files directory.");
         string path = Path.Combine(directory, "nav-saveable-process.json");
-        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(new
-        {
-            RunId = _runId,
-            ProcessId = Process.MyPid(),
-            PreviousProcessId = _previousProcessId,
-            TaskId,
-            Factory = _factory,
-            Restored = _restored,
-            Saved = _saved,
-            Value = _value,
-            Label = _label,
-        }));
+        var snapshot = new NavSaveableProcessSnapshot(
+            _runId, Process.MyPid(), _previousProcessId, TaskId,
+            _factory, _restored, _saved, _value, _label);
+        File.WriteAllText(path + ".tmp", JsonSerializer.Serialize(snapshot,
+            ProcessSnapshotJsonContext.Default.NavSaveableProcessSnapshot));
         File.Move(path + ".tmp", path, overwrite: true);
     }
 }
