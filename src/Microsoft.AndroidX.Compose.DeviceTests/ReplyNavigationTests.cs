@@ -405,25 +405,26 @@ public class ReplyNavigationTests
         using var label = Find(root, n => n.VisibleToUser &&
             n.Text?.Contains(email.Subject, StringComparison.Ordinal) == true)
             ?? throw new InvalidOperationException($"Reply email {id} was not visible.");
-        var current = Copy(label);
-        try
+        using var labelBounds = new Rect();
+        label.GetBoundsInScreen(labelBounds);
+        using var selected = Find(root, node =>
         {
-            while (!current.Scrollable)
+            if (!node.VisibleToUser || !node.Selected)
+                return false;
+            using var bounds = new Rect();
+            node.GetBoundsInScreen(bounds);
+            return bounds.Contains(labelBounds.CenterX(), labelBounds.CenterY());
+        });
+        if (expected)
+        {
+            if (selected is null)
             {
-                if (current.Selected)
-                {
-                    Assert.IsTrue(expected, $"Reply email {id} unexpectedly publishes selected semantics.");
-                    return;
-                }
-                var parent = current.Parent;
-                if (parent is null)
-                    break;
-                current.Dispose();
-                current = parent;
+                Assert.Fail(
+                    $"Reply email {id} has no selected semantics node containing its subject center.");
             }
-            Assert.IsFalse(expected, $"Reply email {id} does not publish selected semantics.");
+            return;
         }
-        finally { current.Dispose(); }
+        Assert.IsNull(selected, $"Reply email {id} unexpectedly publishes selected semantics.");
     }
 
     static void PerformClick(AccessibilityNodeInfo node, bool longClick)
