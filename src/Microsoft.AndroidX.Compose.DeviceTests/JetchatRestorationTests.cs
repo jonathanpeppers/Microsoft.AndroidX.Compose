@@ -257,6 +257,69 @@ public class JetchatRestorationTests
         finally { await Finish(activity); }
     }
 
+    /// <summary>The merged presentation row routes video to the picker and preserves Send state.</summary>
+    [TestMethod]
+    public async Task VideoSelector_MergedPresentationRoutesPickerAndAttachmentSend()
+    {
+        var activity = await Start("light", ownerSwitch: true);
+        try
+        {
+            await Click(activity, node => node.Editable, "editor");
+            await SetText(activity, "caption");
+            await SetSelection(activity, 3, 3);
+            using var mood = Find(
+                activity,
+                node => node.ContentDescription == "Show Emoji selector")
+                ?? throw new InvalidOperationException("Emoji selector is unavailable.");
+            using var attach = Find(
+                activity,
+                node => node.ContentDescription == "Attach video")
+                ?? throw new InvalidOperationException("Video selector is unavailable.");
+            using var send = Find(
+                activity,
+                node => node.Text == "Send")
+                ?? throw new InvalidOperationException("Send action is unavailable.");
+            var density = activity.Resources?.DisplayMetrics?.Density
+                ?? throw new InvalidOperationException("Display density is unavailable.");
+            using var moodBounds = new global::Android.Graphics.Rect();
+            using var attachBounds = new global::Android.Graphics.Rect();
+            using var sendBounds = new global::Android.Graphics.Rect();
+            mood.GetBoundsInScreen(moodBounds);
+            attach.GetBoundsInScreen(attachBounds);
+            send.GetBoundsInScreen(sendBounds);
+            Assert.IsLessThanOrEqualTo(
+                Math.Abs(moodBounds.Left - (int)Math.Round(16 * density)),
+                2,
+                "Selector content must retain the pinned 16 dp start edge.");
+            Assert.IsGreaterThan(
+                sendBounds.Left - attachBounds.Right,
+                (int)Math.Round(40 * density),
+                "Weighted spacing must keep Send separated from the five selector icons.");
+
+            await Click(activity, node => node.ContentDescription == "Attach video", "video selector");
+            Assert.AreEqual(1, activity.VideoPickerRequestCount);
+            Assert.IsFalse(IsEnabled(activity, node => node.ContentDescription == "Attach video"));
+            Assert.IsFalse(IsEnabled(activity, node => node.Text == "Send"));
+            using (var unavailable = Find(
+                activity,
+                node => node.Text?.Contains("Functionality", StringComparison.Ordinal) == true))
+                Assert.IsNull(unavailable, "Video must route to the picker, not an unavailable panel.");
+
+            var picker = activity.TestVideoPicker
+                ?? throw new InvalidOperationException("Test video picker is unavailable.");
+            await activity.OnUi(() =>
+                picker.Complete(VideoPickResult.Selected(VideoAttachmentStore.SeedVideoUri(activity))));
+            await Settle(activity);
+            using var preview = Find(
+                activity,
+                node => node.ContentDescription == "Attached video preview");
+            Assert.IsNotNull(preview);
+            Assert.IsTrue(IsEnabled(activity, node => node.Text == "Send"));
+            Assert.AreEqual(("caption", 3, 3, true), Editor(activity));
+        }
+        finally { await Finish(activity); }
+    }
+
     static async Task<JetchatRestorationTestActivity> Start(string palette, bool ownerSwitch = false)
     {
         _ = Runner.UiAutomation ?? throw new InvalidOperationException("UiAutomation is unavailable.");
@@ -322,10 +385,20 @@ public class JetchatRestorationTests
                 if (!ReferenceEquals(target, node)) target.Dispose();
                 target = parent;
             }
+
             Assert.IsTrue(target.PerformAction(NativeAction.Click), $"Native {name} click failed.");
         }
         finally { if (!ReferenceEquals(target, node)) target.Dispose(); }
         await Settle(activity);
+    }
+
+    static bool IsEnabled(
+        JetchatRestorationTestActivity activity,
+        Func<AccessibilityNodeInfo, bool> predicate)
+    {
+        using var node = Find(activity, predicate)
+            ?? throw new InvalidOperationException("Expected accessibility node is missing.");
+        return node.Enabled;
     }
 
     static async Task SetText(JetchatRestorationTestActivity activity, string text)

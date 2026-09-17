@@ -19,6 +19,8 @@ public class JetchatRestorationTestActivity : MainActivity
     internal bool Restored { get; private set; }
     internal bool Resumed { get; private set; }
     internal MutableManagedState<ConversationUiState>? Owners { get; private set; }
+    internal VideoPickerViewModel? TestVideoPicker { get; private set; }
+    internal int VideoPickerRequestCount { get; private set; }
     internal ComposeView ComposeRoot => FindComposeView(Window?.DecorView
         ?? throw new InvalidOperationException("Jetchat decor is unavailable."))
         ?? throw new InvalidOperationException("Jetchat ComposeView is unavailable.");
@@ -33,7 +35,9 @@ public class JetchatRestorationTestActivity : MainActivity
         {
             // The sample has one channel; this mode exercises replacement in the same real conversation slot.
             var owners = new MutableManagedState<ConversationUiState>(new("#first", 1, []));
+            var videoPicker = new VideoPickerViewModel();
             Owners = owners;
+            TestVideoPicker = videoPicker;
             this.SetContent(c =>
             {
                 var ui = owners.Value;
@@ -46,8 +50,9 @@ public class JetchatRestorationTestActivity : MainActivity
                 {
                     Conversation.Build(
                         ui, menu, popup, scroll, recording, swipe,
-                        new VideoPickerViewModel(),
-                        () => { }, () => { }, _ => { }),
+                        videoPicker,
+                        () => VideoPickerRequestCount++,
+                        () => { }, _ => { }),
                 };
             });
         }
