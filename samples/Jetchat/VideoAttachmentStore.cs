@@ -46,7 +46,7 @@ internal static class VideoAttachmentStore
                 () => CopyBounded(openSource, destination, cancellationToken),
                 cancellationToken);
             using var file = new Java.IO.File(destination);
-            var uri = Android.Net.Uri.FromFile(file)
+            using var uri = Android.Net.Uri.FromFile(file)
                 ?? throw new InvalidOperationException("Could not create a URI for the imported video.");
             return uri.ToString() ?? throw new InvalidOperationException("Imported video URI was empty.");
         }
