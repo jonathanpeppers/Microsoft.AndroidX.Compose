@@ -711,10 +711,13 @@ The `DeviceTests` project always compiles the complete test source set and
 resources, including both the normal MSTest instrumentation and the bounded
 direct-call shared-state runner. Use the standard SDK properties:
 `UseMonoRuntime=false` for CoreCLR, or `PublishAot=true` for NativeAOT.
-Project references set `AdditionalProperties="PublishAot=false"` so app-level
+Project references set `GlobalPropertiesToRemove="PublishAot"` so app-level
 native publishing does not reach the runtime library or netstandard source
-generator. The test project enables the standard `RestoreUseStaticGraphEvaluation`
-setting so restore honors these per-reference properties too; the default
+generator. Removing the property, rather than setting it to `false`, preserves
+the same MSBuild project identity as other solution references where it is
+unset; separate instances would race while writing the same intermediate files.
+The test project enables the standard `RestoreUseStaticGraphEvaluation`
+setting so restore honors this per-reference removal too; the default
 restore traversal otherwise forwards the app's global `PublishAot=true` and
 fails on the netstandard generator. No generator-local property override is
 needed. Use separate, clean artifact directories and application IDs when

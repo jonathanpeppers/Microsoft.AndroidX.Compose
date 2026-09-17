@@ -104,10 +104,10 @@
   <ItemGroup>
     <!-- Native publishing is an application setting, not a dependency/analyzer setting. -->
     <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj"
-                      AdditionalProperties="PublishAot=false" />
+                      GlobalPropertiesToRemove="PublishAot" />
     <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false"
-                      AdditionalProperties="PublishAot=false" />
+                      GlobalPropertiesToRemove="PublishAot" />
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
