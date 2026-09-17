@@ -166,6 +166,19 @@ mode; the original dark mode and unset raw secure key were restored.
 Medium/expanded captures are a separate acceptance pass and are not implied
 by these compact results.
 
+The separate adaptive pass used the same Reply executable with source
+`856cc42`'s test locator and exact fresh-installed APK hashes
+`97F8A615...` / `91937574...`. On the same Pixel 10, temporary window
+overrides produced 1200 x 1800 at 320 dpi (600 x 900 dp) and
+1680 x 1600 at 320 dpi (840 x 800 dp). The exact
+`AdaptiveNavigationMatchesWindowWidth` test matched one case and passed at
+each width, with owned native hierarchies proving the localized Inbox label
+belongs to a clickable/selected start-side navigation control rather than
+content text. Light/dark Inbox and detail frames were captured at both
+widths; a detail hierarchy confirmed the centered title node. These are
+emulated phone-window results, not physical tablet or foldable proof.
+The sample remains single-pane and fold-aware list/detail remains #168.
+
 On 2026-09-15, source `8da2c4f` passed all four focused checks on the attached
 Pixel 7: the numeric-padding regression and all three `ReplySearchTests`
 (zero failures or skips). This includes no-result-to-match recovery, exact

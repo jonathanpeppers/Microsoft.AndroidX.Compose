@@ -125,6 +125,14 @@ hierarchies are session artifacts. This is source-specific C# acceptance,
 not a new matched Kotlin comparison; the R01-R12 observations below remain
 the fixed #349 baseline.
 
+A separate source-specific matrix then passed the exact adaptive test at
+600 x 900 dp and 840 x 800 dp, with native hierarchy evidence for the
+start-side navigation control and light/dark Inbox/detail captures at each
+width. Those dimensions were temporary window/density overrides on the same
+physical phone. They demonstrate medium/expanded navigation switching, not
+physical tablet/foldable behavior, fold posture handling, or dual-pane
+content; #168 remains the list/detail boundary.
+
 | ID | Initial state / action | Result |
 | --- | --- | --- |
 | R01 | Fresh Inbox, collapsed empty search | Paired light/dark states, including short window. Visual theme/card/FAB differences remain. |
