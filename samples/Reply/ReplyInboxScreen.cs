@@ -34,8 +34,7 @@ public static class ReplyInboxScreen
                         isSelected:       selectedEmailIds.Contains(email.Id)))
             {
                 Modifier = Modifier.FillMaxWidth()
-                    .Padding(top: 80)
-                    .Focusable(),
+                    .Padding(top: 80),
                 State = listState,
                 ContentPadding = c.SystemBarsInsets()
                     .Only(WindowInsetsSides.Bottom)
@@ -44,7 +43,10 @@ public static class ReplyInboxScreen
             };
             var content = new Box
             {
-                Modifier.FillMaxSize().StatusBarsPadding(),
+                Modifier.FillMaxSize()
+                    .StatusBarsPadding()
+                    .Semantics("Inbox messages")
+                    .Focusable(),
                 list,
                 new ReplySearchBar(emails, navigateToDetail),
             };
