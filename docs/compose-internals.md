@@ -54,6 +54,32 @@ fun Greeting(name: String, $composer: Composer, $changed: Int) {
 
 That generated code is what makes recomposition incremental.
 
+### Callback scope handle lifetime
+
+`ComposableLambda3` and `ComposableLambda4` expose their native receiver to
+scope-aware bodies as an `IntPtr`. That handle is borrowed from the incoming
+managed peer, not from the JNI callback's original local reference.
+`RenderContext.PushScope` does not take ownership. The callback therefore
+keeps `p0` alive through the complete body and context unwinding with
+`GC.KeepAlive` in `finally`. Native reachability of a scope singleton can
+preserve its managed peer without preserving that particular JNI reference.
+The Android 37.0.0-rc.1.2257 CoreCLR
+[`BridgeProcessingShared`](https://github.com/dotnet/android/blob/37.0.0-rc.1.2257/src/native/clr/host/bridge-processing.cc)
+deletes a participating peer's old global reference when weakening it, then
+creates a new global reference if the native object survives collection.
+Do not replace this lifetime boundary with a static scope cache or retain a
+raw handle after the callback returns.
+
+`ComposableScopeLifetimeTests` forces managed and Java collection inside both
+callback shapes, checks the owner before using the handle for bound RowScope
+alignment, and covers normal and exceptional exits. The checks separate
+managed weak-reference survival from borrowed/current handle equality, then
+retain the observed owner through JNI. Controls distinguish a strongly rooted
+singleton, observations of an unrooted singleton's reference, and collection
+eligibility of a fresh Java object without an independent native root.
+Handle inequality alone is not evidence of the historical crash; these
+diagnostics still require paired baseline/candidate and rendering validation.
+
 ### Pinned `$changed` ABI and Static compatibility
 
 `ChangedBits` follows Kotlin's

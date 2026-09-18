@@ -61,8 +61,16 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     {
         ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
-        using var context = ComposableContext.Enter(composer);
-        using var animation = RenderContext.PushAnimatedVisibilityScope(_animatedScope);
-        return _body(p0, composer);
+        try
+        {
+            using var context = ComposableContext.Enter(composer);
+            using var animation = RenderContext.PushAnimatedVisibilityScope(_animatedScope);
+            return _body(p0, composer);
+        }
+        finally
+        {
+            // Raw scope callbacks borrow the JNI reference owned by this peer.
+            GC.KeepAlive(p0);
+        }
     }
 }
