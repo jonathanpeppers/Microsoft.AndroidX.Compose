@@ -5,7 +5,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Platform;
 
 sealed class FallbackViewNode : ComposableNode
 {
-    static readonly object s_lifetimeKey = new();
+    const int LifetimeKey = 0;
 
     readonly IView _view;
     readonly IMauiContext _context;
@@ -25,12 +25,12 @@ sealed class FallbackViewNode : ComposableNode
             factory: context => host = new FallbackViewHost(context),
             update: platformHost => ((FallbackViewHost)platformHost).Update(_view, _context))
         {
-            Modifier = _modifier,
+            Modifier = Modifier ?? _modifier,
         }.Render(composer);
 
-        // The stable key retains the first effect closure, whose factory
-        // capture points at the AndroidView host for this composition slot.
-        new DisposableEffect(s_lifetimeKey, () => () =>
+        // The supported, stable primitive key retains the first effect
+        // closure, whose factory capture points at this slot's host.
+        new DisposableEffect(LifetimeKey, () => () =>
         {
             host?.RemoveAllViews();
             host = null;
