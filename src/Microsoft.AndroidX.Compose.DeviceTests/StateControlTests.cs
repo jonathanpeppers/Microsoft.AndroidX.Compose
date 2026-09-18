@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.UI.Text;
+using AccessibilityNodeInfo = Android.Views.Accessibility.AccessibilityNodeInfo;
 using SearchBarValue = AndroidX.Compose.Material3.SearchBarValue;
 using WideNavigationRailValue = AndroidX.Compose.Material3.WideNavigationRailValue;
 
@@ -11,7 +12,9 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class StateControlTests
 {
     [TestMethod]
-    public async Task StateControls_PreservePendingValuesReusePeersAndRunOperations()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task StateControls_PreservePendingValuesReusePeersAndRunOperations(bool direct)
     {
         StateControlTestActivity.Reset();
         var search = Require(StateControlTestActivity.Search, "Search state");
@@ -23,7 +26,7 @@ public class StateControlTests
         Assert.AreEqual(SearchBarValue.Expanded, search.CurrentValue);
         Assert.AreEqual(1f, search.Progress);
 
-        var activity = await StartActivity();
+        var activity = await StartActivity(direct);
         try
         {
             var pull = Require(StateControlTestActivity.PullToRefresh, "Pull-to-refresh state");
@@ -93,9 +96,21 @@ public class StateControlTests
             Assert.AreEqual(1f, pull.DistanceFraction, 0.01f);
 
             await RunOnUiThread(activity, () => search.CollapseAsync());
-            Assert.AreEqual(SearchBarValue.Collapsed, search.CurrentValue);
+            Assert.AreEqual(
+                SearchBarValue.Collapsed,
+                await RunOnUiThread(activity, () => Task.FromResult(search.TargetValue)));
+            Assert.AreEqual(
+                SearchBarValue.Collapsed,
+                await RunOnUiThread(activity, () => Task.FromResult(search.CurrentValue)));
+            Assert.AreEqual(0f, search.Progress, 0.01f);
             await RunOnUiThread(activity, () => search.ExpandAsync());
-            Assert.AreEqual(SearchBarValue.Expanded, search.CurrentValue);
+            Assert.AreEqual(
+                SearchBarValue.Expanded,
+                await RunOnUiThread(activity, () => Task.FromResult(search.TargetValue)));
+            Assert.AreEqual(
+                SearchBarValue.Expanded,
+                await RunOnUiThread(activity, () => Task.FromResult(search.CurrentValue)));
+            Assert.AreEqual(1f, search.Progress, 0.01f);
             await RunOnUiThread(activity, () => search.SnapToAsync(0.5f));
             Assert.AreEqual(0.5f, search.Progress, 0.01f);
 
@@ -121,6 +136,10 @@ public class StateControlTests
                 "Dismissable snackbar did not enter the host queue.")
                 ?? throw new InvalidOperationException(
                     "Dismissable snackbar data was unavailable.");
+            await WaitFor(
+                () => AccessibilityTextExists("Dismiss me"),
+                static visible => visible,
+                "SnackbarHost did not render the queued SnackbarData payload.");
             Assert.AreEqual(
                 global::AndroidX.Compose.Material3.SnackbarDuration.Short,
                 dismissedData.Visuals.Duration);
@@ -163,6 +182,20 @@ public class StateControlTests
                 static value => value is null,
                 "Cancelled snackbar remained in the host queue.");
 
+            Assert.IsTrue(
+                global::Android.Runtime.JNIEnv.IsSameObject(
+                    searchJvm.Handle,
+                    Require(search.Jvm, "Search JVM peer").Handle),
+                "Search state mutation replaced its active composition-owned peer.");
+            Assert.IsTrue(
+                global::Android.Runtime.JNIEnv.IsSameObject(
+                    searchTextJvm.Handle,
+                    Require(searchText.Jvm, "Search text JVM peer").Handle),
+                "Search text mutation replaced its active composition-owned peer.");
+
+            var retainedSearchValue = search.CurrentValue;
+            string retainedSearchText = searchText.Text;
+            long retainedSearchSelection = searchTextJvm.Selection;
             int priorPass = StateControlTestActivity.CompletedRenderPasses;
             activity.RunOnUiThread(() =>
                 Require(StateControlTestActivity.Visible, "Visibility state").Value = false);
@@ -170,6 +203,12 @@ public class StateControlTests
                 static () => StateControlTestActivity.CompletedRenderPasses,
                 value => value > priorPass,
                 "Controls did not leave composition.");
+            await WaitFor(
+                () => search.Jvm is null && searchText.Jvm is null,
+                static released => released,
+                "Search owners retained native peers after full removal.");
+            Assert.AreEqual(retainedSearchValue, search.CurrentValue);
+            Assert.AreEqual(retainedSearchText, searchText.Text);
             priorPass = StateControlTestActivity.CompletedRenderPasses;
             activity.RunOnUiThread(() =>
                 Require(StateControlTestActivity.Visible, "Visibility state").Value = true);
@@ -178,8 +217,17 @@ public class StateControlTests
                 value => value > priorPass,
                 "Controls did not re-enter composition.");
 
-            Assert.AreEqual(searchJvm.Handle, Require(search.Jvm, "Search JVM peer").Handle);
-            Assert.AreEqual(searchTextJvm.Handle, Require(searchText.Jvm, "Search text JVM peer").Handle);
+            var reboundSearch = Require(search.Jvm, "Search JVM peer");
+            var reboundSearchText = Require(searchText.Jvm, "Search text JVM peer");
+            Assert.IsFalse(
+                global::Android.Runtime.JNIEnv.IsSameObject(
+                    searchJvm.Handle, reboundSearch.Handle));
+            Assert.IsFalse(
+                global::Android.Runtime.JNIEnv.IsSameObject(
+                    searchTextJvm.Handle, reboundSearchText.Handle));
+            Assert.AreEqual(retainedSearchValue, search.CurrentValue);
+            Assert.AreEqual(retainedSearchText, searchText.Text);
+            Assert.AreEqual(retainedSearchSelection, reboundSearchText.Selection);
             Assert.AreEqual(secureTextJvm.Handle, Require(secureText.Jvm, "Secure text JVM peer").Handle);
             Assert.AreEqual(pullJvm.Handle, Require(pull.Jvm, "Pull JVM peer").Handle);
             Assert.AreEqual(railJvm.Handle, Require(rail.Jvm, "Rail JVM peer").Handle);
@@ -187,10 +235,38 @@ public class StateControlTests
         finally
         {
             activity.RunOnUiThread(activity.Finish);
+            await WaitFor(
+                static () => StateControlTestActivity.Current,
+                static current => current is null,
+                "State-control test activity did not finish.");
         }
     }
 
-    static async Task<StateControlTestActivity> StartActivity()
+    static bool AccessibilityTextExists(string expected)
+    {
+        var automation = TestInstrumentation.Current?.UiAutomation
+            ?? throw new InvalidOperationException(
+                "Instrumentation UI automation is unavailable.");
+        using var root = automation.RootInActiveWindow;
+        if (root is null || root.PackageName != "net.compose.devicetests")
+            return false;
+        return Visit(root);
+
+        bool Visit(AccessibilityNodeInfo node)
+        {
+            if (node.Text == expected)
+                return true;
+            for (int i = 0; i < node.ChildCount; i++)
+            {
+                using var child = node.GetChild(i);
+                if (child is not null && Visit(child))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    static async Task<StateControlTestActivity> StartActivity(bool direct)
     {
         var context = global::Android.App.Application.Context
             ?? throw new InvalidOperationException(
@@ -199,6 +275,7 @@ public class StateControlTests
             context,
             typeof(StateControlTestActivity));
         intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        intent.PutExtra("direct", direct);
         context.StartActivity(intent);
         return await WaitFor(
             static () => StateControlTestActivity.Current,

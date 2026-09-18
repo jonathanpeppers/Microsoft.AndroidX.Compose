@@ -9,6 +9,7 @@ public sealed class ReplySearchBar : ComposableNode
 {
     readonly IReadOnlyList<Email> _emails;
     readonly Action<long> _onSelected;
+    internal Action<ReplySearchSession>? SessionObserved { get; init; }
 
     /// <summary>Creates a standalone search bar without a navigation callback.</summary>
     public ReplySearchBar() : this(LocalEmailsDataProvider.AllEmails, static _ => { }) { }
@@ -28,6 +29,7 @@ public sealed class ReplySearchBar : ComposableNode
         var node = new Composed(c =>
         {
             var session = c.Remember(() => new ReplySearchSession());
+            SessionObserved?.Invoke(session);
             var scope = c.RememberCoroutineScope();
             string searchEmails = c.StringResource(Resource.String.reply_search_emails);
             string search = c.StringResource(Resource.String.reply_search);

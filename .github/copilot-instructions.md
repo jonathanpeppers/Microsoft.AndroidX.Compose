@@ -305,7 +305,7 @@ helpers, operators.
 | `IFunction2?` / `IFunction3?` named slot                                      | Optional `ComposableNode?` property — multi-slot leaf                                                                                                                                       |
 | `IntPtr` with name ending `Scope`                                             | Kotlin extension receiver; auto-bound to `RenderContext.CurrentScope` (no ctor slot)                                                                                                       |
 | `IntPtr` + `[PainterResource]`                                                | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally                                                                                                    |
-| `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]`               | State-holder (Phase 4): exposes wrapper as defaulted ctor slot (`StateType? state = null`), calls `RememberXxxState(composer)` on first render, populates `state.Jvm`, forwards JNI handle |
+| `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]`               | State-holder (Phase 4): exposes a defaulted wrapper, or a required wrapper with `Required = true`; owns/shares the native Remember peer, optionally transforms it, and forwards the final JNI handle |
 | Primitive (`string`/`int`/`long`/`bool`/`float`/`double`)                     | Ctor parameter, stored in `_<name>`                                                                                                                                                        |
 | Registered nullable managed value/configuration (`FloatRange?`, `FlowRowOverflow?`, `FlowColumnOverflow?`) | Optional property; wrapper-passthrough method converts to the platform type at the binding boundary |
 | Anything else                                                                 | Rejected with CN3002                                                                                                                                                                       |
@@ -396,7 +396,8 @@ slots surface as `Action` instead of `Action<IComposer>`.
     convertible to the Remember parameter type; use a managed wrapper method
     around a generated JNI bridge when conversion is required (for example,
     `long?` to boxed `Java.Lang.Long?` or `DatePickerYearRange?` to
-    `Kotlin.Ranges.IntRange?`). Requires `StateType` constructible with no args.
+    `Kotlin.Ranges.IntRange?`). Optional wrappers require `StateType`
+    constructible with no args; `Required = true` wrappers do not.
   - **Phase 4c** — `SharedState = true` opts in to composition-owned sharing for
     sibling facades sharing a `StateType` (e.g. `TimePicker` + `TimeInput`).
     A direct `IRememberObserver` slot identifies the owner. Every execution
@@ -455,6 +456,30 @@ slots surface as `Action` instead of `Action<IComposer>`.
   field named `Jvm` whose declared type is the binding-generated state
   interface. Cannot combine with `[PainterResource]`.
 
+  Set `Required = true` when the wrapper is a required part of the public
+  facade contract, such as the separately rendered SearchBar halves.
+  `PropertyName = "X"` preserves an established public constructor/direct
+  parameter name when Kotlin's physical bridge parameter uses another name.
+  `SuppressOwner = true` omits new public typed Remember helpers when
+  ownership is an internal implementation detail. A shared Remember may
+  return the bound peer directly instead of an `IntPtr`; the generator keeps
+  it alive and publishes it through `SharedStateOwner`.
+
+  Set `Transform = nameof(ComposeBridges.X)` for a two-stage state factory.
+  The named static method receives the shared Remember peer plus
+  `IComposer`, and returns the peer passed to the component bridge. The
+  transform runs inside the acquisition's failure/abort boundary; its result
+  remains alive through the component call. `BottomSheetScaffold` uses this
+  to remember a shared `SheetState`, then remember the enclosing
+  `BottomSheetScaffoldState`.
+
+- `[NativePayloadContent(nameof(ComposeBridges.X))]` — internal required
+  `IFunction3` content whose first argument is a native payload rather than a
+  scope. The parameter is hidden from tree/direct public APIs. Generated
+  lowering uses tracked `Wrap3WithValue` and forwards `(payload, composer)` to
+  the named handler. `SnackbarHost` uses this to render native
+  `SnackbarData` through the bound `Snackbar` API.
+
 - `[ConfirmStateChange(typeof(T))]` (Phase 10) — `IFunction1?` param of a
   `[StateHolder]` Remember bridge. Models per-instance JNI veto adapter for
   Kotlin's `(T) -> Boolean` callback (part of `remember` cache key). Generator:
@@ -493,16 +518,16 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   (`AlertDialog`, `AssistChip`, `ListItem`, `Snackbar`, `BadgedBox`, `Tab`,
   `NavigationBarItem`, top-app-bar family).
 - **Phase 4 / 4b / 4c** — `[StateHolder]` shapes above (`DatePicker`,
-  `DateRangePicker`, `TimePicker`, `TimeInput`, `ModalBottomSheet`).
+  `DateRangePicker`, `TimePicker`, `TimeInput`, `ModalBottomSheet`, the
+  SearchBar family, `SearchBarInputField`, `BottomSheetScaffold`).
   `ModalBottomSheet` exercises Phase 4b (parameterised
   `RememberSheetState(skipPartiallyExpanded, confirmValueChange,
   composer)`) + Phase 4c (`SharedState = true`) + Phase 10
   `[ConfirmStateChange]` simultaneously — the canonical example of all
-  three composing. `BottomSheetScaffold` and `SearchBar` stay hand-
-  written (two non-nullable `IFunction3` slots — needs hybrid-container
-  generator extension). `SnackbarHost` stays hand-written (its body
-  `IFunction3` forwards `p0` to a sibling `Snackbar` bridge — no
-  current generator option models that).
+  three composing. SearchBar uses required shared wrappers across its
+  collapsed/expanded halves. `BottomSheetScaffold` combines a hybrid
+  container with transformed two-stage shared state. `SnackbarHost` uses
+  hidden native-payload content forwarding.
 - **Phase 6** — `DefaultColorFromTheme` for drawer sheets/containers falling
   back to a `ColorScheme` slot.
 - **Phase 7** — `[PainterResource]` resource-id facades (`Image`, Painter
@@ -629,14 +654,6 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
 
 - Facades calling a bound binding directly with no `[ComposeBridge]` —
   `DropdownMenuItem`.
-- State-holder facades that need two non-nullable content slots
-  (hybrid-container with `[Slot]` siblings — not yet modelled):
-  `BottomSheetScaffold` (`sheetContent` + `content`) and the `SearchBar`
-  family (`inputField` + `content`). `SnackbarHost` stays hand-written
-  because its body `IFunction3`'s first arg (`SnackbarData`) is forwarded
-  to a sibling bridge — no current generator option models that. (Phase
-  4b + 4c + 10 combined — parameterised Remember + SharedState +
-  per-instance veto adapter — does work, see `ModalBottomSheet`.)
 - Scope facades doing non-trivial work beyond `RenderContext.PushScope`
   (`SegmentedButton` — two ctors route to two physical bridges plus a
   custom `shape = ItemShape(...)` arg computed from the published
@@ -702,10 +719,10 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3003 | `Scope` is set but bridge has no `IFunction3` content slot.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | CN3004 | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | CN3005 | `[Callback(typeof(T))]` target type unsupported (must be `bool`/`string`/`float` or derive from `Java.Lang.Object`). |
-| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, `[DecorationBox]` on a parameter that is not nullable `IFunction3`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body. |
+| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, `[DecorationBox]` on a parameter that is not nullable `IFunction3`, invalid `[NativePayloadContent]` shape/handler, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body. |
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static remember bridge, inaccessible writable `Jvm` field, invalid `Bind`, `Unbind` not an accessible parameterless instance void method, or conflicting `Bind`/`Unbind` among shared declarations with the same `Remember` and `StateType`. |
+| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a compatible static remember bridge, inaccessible writable `Jvm` field, invalid `Bind`/`Unbind`, peer return without shared ownership, invalid `Transform`, or conflicting ownership hooks among shared declarations with the same `Remember` and `StateType`. |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3` or is a `[DecorationBox]` callback, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous, missing defaults metadata/entry, incompatible shared parameters, discriminator not a single non-null reference type, no primary-only discriminator, callback required/optional shape changes, optional callback property payload type changes, or combined with `BranchOn`/`AlternateBridge`. |
@@ -850,8 +867,7 @@ Pattern (canonical: `DrawerValueConfirmStateChange`):
 
 1. **For new facades, prefer the generator path** —
    `[ConfirmStateChange(typeof(T))]` + `[ComposeFacade]` (Phase 10).
-2. **Hand-written holdouts** (`BottomSheetScaffold`) by
-   convention:
+2. **Hand-written holdouts** by convention:
    - Expose hook as `Func<T, bool>?` property, default `null` (= "use Kotlin's
      default — always allow"). Document `false` = veto.
    - Allocate JNI adapter **once per node instance** as `readonly` field.
@@ -953,10 +969,10 @@ positional emission is preserved (back-compat with all existing pin tests).
 
 ### Hand-written facade holdouts
 
-Hand-written narrow facades (SnackbarHost and the SearchBar family) compute
-per-param masks. Wide TextField/BottomSheetScaffold and receiver-bearing
-SegmentedButton masks are suppressed at the JNI bridge boundary. Do not
-enable them until every physical Kotlin slot/group can be represented.
+Generated narrow facades compute per-param masks. Wide TextField and
+BottomSheetScaffold routes and receiver-bearing SegmentedButton masks are
+suppressed at the JNI bridge boundary. Do not enable them until every
+physical Kotlin slot/group can be represented.
 
 ### Don't regress correctness
 
@@ -1363,9 +1379,9 @@ explicit-composer adapter on `Composables` and apply
 nullability and optional defaults. The explicit method remains the sole
 rendering implementation and must delegate to the existing facade rather
 than duplicate bridge logic. `[Obsolete]` metadata is copied to the generated
-sibling. `MaterialTheme`, `Scaffold`, `SnackbarHost`, `SegmentedButton`,
-`Layout`, `TextField`, `OutlinedTextField`, the search family, and the
-remembered-facade `BottomSheetScaffold` adapter are the canonical examples.
+sibling. `MaterialTheme`, `Scaffold`, `SegmentedButton`, `Layout`, `TextField`, and
+`OutlinedTextField` are the canonical examples. SnackbarHost, the SearchBar
+family, and BottomSheetScaffold use generated catalog methods.
 
 ### Wiring the generator into a consuming project
 
@@ -1417,8 +1433,8 @@ Call sites capture omitted C#
   shapes outside the issue-listed holdouts.
   Generic lowering covers typed animation, pager, carousel, and lazy
   collection facades; ambient-overload generation covers `MaterialTheme`,
-  `Scaffold`, `SnackbarHost`, `SegmentedButton`, `Layout`, `TextField`,
-  `OutlinedTextField`, the search family, and `BottomSheetScaffold`.
+  `Scaffold`, `SegmentedButton`, `Layout`, `TextField`, and
+  `OutlinedTextField`.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

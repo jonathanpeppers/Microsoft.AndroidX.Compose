@@ -497,7 +497,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags);
 
         bool emitComposableMethodEntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
-        var ownerSlots = slots.Where(s => s.SharedState
+        var ownerSlots = slots.Where(s => s.SharedState && !s.SuppressOwner
             && method.Name == GetSharedStateDeclarations(container, s.RememberMethodName, s.StateWrapperType)
                 .Select(d => d.Method.Name).OrderBy(n => n, StringComparer.Ordinal).First())
             .GroupBy(s => (s.RememberMethodName, Wrapper: s.StateWrapperType?.ToDisplayString(
@@ -1030,6 +1030,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             string? remember = ReadString(stateAttr, "Remember");
             string? bind = ReadString(stateAttr, "Bind");
+            string? transform = ReadString(stateAttr, "Transform");
+            string? propertyName = ReadString(stateAttr, "PropertyName");
             INamedTypeSymbol? stateType = ReadType(stateAttr, "StateType");
             if (remember is not { Length: > 0 })
             {
@@ -1055,6 +1057,19 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': Bind value '{bind}' is not a valid C# identifier"));
                 return null;
             }
+            if (transform is { Length: > 0 } invalidTransform && !SyntaxFacts.IsValidIdentifier(invalidTransform))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': Transform value '{transform}' is not a valid C# identifier"));
+                return null;
+            }
+            if (propertyName is { Length: > 0 } invalidPropertyName &&
+                !SyntaxFacts.IsValidIdentifier(invalidPropertyName))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': PropertyName value '{propertyName}' is not a valid C# identifier"));
+                return null;
+            }
 
             // Validate the Remember bridge resolves to a static method on
             // AndroidX.Compose.ComposeBridges whose last parameter is an
@@ -1076,12 +1091,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             var rememberFit = rememberMethods.FirstOrDefault(m =>
                 m.IsStatic &&
-                IsComposableBridge(m) &&
-                m.ReturnType.SpecialType == SpecialType.System_IntPtr);
+                IsComposableBridge(m));
             if (rememberFit is null)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
-                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method whose last parameter is an IComposer and that returns IntPtr"));
+                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method whose last parameter is an IComposer"));
                 return null;
             }
 
@@ -1105,6 +1119,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be accessible (public or internal)"));
                 return null;
             }
+            bool rememberReturnsPeer = SymbolEqualityComparer.Default.Equals(
+                rememberFit.ReturnType, jvmMember.Type);
+            if (!rememberReturnsPeer &&
+                rememberFit.ReturnType.SpecialType != SpecialType.System_IntPtr)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must return IntPtr or the Jvm field type '{jvmMember.Type.ToDisplayString()}'"));
+                return null;
+            }
+            if (rememberReturnsPeer && !ReadBool(stateAttr, "SharedState"))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': peer-returning Remember methods require SharedState = true"));
+                return null;
+            }
+            IMethodSymbol? transformMethod = null;
             if (bind is { Length: > 0 } bindMethodName)
             {
                 var bindMethod = stateType.GetMembers(bindMethodName).OfType<IMethodSymbol>().FirstOrDefault(m =>
@@ -1120,6 +1150,30 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     return null;
                 }
             }
+            if (transform is { Length: > 0 } transformMethodName)
+            {
+                if (!ReadBool(stateAttr, "SharedState"))
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                        $"[StateHolder] on '{p.Name}': Transform requires SharedState = true"));
+                    return null;
+                }
+                transformMethod = bridgesType.GetMembers(transformMethodName)
+                    .OfType<IMethodSymbol>()
+                    .FirstOrDefault(m =>
+                        m.IsStatic &&
+                        IsComposableBridge(m) &&
+                        m.Parameters.Length == 2 &&
+                        SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, jvmMember.Type) &&
+                        m.ReturnType is INamedTypeSymbol returnType &&
+                        IsJavaObject(returnType));
+                if (transformMethod is null)
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                        $"[StateHolder] on '{p.Name}': Transform method 'ComposeBridges.{transformMethodName}' must be static, accept ({jvmMember.Type.ToDisplayString()}, IComposer), and return a Java.Lang.Object peer"));
+                    return null;
+                }
+            }
 
             // Phase 4b — Remember has N user params before composer. Each
             // user param must either:
@@ -1131,7 +1185,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             //       back to `Initial<PascalCase>` for the Kotlin
             //       "initialX → live X" wrapper convention).
             // Phase 4b also requires an accessible parameterless
-            // construction path on the StateType so the ctor can
+            // construction path on optional StateType slots so the ctor can
             // auto-create a default wrapper when the caller passes null.
             var unbind = ReadString(stateAttr, "Unbind");
             if (unbind is { Length: > 0 } unbindName && !stateType.GetMembers(unbindName)
@@ -1169,7 +1223,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var confirmInfos = new List<ConfirmStateChangeInfo>();
             if (rememberUserParams.Length > 0)
             {
-                if (!HasAccessibleParameterlessConstructor(stateType))
+                if (!ReadBool(stateAttr, "Required") &&
+                    !HasAccessibleParameterlessConstructor(stateType))
                 {
                     diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                         $"[StateHolder] on '{p.Name}': parameterised Remember requires StateType '{stateType.ToDisplayString()}' to be constructible with no arguments (parameterless ctor or all-defaulted-param ctor)"));
@@ -1214,11 +1269,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                             $"[StateHolder] on '{p.Name}': StateType member '{resolved.Name}' has type '{resolvedType.ToDisplayString()}', which is not implicitly convertible to Remember parameter '{up.Name}' of type '{up.Type.ToDisplayString()}'"));
                         return null;
                     }
-                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved.Name;
+                    rememberArgExpressions[i] = "_" + p.Name
+                        + (ReadBool(stateAttr, "Required") ? "." : "!.")
+                        + resolved.Name;
                 }
             }
 
             return new FacadeSlot(p, FacadeSlotKind.StateHolder,
+                slotPropertyName: string.IsNullOrEmpty(propertyName) ? null : propertyName,
                 rememberMethodName: remember,
                 stateWrapperType: stateType,
                 stateJvmType: jvmMember.Type,
@@ -1226,7 +1284,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 bindMethodName: string.IsNullOrEmpty(bind) ? null : bind,
                 sharedState: ReadBool(stateAttr, "SharedState"),
                 confirmStateChanges: confirmInfos.ToArray(),
-                unbindMethodName: string.IsNullOrEmpty(unbind) ? null : unbind);
+                unbindMethodName: string.IsNullOrEmpty(unbind) ? null : unbind,
+                requiredState: ReadBool(stateAttr, "Required"),
+                suppressOwner: ReadBool(stateAttr, "SuppressOwner"),
+                rememberReturnsPeer: rememberReturnsPeer,
+                transformMethodName: transformMethod?.Name);
         }
 
         // [PainterResource] — annotates the bridge param that takes
@@ -1318,6 +1380,40 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var funcArity = KotlinFunctionArity(p.Type);
         if (funcArity >= 0)
         {
+            var payloadAttr = p.GetAttributes().FirstOrDefault(a =>
+                a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.NativePayloadContentAttribute");
+            if (payloadAttr is not null)
+            {
+                string? handler = payloadAttr.ConstructorArguments.Length > 0
+                    ? payloadAttr.ConstructorArguments[0].Value as string
+                    : null;
+                if (funcArity != 3 || p.NullableAnnotation == NullableAnnotation.Annotated ||
+                    handler is not { Length: > 0 } || !SyntaxFacts.IsValidIdentifier(handler))
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
+                        $"[NativePayloadContent] on '{p.Name}' requires a non-null IFunction3 and a valid handler name"));
+                    return null;
+                }
+                var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
+                var javaObjectType = c.Compilation.GetTypeByMetadataName("Java.Lang.Object");
+                var handlerMethod = bridgesType?.GetMembers(handler).OfType<IMethodSymbol>()
+                    .FirstOrDefault(m =>
+                        m.IsStatic &&
+                        m.ReturnsVoid &&
+                        m.Parameters.Length == 2 &&
+                        SymbolEqualityComparer.Default.Equals(
+                            m.Parameters[0].Type, javaObjectType) &&
+                        ComposeDefaultsGenerator.IsComposer(m.Parameters[1].Type));
+                if (handlerMethod is null)
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
+                        $"[NativePayloadContent] on '{p.Name}' requires static ComposeBridges.{handler}(Java.Lang.Object?, IComposer) returning void"));
+                    return null;
+                }
+                return new FacadeSlot(p, FacadeSlotKind.NativePayloadContent,
+                    nativePayloadHandler: handler);
+            }
+
             var lambda = LambdaAdapterLowering.Classify(p);
             if (!lambda.Success)
             {
@@ -1359,6 +1455,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         if (IsPrimitiveCtorType(p.Type) ||
+            ComposeFacadeManagedTypes.IsRequiredRecognized(p.Type) ||
             p.Type.ToDisplayString() == "AndroidX.Compose.UI.Text.Input.TextFieldValue")
             return new FacadeSlot(p, FacadeSlotKind.Primitive);
 
@@ -1410,7 +1507,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var ctorSlotsAll = slots.Where(s => IsCtorSlot(s)).ToArray();
         var ctorSlots = ctorSlotsAll
             .Where(s => !HasFacadeCtorDefault(s))
-            .Concat(ctorSlotsAll.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+            .Concat(ctorSlotsAll.Where(s => s.Kind == FacadeSlotKind.StateHolder && HasFacadeCtorDefault(s)))
             .Concat(ctorSlotsAll.Where(s => HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
             .ToArray();
         // Named-property slots (Phase 3).
@@ -1609,13 +1706,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (s.SharedState)
             {
                 var holder = "__" + s.Param.Name + "Holder";
-                if (s.IsParameterisedStateHolder)
+                if (s.IsParameterisedStateHolder && !s.RequiredState)
                     sb.Append("            var __").Append(s.Param.Name).Append("DefaultHolder = ")
                       .Append(composerName).Append(".Remember(static () => new ")
                       .Append(s.StateWrapperType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
                           ?? throw new InvalidOperationException("Shared state has no wrapper type.")).AppendLine("());");
                 sb.Append("            var ").Append(holder).Append(" = _").Append(id);
-                if (s.IsParameterisedStateHolder)
+                if (s.IsParameterisedStateHolder && !s.RequiredState)
                     sb.Append(" ?? __").Append(s.Param.Name).Append("DefaultHolder");
                 sb.AppendLine(";");
                 EmitSharedStatePreamble(sb, s, holder, jvmFqn, composerName, false);
@@ -1637,7 +1734,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 foreach (var argExpr in s.RememberArgExpressions)
                     sb.Append(argExpr).Append(", ");
                 sb.Append(composerName).AppendLine(");");
-                if (s.IsParameterisedStateHolder)
+                if (s.IsParameterisedStateHolder && !s.RequiredState)
                 {
                     sb.Append("            if (_").Append(id).AppendLine(".Jvm is null)");
                     if (s.BindMethodName is not null)
@@ -1786,6 +1883,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     "c => " + renderChildrenCall)).AppendLine(";");
             }
         }
+        foreach (var payload in slots.Where(s => s.Kind == FacadeSlotKind.NativePayloadContent))
+            EmitNativePayloadWrapper(sb, payload, composerName, "            ");
 
         // Phase 6 — theme color resolution.
         if (themeColor is not null && colorSlot is not null)
@@ -1872,6 +1971,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             sb.AppendLine(");");
         }
+        foreach (var state in slots.Where(s => s.TransformMethodName is not null))
+            sb.Append("            global::System.GC.KeepAlive(__").Append(state.Param.Name).AppendLine("TransformedPeer);");
 
         sb.AppendLine("        }");
         sb.AppendLine("    }");
@@ -1919,7 +2020,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         var ctorSlotsAll = slots.Where(IsCtorSlot)
             .Where(s => !HasFacadeCtorDefault(s))
-            .Concat(slots.Where(s => IsCtorSlot(s) && s.Kind == FacadeSlotKind.StateHolder))
+            .Concat(slots.Where(s => IsCtorSlot(s) && s.Kind == FacadeSlotKind.StateHolder && HasFacadeCtorDefault(s)))
             .Concat(slots.Where(s => IsCtorSlot(s) && HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
             .ToArray();
         var requiredCtorSlots = ctorSlotsAll.Where(s => !HasFacadeCtorDefault(s)).ToArray();
@@ -2531,6 +2632,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             EmitComposableMethodContentWrapper(sb, contentSlot, scope, indexedChildren,
                 implicitComposer, "            ");
         }
+        foreach (var payload in slots.Where(s => s.Kind == FacadeSlotKind.NativePayloadContent))
+            EmitNativePayloadWrapper(sb, payload, "__composer", "            ");
 
         if (themeColor is not null)
         {
@@ -2585,6 +2688,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ExplicitDefaultsMethod(primaryMethodName, callerProvidesDefaults, defaultArguments),
             primaryUserParams, slotByName, defaultArguments,
             callerProvidesChanged, route);
+        foreach (var state in slots.Where(s => s.TransformMethodName is not null))
+            sb.Append("            global::System.GC.KeepAlive(__").Append(state.Param.Name).AppendLine("TransformedPeer);");
+    }
+
+    static void EmitNativePayloadWrapper(
+        StringBuilder sb,
+        FacadeSlot slot,
+        string composerName,
+        string indent)
+    {
+        sb.Append(indent).Append("var __").Append(slot.Param.Name)
+          .Append(" = global::AndroidX.Compose.ComposableLambdas.Wrap3WithValue(")
+          .Append(composerName).Append(", (payload, current) => global::AndroidX.Compose.ComposeBridges.")
+          .Append(slot.NativePayloadHandler).AppendLine("(payload, current));");
     }
 
     static void EmitComposableMethodStateHolderPreamble(StringBuilder sb,
@@ -2596,7 +2713,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             string holder = input;
             var stateWrapperType = s.StateWrapperType
                 ?? throw new InvalidOperationException("State-holder slot is missing its wrapper type.");
-            if (s.IsParameterisedStateHolder)
+            if (s.IsParameterisedStateHolder && !s.RequiredState)
             {
                 var wrapperType = stateWrapperType.ToDisplayString(
                     SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
@@ -2689,13 +2806,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(s.RememberMethodName).Append('(');
         foreach (var arg in s.RememberArgExpressions)
         {
-            var expression = arg;
-            var fieldPrefix = "_" + s.Param.Name + "!.";
-            if (expression.StartsWith(fieldPrefix, StringComparison.Ordinal))
-                expression = holder + "." + expression.Substring(fieldPrefix.Length);
-            else if (expression.StartsWith("_", StringComparison.Ordinal))
-                expression = "__" + expression.Substring(1);
-            sb.Append(expression).Append(", ");
+            sb.Append(StateRememberArgument(s, arg, holder)).Append(", ");
         }
         sb.AppendLine("__composer);");
     }
@@ -2830,6 +2941,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Content3:
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
+                case FacadeSlotKind.NativePayloadContent:
                     sb.Append(indent).Append(variable)
                       .Append(" |= (int)global::AndroidX.Compose.ChangedBits.Static << ")
                       .Append(shift).AppendLine(";");
@@ -3208,7 +3320,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 or FacadeSlotKind.Content2 or FacadeSlotKind.Content3
                 or FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
                 or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
-                or FacadeSlotKind.StateHolder => "__" + s.Param.Name,
+                or FacadeSlotKind.StateHolder or FacadeSlotKind.NativePayloadContent
+                => "__" + s.Param.Name,
             FacadeSlotKind.OptionalValue when s.CallbackType is not null => "__" + s.Param.Name,
             FacadeSlotKind.Primitive or FacadeSlotKind.OptionalValue
                 => EscapeIdent(s.Param.Name),
@@ -3402,6 +3515,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ? "." + unbind + "();" : ".Jvm = null;").AppendLine();
         sb.AppendLine("            });");
         sb.Append("            global::System.IntPtr ").Append(local).AppendLine(";");
+        if (s.TransformMethodName is not null)
+        {
+            sb.Append("            ").Append(jvmFqn).Append(' ').Append(local).AppendLine("SourcePeer;");
+            sb.Append("            global::Java.Lang.Object? ").Append(local).AppendLine("TransformedPeer = null;");
+        }
         sb.Append("            using var ").Append(local).Append("Acquisition = ").Append(local).AppendLine("Owner.Acquire();");
         // The data key resets remembered values but is not part of the positional save key.
         sb.AppendLine("            try");
@@ -3424,42 +3542,103 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("                        ").Append(composerName).Append(".SideEffect(() => __").Append(info.FieldIdentifier)
               .Append(".Callback = ").Append(target).AppendLine(");");
         }
-        sb.Append("                        ").Append(local).Append(" = global::AndroidX.Compose.ComposeBridges.")
+        sb.Append("                        ");
+        if (s.RememberReturnsPeer)
+            sb.Append("var __peer = ");
+        else
+            sb.Append(local).Append(" = ");
+        sb.Append("global::AndroidX.Compose.ComposeBridges.")
           .Append(s.RememberMethodName).Append('(');
         foreach (var arg in s.RememberArgExpressions)
         {
-            string prefix = "_" + s.Param.Name + "!.";
-            sb.Append(arg.StartsWith(prefix, StringComparison.Ordinal)
-                ? holder + "." + arg.Substring(prefix.Length)
-                : "_" + arg).Append(", ");
+            sb.Append(StateRememberArgument(s, arg, holder)).Append(", ");
         }
         sb.Append(composerName).AppendLine(");");
-        sb.Append("                        var __peer = global::Java.Lang.Object.GetObject<").Append(jvmFqn)
-          .Append(">(").Append(local).AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-        sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state Remember bridge returned no peer.\");");
-        sb.Append("                        if (").Append(holder).Append(" is not null && !global::System.Object.ReferenceEquals(")
-          .Append(holder).AppendLine(".Jvm, __peer))");
-        sb.Append("                            ").Append(holder).Append(s.BindMethodName is { } bind
-            ? "." + bind + "(__peer);" : ".Jvm = __peer;").AppendLine();
-        sb.Append("                        ").Append(local).AppendLine("Acquisition.Publish((global::Java.Lang.Object)__peer);");
+        if (s.RememberReturnsPeer)
+        {
+            sb.AppendLine("                        if (__peer is null)");
+            sb.AppendLine("                            throw new global::System.InvalidOperationException(\"Shared state Remember returned no peer.\");");
+            sb.Append("                        ").Append(local).AppendLine(" = __peer.Handle;");
+        }
+        else
+        {
+            sb.Append("                        var __peer = global::Java.Lang.Object.GetObject<").Append(jvmFqn)
+              .Append(">(").Append(local).AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+            sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state Remember bridge returned no peer.\");");
+        }
+        if (s.TransformMethodName is not null)
+        {
+            sb.Append("                        ").Append(local).AppendLine("SourcePeer = __peer;");
+        }
+        else
+        {
+            EmitSharedStateBinding(sb, s, holder, "__peer", "                        ");
+            sb.Append("                        ").Append(local).AppendLine("Acquisition.Publish((global::Java.Lang.Object)__peer);");
+        }
         sb.AppendLine("                    }");
         sb.AppendLine("                    else");
         sb.AppendLine("                    {");
         sb.Append("                        var __peer = ").Append(local).AppendLine("Acquisition.Peer");
         sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state acquisition has no published peer.\");");
         sb.Append("                        ").Append(local).AppendLine(" = __peer.Handle;");
+        if (s.TransformMethodName is not null)
+        {
+            sb.Append("                        ").Append(local).Append("SourcePeer = __peer as ").Append(jvmFqn).AppendLine();
+            sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state acquisition has no compatible source peer for its transform.\");");
+        }
         sb.AppendLine("                    }");
         sb.AppendLine("                }");
         sb.AppendLine("                finally");
         sb.AppendLine("                {");
         sb.Append("                    ").Append(composerName).AppendLine(".EndReusableGroup();");
         sb.AppendLine("                }");
+        if (s.TransformMethodName is { } transform)
+        {
+            sb.Append("                ").Append(local).Append("TransformedPeer = global::AndroidX.Compose.ComposeBridges.")
+              .Append(transform).Append('(').Append(local).Append("SourcePeer, ").Append(composerName).AppendLine(")");
+            sb.AppendLine("                    ?? throw new global::System.InvalidOperationException(\"Shared state transform returned no peer.\");");
+            sb.Append("                if (").Append(local).AppendLine("Acquisition.IsOwner)");
+            sb.AppendLine("                {");
+            EmitSharedStateBinding(sb, s, holder, local + "SourcePeer", "                    ");
+            sb.Append("                    ").Append(local).Append("Acquisition.Publish((global::Java.Lang.Object)")
+              .Append(local).AppendLine("SourcePeer);");
+            sb.AppendLine("                }");
+            sb.Append("                ").Append(local).Append(" = ").Append(local).AppendLine("TransformedPeer.Handle;");
+        }
         sb.AppendLine("            }");
         sb.Append("            catch (global::System.Exception ").Append(local).AppendLine("Error)");
         sb.AppendLine("            {");
         sb.Append("                ").Append(local).Append("Acquisition.Abort(").Append(local).AppendLine("Error);");
         sb.AppendLine("                throw;");
         sb.AppendLine("            }");
+    }
+
+    static void EmitSharedStateBinding(
+        StringBuilder sb,
+        FacadeSlot slot,
+        string holder,
+        string peer,
+        string indent)
+    {
+        sb.Append(indent).Append("if (").Append(holder)
+          .Append(" is not null && !global::System.Object.ReferenceEquals(")
+          .Append(holder).Append(".Jvm, ").Append(peer).AppendLine("))");
+        sb.Append(indent).Append("    ").Append(holder)
+          .Append(slot.BindMethodName is { } bind
+              ? "." + bind + "(" + peer + ");"
+              : ".Jvm = " + peer + ";")
+          .AppendLine();
+    }
+
+    static string StateRememberArgument(FacadeSlot slot, string argument, string holder)
+    {
+        string optionalPrefix = "_" + slot.Param.Name + "!.";
+        if (argument.StartsWith(optionalPrefix, StringComparison.Ordinal))
+            return holder + "." + argument.Substring(optionalPrefix.Length);
+        string requiredPrefix = "_" + slot.Param.Name + ".";
+        if (argument.StartsWith(requiredPrefix, StringComparison.Ordinal))
+            return holder + "." + argument.Substring(requiredPrefix.Length);
+        return "_" + argument;
     }
 
     static void EmitSharedStateOwnerApi(StringBuilder sb, FacadeSlot slot)
@@ -3581,6 +3760,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     break;
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
+                case FacadeSlotKind.NativePayloadContent:
                 case FacadeSlotKind.PainterResource:
                 case FacadeSlotKind.Primitive:
                 case FacadeSlotKind.ThemeColor:
@@ -3661,6 +3841,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Content3:
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
+                case FacadeSlotKind.NativePayloadContent:
                     // Wrap2/Wrap3 update a tracked Kotlin wrapper, invalidating
                     // its readers even when the containing call skips.
                     sb.Append(indent).Append(changedVar).Append(" |= (int)global::AndroidX.Compose.ChangedBits.Static << ")
@@ -3736,6 +3917,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.NamedFunction3   => "__" + s.Param.Name,
             FacadeSlotKind.RequiredFunction2 => "__" + s.Param.Name,
             FacadeSlotKind.RequiredFunction3 => "__" + s.Param.Name,
+            FacadeSlotKind.NativePayloadContent => "__" + s.Param.Name,
             FacadeSlotKind.Callback         => "__" + s.Param.Name,
             FacadeSlotKind.Primitive        => CtorFieldExpression(s),
             FacadeSlotKind.PainterResource  => "__painterPeer",
@@ -3761,7 +3943,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// (C# requires optional params to trail required ones).
     /// </summary>
     static bool HasFacadeCtorDefault(FacadeSlot s) =>
-        s.Kind == FacadeSlotKind.StateHolder ||
+        s.Kind == FacadeSlotKind.StateHolder && !s.RequiredState ||
         (s.Kind == FacadeSlotKind.Primitive && TryGetFacadeCtorDefault(s.Param, out _));
 
     static bool TryGetFacadeCtorDefault(IParameterSymbol p, out object? value)
@@ -3892,7 +4074,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             sb.Append(", ");
             sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
-            if (s.Kind == FacadeSlotKind.StateHolder)
+            if (s.Kind == FacadeSlotKind.StateHolder && !s.RequiredState)
                 sb.Append(" = null");
             else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                 sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
@@ -3909,7 +4091,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // slots.
         foreach (var s in emittedSlots)
         {
-            if (s.IsParameterisedStateHolder && !s.SharedState)
+            if (s.IsParameterisedStateHolder && !s.SharedState && !s.RequiredState)
             {
                 var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                     .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
@@ -4139,7 +4321,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             else
             {
                 sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
-                if (s.Kind == FacadeSlotKind.StateHolder)
+                if (s.Kind == FacadeSlotKind.StateHolder && !s.RequiredState)
                     sb.Append(" = null");
                 else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                     sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
@@ -4165,7 +4347,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             // Remember bridge has user params. The Render body
             // reads init values off `_state` to pass into Remember,
             // so the field must be non-null on entry.
-            if (s.IsParameterisedStateHolder && !s.SharedState)
+            if (s.IsParameterisedStateHolder && !s.SharedState && !s.RequiredState)
             {
                 var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                     .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
@@ -4189,6 +4371,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static bool RequiresCtorNullGuard(FacadeSlot slot) =>
         slot.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Callback ||
+        slot.Kind == FacadeSlotKind.StateHolder && slot.RequiredState ||
         slot.Kind == FacadeSlotKind.Primitive &&
         slot.Param.Type.IsReferenceType &&
         slot.Param.NullableAnnotation != NullableAnnotation.Annotated;
@@ -4218,8 +4401,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             : field;
     }
 
-    static string CtorIdentifier(FacadeSlot slot) =>
-        slot.Kind == FacadeSlotKind.PainterResource ? "drawableResourceId" : slot.Param.Name;
+    static string CtorIdentifier(FacadeSlot slot)
+    {
+        if (slot.Kind == FacadeSlotKind.PainterResource)
+            return "drawableResourceId";
+        if (slot.Kind == FacadeSlotKind.StateHolder &&
+            slot.SlotPropertyName is { Length: > 0 } name)
+            return char.ToLowerInvariant(name[0]) + name.Substring(1);
+        return slot.Param.Name;
+    }
 
     static string CtorParamType(FacadeSlot slot)
     {
@@ -4234,7 +4424,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes)) + ">",
             FacadeSlotKind.PainterResource => "int",
             FacadeSlotKind.StateHolder => slot.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
-                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes)) + "?",
+                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes))
+                + (slot.RequiredState ? "" : "?"),
             FacadeSlotKind.Primitive => slot.Param.Type.ToDisplayString(format),
             _ => slot.Param.Type.ToDisplayString(),
         };
@@ -4693,6 +4884,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         ThemeColor,
         ScopeReceiver,
         StateHolder,
+        NativePayloadContent,
         OptionalValue,
     }
 
@@ -4705,7 +4897,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             string? bindMethodName = null, bool sharedState = false,
             ConfirmStateChangeInfo[]? confirmStateChanges = null,
             bool exclusiveField = false, string? fieldName = null,
-            string? unbindMethodName = null)
+            string? unbindMethodName = null,
+            bool requiredState = false, bool suppressOwner = false,
+            bool rememberReturnsPeer = false,
+            string? transformMethodName = null,
+            string? nativePayloadHandler = null)
         {
             Param = param;
             Kind = kind;
@@ -4721,6 +4917,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ExclusiveField = exclusiveField;
             FieldName = fieldName;
             UnbindMethodName = unbindMethodName;
+            RequiredState = requiredState;
+            SuppressOwner = suppressOwner;
+            RememberReturnsPeer = rememberReturnsPeer;
+            TransformMethodName = transformMethodName;
+            NativePayloadHandler = nativePayloadHandler;
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }
@@ -4733,6 +4934,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public ITypeSymbol? StateJvmType { get; }
         public string? BindMethodName { get; }
         public string? UnbindMethodName { get; }
+        public bool RequiredState { get; }
+        public bool SuppressOwner { get; }
+        public bool RememberReturnsPeer { get; }
+        public string? TransformMethodName { get; }
+        public string? NativePayloadHandler { get; }
         /// <summary>
         /// Phase 4b — one C# expression per user parameter of the
         /// <c>Remember*State</c> bridge (composer excluded). Each expression
@@ -4768,10 +4974,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
             new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName,
                 StateWrapperType, StateJvmType, RememberArgExpressions, BindMethodName,
-                SharedState, ConfirmStateChanges, ExclusiveField, FieldName, UnbindMethodName);
+                SharedState, ConfirmStateChanges, ExclusiveField, FieldName, UnbindMethodName,
+                RequiredState, SuppressOwner, RememberReturnsPeer, TransformMethodName,
+                NativePayloadHandler);
         public FacadeSlot WithExclusiveField(string? fieldName = null) =>
             new(Param, Kind, CallbackType, SlotPropertyName, RememberMethodName,
                 StateWrapperType, StateJvmType, RememberArgExpressions, BindMethodName,
-                SharedState, ConfirmStateChanges, true, fieldName, UnbindMethodName);
+                SharedState, ConfirmStateChanges, true, fieldName, UnbindMethodName,
+                RequiredState, SuppressOwner, RememberReturnsPeer, TransformMethodName,
+                NativePayloadHandler);
     }
 }

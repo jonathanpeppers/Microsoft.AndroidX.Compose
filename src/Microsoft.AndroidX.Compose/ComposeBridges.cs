@@ -2,6 +2,7 @@ using Android.Runtime;
 using AndroidX.Compose.Foundation.Interaction;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Foundation.Text.Input;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
@@ -1255,16 +1256,50 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;JJ" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(BottomSheetScaffoldDefault))]
+    [ComposeFacade(Container = true)]
     public static partial void BottomSheetScaffold(
+        [Slot("SheetContent")]
         IFunction3  sheetContent,
         IModifier?  modifier,
+        [StateHolder(Remember = nameof(RememberStandardBottomSheetState),
+                     StateType = typeof(SheetStateHolder),
+                     Bind = nameof(SheetStateHolder.BindJvm),
+                     Unbind = nameof(SheetStateHolder.UnbindJvm),
+                     SharedState = true,
+                     PropertyName = "SheetState",
+                     SuppressOwner = true,
+                     Transform = nameof(RememberBottomSheetScaffoldState))]
         IntPtr      scaffoldState,
         IFunction2? sheetDragHandle,
         IFunction2? topBar,
-        IFunction3? snackbarHost,
         IFunction3  content,
         int         defaults,
         IComposer   composer, int _changed = 0);
+
+    internal static SheetState RememberStandardBottomSheetState(
+        SheetValue rememberStandardValue,
+        [ConfirmStateChange(typeof(SheetValue),
+            AdapterType = typeof(SheetValueConfirmStateChange),
+            PropertyName = "ConfirmValueChange")]
+        IFunction1 confirmValueChange,
+        IComposer composer) =>
+        BottomSheetScaffoldKt.RememberStandardBottomSheetState(
+            initialValue: rememberStandardValue,
+            confirmValueChange: confirmValueChange,
+            skipHiddenState: true,
+            _composer: composer,
+            p4: 0,
+            _changed: 0);
+
+    internal static BottomSheetScaffoldState RememberBottomSheetScaffoldState(
+        SheetState sheetState,
+        IComposer composer) =>
+        BottomSheetScaffoldKt.RememberBottomSheetScaffoldState(
+            bottomSheetState: sheetState,
+            snackbarHostState: null,
+            _composer: composer,
+            p3: 0,
+            _changed: 2);
 
     // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc
     [ComposeBridge(
@@ -3523,21 +3558,29 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer, int _changed = 0);
 
-    // androidx.compose.material3.SnackbarHostKt.SnackbarHost — UNMANGLED
-    // (no inline-class params). 3 user params: hostState, modifier,
-    // snackbar. Bits 0 (hostState) and 2 (snackbar) always provided.
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/SnackbarHostKt",
-        JvmName   = "SnackbarHost",
-        Signature = "(Landroidx/compose/material3/SnackbarHostState;" +
-                    "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;" +
-                    "Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(SnackbarHostDefault))]
+    [ComposeFacade(Defaults = typeof(SnackbarHostDefault))]
     public static partial void SnackbarHost(
-        IntPtr     hostState,
+        SnackbarHostState hostState,
+        IModifier? modifier,
+        [NativePayloadContent(nameof(SnackbarFromData))]
+        IFunction3 snackbar,
+        int defaults,
+        IComposer composer, int _changed = 0);
+
+    public static partial void SnackbarHost(
+        SnackbarHostState hostState,
         IModifier? modifier,
         IFunction3 snackbar,
-        IComposer  composer, int _changed = 0);
+        int defaults,
+        IComposer composer,
+        int _changed) =>
+        SnackbarHostKt.SnackbarHost(
+            hostState.Jvm,
+            modifier,
+            snackbar,
+            composer,
+            p4: _changed,
+            _changed: defaults);
 
     // androidx.compose.material3.BadgeKt.Badge-eopBjH0. 4 user params:
     // modifier, containerColor, contentColor, content (RowScope-receiver
@@ -3716,22 +3759,17 @@ internal static partial class ComposeBridges
         }
     }
 
-    // androidx.compose.material3.SearchBarKt.rememberSearchBarState —
-    // factory @Composable that produces a `SearchBarState`. 3 user params:
-    // initialValue (enum), animationSpecForExpand, animationSpecForCollapse.
-    // The wrapper supplies initialValue and defaults both animation specs.
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/SearchBarKt",
-        JvmName   = "rememberSearchBarState",
-        Signature = "(Landroidx/compose/material3/SearchBarValue;" +
-                    "Landroidx/compose/animation/core/AnimationSpec;" +
-                    "Landroidx/compose/animation/core/AnimationSpec;" +
-                    "Landroidx/compose/runtime/Composer;II)" +
-                    "Landroidx/compose/material3/SearchBarState;",
-        Defaults  = typeof(RememberSearchBarStateDefault))]
-    public static partial IntPtr RememberSearchBarState(
-        AndroidX.Compose.Material3.SearchBarValue? initialValue,
-        IComposer composer);
+    internal static AndroidX.Compose.Material3.SearchBarState RememberSearchBarState(
+        AndroidX.Compose.Material3.SearchBarValue rememberValue,
+        IComposer composer) =>
+        SearchBarKt.RememberSearchBarState(
+            rememberValue,
+            null,
+            null,
+            composer,
+            0,
+            (int)(RememberSearchBarStateDefault.AnimationSpecForExpand |
+                RememberSearchBarStateDefault.AnimationSpecForCollapse));
 
     // androidx.compose.material3.SearchBarKt.SearchBar-nbWgWpA — the
     // state-based collapsed search bar. 7 user params: state, inputField
@@ -3746,8 +3784,17 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/SearchBarColors;FF" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(SearchBarDefault))]
+    [ComposeFacade]
     public static partial void SearchBar(
+        [StateHolder(Remember = nameof(RememberSearchBarState),
+                     StateType = typeof(SearchBarState),
+                     Bind = nameof(SearchBarState.BindJvm),
+                     Unbind = nameof(SearchBarState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
         IntPtr     state,
+        [Slot("InputField")]
         IFunction2 inputField,
         IModifier? modifier,
         IComposer  composer, int _changed = 0);
@@ -3766,8 +3813,17 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/SearchBarScrollBehavior;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(TopSearchBarDefault))]
+    [ComposeFacade]
     public static partial void TopSearchBar(
+        [StateHolder(Remember = nameof(RememberSearchBarState),
+                     StateType = typeof(SearchBarState),
+                     Bind = nameof(SearchBarState.BindJvm),
+                     Unbind = nameof(SearchBarState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
         IntPtr     state,
+        [Slot("InputField")]
         IFunction2 inputField,
         IModifier? modifier,
         IComposer  composer, int _changed = 0);
@@ -3788,8 +3844,17 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ExpandedDockedSearchBarDefault))]
+    [ComposeFacade(Scope = "Column")]
     public static partial void ExpandedDockedSearchBar(
+        [StateHolder(Remember = nameof(RememberSearchBarState),
+                     StateType = typeof(SearchBarState),
+                     Bind = nameof(SearchBarState.BindJvm),
+                     Unbind = nameof(SearchBarState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
         IntPtr     state,
+        [Slot("InputField")]
         IFunction2 inputField,
         IModifier? modifier,
         IFunction3 content,
@@ -3812,8 +3877,17 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ExpandedFullScreenSearchBarDefault))]
+    [ComposeFacade(Scope = "Column")]
     public static partial void ExpandedFullScreenSearchBar(
+        [StateHolder(Remember = nameof(RememberSearchBarState),
+                     StateType = typeof(SearchBarState),
+                     Bind = nameof(SearchBarState.BindJvm),
+                     Unbind = nameof(SearchBarState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
         IntPtr     state,
+        [Slot("InputField")]
         IFunction2 inputField,
         IModifier? modifier,
         IFunction3 content,
@@ -3860,6 +3934,68 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         IComposer   composer, int _changed = 0);
+
+    [ComposeFacade(ClassName = "SearchBarInputField",
+        Defaults = typeof(SearchBarDefaultsInputFieldDefault))]
+    public static partial void SearchBarInputField(
+        [StateHolder(Remember = nameof(RememberSearchBarTextFieldState),
+                     StateType = typeof(SearchBarTextFieldState),
+                     Bind = nameof(SearchBarTextFieldState.BindJvm),
+                     Unbind = nameof(SearchBarTextFieldState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
+        IntPtr textState,
+        [StateHolder(Remember = nameof(RememberSearchBarState),
+                     StateType = typeof(SearchBarState),
+                     Bind = nameof(SearchBarState.BindJvm),
+                     Unbind = nameof(SearchBarState.UnbindJvm),
+                     SharedState = true,
+                     Required = true,
+                     SuppressOwner = true)]
+        IntPtr searchState,
+        [Callback(typeof(string))]
+        IFunction1? onSearch,
+        IModifier? modifier,
+        [Slot("Placeholder")] IFunction2? placeholder,
+        [Slot("LeadingIcon")] IFunction2? leadingIcon,
+        [Slot("TrailingIcon")] IFunction2? trailingIcon,
+        int defaults,
+        IComposer composer, int _changed = 0);
+
+    public static partial void SearchBarInputField(
+        IntPtr textState,
+        IntPtr searchState,
+        IFunction1? onSearch,
+        IModifier? modifier,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int defaults,
+        IComposer composer,
+        int _changed) =>
+        SearchBarDefaultsInputFieldExplicitDefaults(
+            textState,
+            searchState,
+            onSearch ?? NoOpSearchCallback.Instance,
+            modifier,
+            placeholder,
+            leadingIcon,
+            trailingIcon,
+            defaults,
+            composer,
+            _changed);
+
+    internal static TextFieldState RememberSearchBarTextFieldState(
+        string rememberText,
+        long rememberSelection,
+        IComposer composer) =>
+        TextFieldStateKt.RememberTextFieldState(
+            rememberText,
+            rememberSelection,
+            composer,
+            0,
+            0);
 
     // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle
     // overload). 10 user params: title, subtitle, modifier, navigationIcon,
@@ -4031,25 +4167,31 @@ internal static partial class ComposeBridges
         [FacadeDefault(true)] bool enabled,
         IComposer  composer, int _changed = 0);
 
-    // androidx.compose.material3.SnackbarKt.Snackbar-sDKtq54 (SnackbarData
-    // overload — fed by SnackbarHost's content lambda when state has
-    // queued data). 9 user params: snackbarData, modifier, actionOnNewLine,
-    // shape, containerColor, contentColor, actionColor, actionContentColor,
-    // dismissActionContentColor. Bit 0 (snackbarData) always provided —
-    // we take the raw JNI handle so SnackbarHost can forward Function3's
-    // p0 (a Java.Lang.Object SnackbarData) directly.
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/SnackbarKt",
-        JvmName   = "Snackbar-sDKtq54",
-        Signature = "(Landroidx/compose/material3/SnackbarData;" +
-                    "Landroidx/compose/ui/Modifier;Z" +
-                    "Landroidx/compose/ui/graphics/Shape;JJJJJ" +
-                    "Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(SnackbarFromDataDefault))]
-    public static partial void SnackbarFromData(
-        IntPtr     snackbarData,
-        IModifier? modifier,
-        IComposer  composer, int _changed = 0);
+    internal static void SnackbarFromData(
+        Java.Lang.Object? payload,
+        IComposer composer)
+    {
+        var nativePayload = payload
+            ?? throw new InvalidOperationException(
+                "SnackbarHost emitted no SnackbarData payload.");
+        var snackbarData = nativePayload.JavaCast<ISnackbarData>()
+            ?? throw new InvalidOperationException(
+                "SnackbarHost payload did not implement ISnackbarData.");
+        SnackbarKt.Snackbar(
+            snackbarData,
+            null,
+            false,
+            null,
+            0L,
+            0L,
+            0L,
+            0L,
+            0L,
+            composer,
+            0,
+            (int)SnackbarFromDataDefault.All);
+        GC.KeepAlive(nativePayload);
+    }
 
     // Phase 8 — wrapper-passthrough facades. These are [ComposeFacade]-only
     // partial methods with hand-written bodies that delegate to a bound

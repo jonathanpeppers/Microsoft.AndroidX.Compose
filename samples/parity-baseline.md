@@ -261,7 +261,7 @@ There is no matched pre-sprint image set, so no invented "before" result.
 | Matched captures and interaction differences, light/dark and sizes | Recorded states and 68 actual geometry checks; every behavioral limitation remains explicit, not a pass. |
 | Classify differences and link actionable gaps | Categories/follow-ups above, including the issue's allowed **not yet investigated** category. |
 | Correct sample READMEs and links | Jetchat/Reply integrations and JetNews PNG/markup/refresh/share implementations reconciled against code. |
-| Reconcile partial trackers | #340 completed; #120 remains open for search/SnackbarHost/BottomSheetScaffold migrations. TimeInput and ModalBottomSheet already migrated. #159/#149 historical claims annotated. |
+| Reconcile partial trackers | #340 completed; #120's remaining search/SnackbarHost/BottomSheetScaffold migrations are implemented and await merge. TimeInput and ModalBottomSheet were already migrated. #159/#149 historical claims annotated. |
 | Repeat selected comparisons and report remaining differences | Frozen-source repeat evidence above; no blanket exact parity, full accessibility, fold or process-death claim. |
 
 This completes the bounded comparison record and documentation work for

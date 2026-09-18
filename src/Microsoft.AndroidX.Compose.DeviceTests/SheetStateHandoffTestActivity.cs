@@ -18,6 +18,7 @@ public class SheetStateHandoffTestActivity : ComponentActivity
     internal SheetStateHolder Sheet { get; private set; } = new();
     internal MutableState<bool> Standard { get; } = new(false);
     internal MutableState<bool> Visible { get; } = new(true);
+    internal MutableState<bool> AllowTransitions { get; } = new(false);
     internal MutableState<int> Pass { get; } = new(0);
     internal int CompletedPass => Volatile.Read(ref _completedPass);
 
@@ -54,8 +55,8 @@ public class SheetStateHandoffTestActivity : ComponentActivity
             if (Visible.Value)
             {
                 bool standard = Standard.Value;
-                // Veto automatic show; a fresh callback also forces direct helpers to execute each pass.
-                Func<SheetValue, bool> confirm = _ => pass < 0;
+                bool allowTransitions = AllowTransitions.Value;
+                Func<SheetValue, bool> confirm = _ => allowTransitions;
                 if (direct)
                 {
                     using var context = ComposableContext.Enter(composer);

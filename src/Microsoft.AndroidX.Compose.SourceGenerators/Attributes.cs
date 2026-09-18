@@ -458,7 +458,8 @@ internal static class Attributes
             /// <para><b>Remember</b>: the <c>nameof(ComposeBridges.X)</c>
             /// of a static partial bridge on <c>ComposeBridges</c> whose
             /// last parameter is an <c>IComposer</c> and that returns
-            /// <c>IntPtr</c>. The remaining (leading) parameters are
+            /// <c>IntPtr</c>, or for shared state the wrapper's JVM peer
+            /// type. The remaining (leading) parameters are
             /// treated as init values — each one is read off the
             /// caller-supplied <c>StateType</c> wrapper at render time.
             /// Phase 4 covers the zero-user-param shape (e.g.
@@ -480,10 +481,18 @@ internal static class Attributes
             /// <c>state.Jvm = Java.Lang.Object.GetObject&lt;IXxxState&gt;
             /// (handle, JniHandleOwnership.DoNotTransfer)!</c> the first
             /// time <c>Render</c> sees a non-null wrapper. For Phase 4b
-            /// (parameterised Remember) the type must also be
-            /// constructible with no arguments (parameterless ctor or
-            /// all-defaulted-params ctor) so the facade can auto-create
-            /// a default wrapper when the caller passes <c>null</c>.</para>
+            /// (parameterised Remember) an optional wrapper type must also
+            /// be constructible with no arguments (parameterless ctor or
+            /// all-defaulted-params ctor) so the facade can auto-create a
+            /// default wrapper when the caller passes <c>null</c>. A
+            /// <see cref="Required"/> wrapper needs no such constructor.</para>
+            /// <para><b>Required</b>: preserves a non-nullable caller-supplied
+            /// wrapper in the generated constructor and direct method instead
+            /// of synthesizing an optional wrapper. Use this when native state
+            /// is shared across separately rendered facade halves.</para>
+            /// <para><b>PropertyName</b>: optional PascalCase public surface
+            /// name when the Kotlin bridge parameter name differs from the
+            /// established C# wrapper name.</para>
             /// <para><b>SharedState</b> (Phase 4c): when <c>true</c>,
             /// a composition-slot owner executes the native Remember on
             /// every owning render. Siblings consume that owner's peer;
@@ -502,10 +511,22 @@ internal static class Attributes
             /// immediately; existing adapters receive updates after successful
             /// application via SideEffect, not during speculative rendering.
             /// Defaults to <c>false</c>.</para>
+            /// <para><b>SuppressOwner</b>: omits the public typed Remember
+            /// helpers for an ownership declaration used only internally by
+            /// consumer facades.</para>
+            /// <para><b>Bind</b>: optional accessible instance void method
+            /// accepting the wrapper's JVM peer. The generator calls it when
+            /// publishing a successfully remembered peer instead of assigning
+            /// the <c>Jvm</c> field directly.</para>
             /// <para><b>Unbind</b>: optional accessible parameterless instance
             /// void method called when the owner is forgotten or abandoned.
             /// It captures transferable live values and clears <c>Jvm</c>.
             /// Without it, ownership cleanup only clears <c>Jvm</c>.</para>
+            /// <para><b>Transform</b>: optional static method on
+            /// <c>ComposeBridges</c> that converts the shared remembered peer
+            /// to the peer passed to the facade bridge. The transform executes
+            /// inside the acquisition's abort boundary and its result is kept
+            /// alive through the component call.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]
@@ -517,6 +538,24 @@ internal static class Attributes
                 public string Bind { get; set; } = "";
                 public string Unbind { get; set; } = "";
                 public bool SharedState { get; set; }
+                public bool Required { get; set; }
+                public string PropertyName { get; set; } = "";
+                public bool SuppressOwner { get; set; }
+                public string Transform { get; set; } = "";
+            }
+
+            /// <summary>
+            /// Marks a required Kotlin <c>IFunction3</c> content parameter
+            /// whose first argument is a native payload rather than a scope.
+            /// The generated facade hides the content parameter and emits a
+            /// tracked value lambda that forwards the payload and composer to
+            /// the named static handler on <c>ComposeBridges</c>.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class NativePayloadContentAttribute : global::System.Attribute
+            {
+                public NativePayloadContentAttribute(string handler) { }
             }
 
             /// <summary>
