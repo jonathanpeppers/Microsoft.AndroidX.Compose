@@ -94,6 +94,7 @@ public class CompositionKeyTests
             for (int index = 0; index < calls.Length; index++)
                 expressions.Add($"{site}:{index}",
                     calls[index].ArgumentList.Arguments[0].Expression.ToString()
+                        .Replace("index", "i", StringComparison.Ordinal)
                         .Replace("child.GetType()", "childType", StringComparison.Ordinal));
         }
         var lambdas = CSharpSyntaxTree.ParseText(
