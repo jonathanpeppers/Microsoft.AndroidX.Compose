@@ -12,6 +12,8 @@ namespace Microsoft.AndroidX.Compose.Maui.DeviceTests;
 [Instrumentation(Name = "net.compose.maui.devicetests.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
+    internal static TestInstrumentation? Current { get; private set; }
+
     string? _filter;
 
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
@@ -20,8 +22,16 @@ public class TestInstrumentation : Instrumentation
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
+        Current = this;
         _filter = arguments?.GetString("filter");
         Start();
+    }
+
+    /// <summary>Releases the current test-host reference when Android destroys the instrumentation.</summary>
+    public override void OnDestroy()
+    {
+        Current = null;
+        base.OnDestroy();
     }
 
     public override async void OnStart()
@@ -65,6 +75,10 @@ public class TestInstrumentation : Instrumentation
         {
             bundle.PutString("error", ex.ToString());
             Finish(Result.Canceled, bundle);
+        }
+        finally
+        {
+            Current = null;
         }
     }
 }
