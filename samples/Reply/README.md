@@ -174,16 +174,28 @@ evidence. The size override was reset, both owned packages were removed, and
 the original size, density, font scale, night-mode key, and rotation settings
 were verified before releasing the device.
 
-The final self-contained Debug payloads were rebuilt and rechecked on that
-device from 22:17:36Z through 22:29:54Z. The build and installed APK hashes
-matched: DeviceTests
+Self-contained Debug payloads were rebuilt and rechecked on that device from
+22:17:36Z through 22:29:54Z. The build and installed APK hashes matched:
+DeviceTests
 `08F027E27C11E6A4C2D5DB15F8C41E3D51CE2A46666DCC144BBA46F76CA2E576`
 and Gallery
 `450C14F9E15ABDE9CC845A3C45D1D4C43B92F5044405F425EE06B07D47BCF21D`.
 The compact Back/tab control, simulated-hinge restoration control, adaptive
 search/tab control, compact viewport/detail control, compact and resized
-expanded directive controls, and Gallery deep link all passed on these final
+expanded directive controls, and Gallery deep link all passed on those
 payloads.
+
+Two additional screenshot-driving reruns at 3000 x 2000 initially failed
+before reaching their product assertions: the preserved TRXs reported
+`Reply 'Articles' node was not present` and
+`Selected tab 'Inbox' is missing`. The permanent drawer exposes those labels
+through accessibility text, while the compact navigation items expose content
+descriptions. The shared test helper now accepts either semantic form. A final
+test-only DeviceTests rebuild from commit `0385492`, with matching build and
+installed APK hash
+`EF1F6DF66011446133AE401F5CA117FBB10B99EDD8EA6A9CEB44005095820BD0`,
+passed both corrected cases at 3000 x 2000. The failed and passing
+instrumentation streams and TRXs were retained separately.
 
 On 2026-09-17, executable source `0edae77` passed all nine
 `ReplyNavigationTests` and all three `ReplySearchTests` on a Pixel 10
