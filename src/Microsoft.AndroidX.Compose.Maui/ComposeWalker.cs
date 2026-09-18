@@ -104,7 +104,7 @@ internal static class ComposeWalker
             Modifier = modifier,
         };
 
-        var container = new Box();
+        var container = new Box(propagateMinConstraints: true);
         container.Add(androidView);
         // Update refreshes the holder when Compose reuses a deactivated
         // AndroidView node, so final release always detaches its child.
