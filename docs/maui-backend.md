@@ -559,7 +559,12 @@ page so cross-sibling animation, semantics, and a single
   Compose `Column`, `Microsoft.Maui.Controls.HorizontalStackLayout`
   → Compose `Row`. `Grid`, `AbsoluteLayout`, `FlexLayout`,
   `StackLayout` stay on MAUI's stock `LayoutHandler` and host via
-  `AndroidView` interop.
+  `AndroidView` interop. MAUI's `Add`, `Insert`, `Remove`, `Update`,
+  and `Clear` layout commands invalidate the composed child snapshot.
+  Each live child receives a deterministic handler-local movable-group
+  identity, so inserting, removing, or replacing siblings preserves
+  surviving children's remembered state while forgotten children leave
+  the composition.
 - **`ScrollViewHandler` (overridden)** — wraps content in
   `Modifier.verticalScroll` / `horizontalScroll` driven by Compose's
   `rememberScrollState`.

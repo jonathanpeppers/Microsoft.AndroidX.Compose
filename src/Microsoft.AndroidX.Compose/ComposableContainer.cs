@@ -12,12 +12,16 @@ namespace AndroidX.Compose;
 /// </summary>
 public abstract class ComposableContainer : ComposableNode, IEnumerable
 {
-    readonly List<ComposableNode> _children = new();
+    readonly List<ComposableNode> _children = [];
+    readonly List<Java.Lang.Object?> _movableKeys = [];
 
     public void Add(ComposableNode? child)
     {
         if (child is not null)
+        {
             _children.Add(child);
+            _movableKeys.Add(null);
+        }
     }
 
     /// <summary>
@@ -41,6 +45,17 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     {
         ArgumentNullException.ThrowIfNull(builder);
         _children.Add(new Composed(builder));
+        _movableKeys.Add(null);
+    }
+
+    // Internal backends can preserve a dynamic child's composition identity
+    // across insert/remove operations by supplying a deterministic data key.
+    internal void AddMovable(Java.Lang.Object key, ComposableNode child)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(child);
+        _children.Add(child);
+        _movableKeys.Add(key);
     }
 
     /// <summary>
@@ -59,11 +74,14 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
 
     /// <summary>
     /// Renders this container's children sequentially into
-    /// <paramref name="composer"/>, wrapping each child in a per-position
+    /// <paramref name="composer"/>. Normal children use a per-position
     /// <c>StartReplaceableGroup</c> whose key combines the sibling index
-    /// <em>and</em> a deterministic identity for the child's runtime
-    /// <see cref="Type"/>. Without per-
-    /// position groups, three sibling <c>SegmentedButton</c>s (same C#
+    /// and a deterministic identity for the child's runtime
+    /// <see cref="Type"/>. Internal dynamic children added through
+    /// <c>AddMovable</c> instead use their deterministic data key so
+    /// remembered state follows the same child through insertion and
+    /// removal of siblings. Without per-position groups, three sibling
+    /// <c>SegmentedButton</c>s (same C#
     /// call site → same group key) rely on Compose's positional
     /// disambiguation, which combined with lambda-identity churn
     /// elsewhere can land Reuse/Move ops at the wrong tree index.
@@ -80,12 +98,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     protected void RenderChildren(IComposer composer)
     {
         for (int i = 0; i < _children.Count; i++)
-        {
-            var child = _children[i];
-            composer.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()));
-            try { child.Render(composer); }
-            finally { composer.EndReplaceableGroup(); }
-        }
+            RenderChild(composer, i);
     }
 
     /// <summary>
@@ -96,10 +109,8 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// <see cref="RenderContext.CurrentRowChildIndex"/> and
     /// <see cref="RenderContext.CurrentRowChildCount"/> to compute
     /// Kotlin defaults that depend on their position in the row
-    /// (start/end shape, etc.). Each child still gets the same
-    /// per-position <c>StartReplaceableGroup</c> key as
-    /// <see cref="RenderChildren"/> — see that method for the
-    /// positional-identity rationale.
+    /// (start/end shape, etc.). Each child gets the same positional or
+    /// movable group policy as <see cref="RenderChildren"/>.
     /// </summary>
     private protected void RenderChildrenIndexed(IComposer composer)
     {
@@ -107,10 +118,24 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
         for (int i = 0; i < _children.Count; i++)
         {
             rows.SetIndex(i);
-            var child = _children[i];
-            composer.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()));
+            RenderChild(composer, i);
+        }
+    }
+
+    void RenderChild(IComposer composer, int index)
+    {
+        var child = _children[index];
+        var movableKey = _movableKeys[index];
+        if (movableKey is null)
+        {
+            composer.StartReplaceableGroup(CompositionGroupKey.Compute(index, child.GetType()));
             try { child.Render(composer); }
             finally { composer.EndReplaceableGroup(); }
+            return;
         }
+
+        composer.StartMovableGroup(CompositionGroupKey.Compute(0, child.GetType()), movableKey);
+        try { child.Render(composer); }
+        finally { composer.EndMovableGroup(); }
     }
 }

@@ -2,6 +2,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using System.Runtime.CompilerServices;
 using ILayout = Microsoft.Maui.ILayout;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
@@ -58,13 +59,26 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
             [nameof(IPadding.Padding)]            = MapPadding,
         };
 
-    /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
+    /// <summary>
+    /// Command mapper for MAUI's imperative layout child mutations.
+    /// Each command invalidates the Compose child snapshot after MAUI
+    /// has updated the live <see cref="ILayout"/>.
+    /// </summary>
     public static CommandMapper<ILayout, LayoutHandler> CommandMapper =
-        new(ViewCommandMapper);
+        new(ViewCommandMapper)
+        {
+            ["Add"]    = MapChildMutation,
+            ["Insert"] = MapChildMutation,
+            ["Remove"] = MapChildMutation,
+            ["Update"] = MapChildMutation,
+            ["Clear"]  = MapClear,
+        };
 
     readonly MutableState<int> _childrenVersion = new(0);
     readonly MutableState<float> _spacing = new(0f);
     readonly MutableState<bool> _clipsToBounds = new(false);
+    readonly ConditionalWeakTable<IView, Java.Lang.Integer> _childIdentities = new();
+    int _nextChildIdentity;
     // Thickness is a MAUI struct; not a Java type, primitive, or
     // Nullable<primitive>, so MutableState<Thickness> throws
     // NotSupportedException at construction. Use a version counter
@@ -111,7 +125,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         SubscribeToViewProperties();
         var spacing = _spacing.Value;
         _ = _paddingVersion.Value;  // subscribe — padding change bumps this
-        _ = _childrenVersion.Value; // subscribe — a tree mutation bumps this
+        var children = SnapshotChildren(layout);
         var padding = layout is IPadding pad ? pad.Padding : Thickness.Zero;
 
         var arrangement = spacing > 0f ? Arrangement.SpacedBy(new Dp(spacing)) : null;
@@ -152,22 +166,62 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         }
         container.Modifier = outer;
 
-        for (int i = 0; i < layout.Count; i++)
+        for (int i = 0; i < children.Length; i++)
         {
-            var child = layout[i];
-            container.Add(c => ComposeWalker.Render(child, c, context));
+            var child = children[i];
+            container.AddMovable(
+                GetChildIdentity(child),
+                new Composed(c => ComposeWalker.Render(child, c, context)));
         }
 
         return container;
     }
 
+    internal IView[] SnapshotChildren(ILayout layout)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        _ = _childrenVersion.Value;
+        var children = new IView[layout.Count];
+        for (int i = 0; i < children.Length; i++)
+            children[i] = layout[i];
+        return children;
+    }
+
+    internal int ChildrenVersion => _childrenVersion.Value;
+
+    internal Java.Lang.Object ChildrenVersionState => (Java.Lang.Object)_childrenVersion._state;
+
+    internal Java.Lang.Integer GetChildIdentity(IView child)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        return _childIdentities.GetValue(child, CreateChildIdentity);
+    }
+
+    Java.Lang.Integer CreateChildIdentity(IView _)
+    {
+        if (_nextChildIdentity == int.MaxValue)
+            throw new InvalidOperationException("LayoutHandler exhausted its deterministic child identities.");
+        return Java.Lang.Integer.ValueOf(_nextChildIdentity++)
+            ?? throw new InvalidOperationException("Unable to box a LayoutHandler child identity.");
+    }
+
+    static void MapChildMutation(LayoutHandler handler, ILayout layout, object? args)
+    {
+        if (args is LayoutHandlerUpdate)
+            MapChildren(handler, layout);
+    }
+
+    static void MapClear(LayoutHandler handler, ILayout layout, object? args) =>
+        MapChildren(handler, layout);
+
     /// <summary>
     /// Bump the children-version slot so any composition reading it
     /// (the layout container) recomposes. Stock MAUI's
     /// <c>LayoutHandlerUpdate</c> command pushes the same signal
-    /// through <see cref="ILayoutHandler"/>'s
-    /// <c>Add</c>/<c>Insert</c>/<c>Remove</c>/<c>Clear</c>; we
-    /// short-circuit at the mapper layer instead.
+    /// through the <c>Add</c>/<c>Insert</c>/<c>Remove</c>/
+    /// <c>Update</c>/<c>Clear</c> command mapper entries above.
+    /// The property mapping remains as a compatibility path for
+    /// callers that explicitly update <c>Children</c>.
     /// </summary>
     public static void MapChildren(LayoutHandler handler, ILayout layout)
     {
