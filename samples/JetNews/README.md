@@ -15,7 +15,16 @@ The #159 sample follow-up was compared with pinned upstream
 `4c1fe7586e2fbf1c934925ef8ab64d3803361423` and current upstream
 `0bbd72d69834ec86a9a72bd3513118755fb286c5` (2026-09-18).
 
-<img src="../docs/jetnews.png" alt="JetNews running on an Android device" width="320" />
+<p>
+  <img src="../docs/jetnews.png" alt="JetNews home feed using Material typography and colors" width="260" />
+  <img src="../docs/jetnews-search.png" alt="JetNews live search results for bindings" width="260" />
+  <img src="../docs/jetnews-article.png" alt="JetNews article with themed inline styles and clickable links" width="260" />
+</p>
+<p><em>Home feed, live filtering, and theme-driven article markup.</em></p>
+
+<img src="../docs/jetnews-topics.png" alt="JetNews adaptive Topics layout in landscape" width="780" />
+
+<p><em>Topics adapts to two columns at the upstream landscape breakpoint.</em></p>
 
 Run with:
 
