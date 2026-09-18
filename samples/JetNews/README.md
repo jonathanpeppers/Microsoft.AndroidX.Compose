@@ -150,8 +150,8 @@ No hardware-key interception is needed for live filtering.
 The article share button opens a confirmation dialog; its "Share anyway"
 action invokes `MainActivity.SharePost`, which launches an Android
 `ACTION_SEND` chooser with the article title and a synthetic URL.
-No share target produces a snackbar, not a silent no-op. The synthetic
-URL is not evidence of working inbound deep links.
+Failure to launch the chooser produces a snackbar instead of a silent
+no-op. The synthetic URL is not evidence of working inbound deep links.
 
 ### Topics adapts at the upstream breakpoint
 
