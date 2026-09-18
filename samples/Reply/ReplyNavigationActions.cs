@@ -37,7 +37,11 @@ public sealed class ReplyNavigationActions
 
     /// <summary>Opens an email from the inbox or a search result without duplicating it.</summary>
     public void OpenEmail(long emailId) =>
-        _nav.Navigate(Route.EmailDetail(emailId), new NavOptions { LaunchSingleTop = true });
+        _nav.Navigate(Route.EmailDetail(emailId), new NavOptions
+        {
+            PopUpToRoute = Route.Inbox,
+            LaunchSingleTop = true,
+        });
 
     /// <summary>Closes detail through the same action for system Back and the app-bar Up button.</summary>
     public void CloseEmail(ReplyState state)

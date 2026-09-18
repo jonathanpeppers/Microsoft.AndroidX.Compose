@@ -27,7 +27,7 @@ Port status legend: ✅ runnable port · 🚧 in progress · ⬜️ not started 
 |----------------------:|-------------|:------:|-------|
 | Low                   | **Jetchat** | ✅      | Channel drawer UI over one chat log, profile routes, Foundation `BasicTextField` with working IME Send, emoji/focus handoff, native long-press recording gestures, placeholder attachment panels, drag/drop feedback, custom fonts and Surface/FAB styling. Remaining differences include sample integration, data/deviation and uninvestigated behavior, not just missing reusable APIs. See [Jetchat](Jetchat/README.md). |
 | Medium                | JetNews     | ✅      | Phone-only Home / Article / Interests, drawer, bookmarks, bundled hero PNGs, styled paragraph runs, refresh/retry, snackbar feedback and share chooser. Six original seed articles; adaptive layouts, theme/localization polish, clickable links and search filtering remain. See [JetNews](JetNews/README.md). |
-| Medium                | Reply       | ✅      | Phone-only inbox/detail and four tabs, interactive docked prefix search, single-top/save-restore navigation, stable email keys and long-press selection. Search/navigation are integrated, not placeholders. Adaptive navigation, FAB response, selected semantics and visual styling remain sample work; fold-aware list/detail has separate scope. See [Reply](Reply/README.md). |
+| Medium                | Reply       | ✅      | Fold-aware adaptive list/detail with four responsive tabs, interactive docked prefix search, single-top/save-restore navigation, stable email keys and long-press selection. NavHost remains the durable route owner while Material 3 Adaptive lays out and animates the panes. See [Reply](Reply/README.md). |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
 | High                  | JetLagged   | ⬜️     | Custom drawing + heavy animation. |
@@ -48,7 +48,7 @@ difference first.
 | [#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349) | Finite Jetchat/Reply parity baseline, remaining matched captures and documented limitations. Source-level Jetchat differences are listed in its README; not all have device evidence. |
 | [#384](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/384) | **Jetchat presentation integration** using delivered APIs. Its README separately links Tooltip control (#388), infinite pulse (#385), video (#387) and draft restoration (#386). |
 | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383) | **Reply sample integration**: delivered adaptive-navigation, FAB, selection, inset and theme APIs; exact remaining styling slots still require an audit. |
-| [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | **Reply fold/list-detail**: reusable API and integration scope, separate from already-delivered NavigationSuite and size reads. Verify current binding members before repeating the tracker's historical package-availability claims. |
+| [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | **Reply fold/list-detail**: official Material 3 Adaptive list/detail scaffolds and Jetpack WindowManager folding features, integrated without replacing Reply's saved NavHost route contract. |
 | [#159](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/159) | **JetNews** remaining adaptive, navigation and sample polish; existing hero images, styled runs, refresh and share behavior are not missing features. |
 | [#120](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/120) | Remaining generator migrations: search family, SnackbarHost and BottomSheetScaffold. TimeInput and ModalBottomSheet already migrated. Not a reason to call existing sample controls unavailable. |
 | [#346](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/346) | Separate frozen-build performance work. Screenshot or symbol parity does not establish performance parity. |
@@ -68,7 +68,7 @@ Closed gaps that previously appeared here (now usable in samples):
 **#140** `DrawerState.open()` / `close()` suspend bridges,
 **#141** `AnnotatedString` + `SpanStyle` for inline-run text styling,
 **#142** `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors,
-**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold is also available; fold-aware list/detail remains separate in #168),
+**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold is also available),
 **#144** Custom `Layout` measure/place primitive,
 **#145** `ContentScale` + `Alignment` slots on the `Image` facade,
 **#146** `stringResource(id)` lookup,

@@ -18,6 +18,7 @@
     <string name="reply_search_emails">Search emails</string>
     <string name="reply_no_item_found">No item found</string>
     <string name="reply_no_search_history">No search history</string>
+    <string name="reply_select_email">Select an email</string>
     <string name="reply_empty_title">Screen under construction</string>
     <string name="reply_empty_subtitle">This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose</string>
 </resources>

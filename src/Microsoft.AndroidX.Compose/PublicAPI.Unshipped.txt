@@ -9,6 +9,15 @@ AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(AndroidX.
 AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(AndroidX.Compose.Dp topLeft, AndroidX.Compose.Dp topRight, AndroidX.Compose.Dp bottomRight, AndroidX.Compose.Dp bottomLeft) -> void
 AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(int cornerPercent) -> void
 AndroidX.Compose.AbsoluteRoundedCornerShape.AbsoluteRoundedCornerShape(int topLeftPercent, int topRightPercent, int bottomRightPercent, int bottomLeftPercent) -> void
+AndroidX.Compose.AdaptiveHingePolicy
+AndroidX.Compose.AdaptiveHingePolicy.AlwaysAvoid = 0 -> AndroidX.Compose.AdaptiveHingePolicy
+AndroidX.Compose.AdaptiveHingePolicy.AvoidOccluding = 2 -> AndroidX.Compose.AdaptiveHingePolicy
+AndroidX.Compose.AdaptiveHingePolicy.AvoidSeparating = 1 -> AndroidX.Compose.AdaptiveHingePolicy
+AndroidX.Compose.AdaptiveHingePolicy.NeverAvoid = 3 -> AndroidX.Compose.AdaptiveHingePolicy
+AndroidX.Compose.AdaptivePaneRole
+AndroidX.Compose.AdaptivePaneRole.Detail = 1 -> AndroidX.Compose.AdaptivePaneRole
+AndroidX.Compose.AdaptivePaneRole.Extra = 2 -> AndroidX.Compose.AdaptivePaneRole
+AndroidX.Compose.AdaptivePaneRole.List = 0 -> AndroidX.Compose.AdaptivePaneRole
 AndroidX.Compose.AlertDialog
 AndroidX.Compose.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
 AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
@@ -924,6 +933,24 @@ AndroidX.Compose.LinearProgressIndicator.Progress.set -> void
 AndroidX.Compose.LinearProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
 AndroidX.Compose.LinearProgressIndicator.TrackColor.set -> void
 AndroidX.Compose.LinkAnnotation
+AndroidX.Compose.ListDetailPaneScaffold<T>
+AndroidX.Compose.ListDetailPaneScaffold<T>.DetailPane.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.ListDetailPaneScaffold<T>.DetailPane.set -> void
+AndroidX.Compose.ListDetailPaneScaffold<T>.ExtraPane.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ListDetailPaneScaffold<T>.ExtraPane.set -> void
+AndroidX.Compose.ListDetailPaneScaffold<T>.ListDetailPaneScaffold(AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>! navigator) -> void
+AndroidX.Compose.ListDetailPaneScaffold<T>.ListPane.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.ListDetailPaneScaffold<T>.ListPane.set -> void
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.CanNavigateBack(AndroidX.Compose.PaneBackNavigationBehavior behavior = AndroidX.Compose.PaneBackNavigationBehavior.PopUntilScaffoldValueChange) -> bool
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.CurrentContentKey.get -> T?
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.CurrentPane.get -> AndroidX.Compose.AdaptivePaneRole?
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.HasCurrentDestination.get -> bool
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.IsPredictiveBackInProgress.get -> bool
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.ListDetailPaneScaffoldNavigator() -> void
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.NavigateBackAsync(AndroidX.Compose.PaneBackNavigationBehavior behavior = AndroidX.Compose.PaneBackNavigationBehavior.PopUntilScaffoldValueChange, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.NavigateToAsync(AndroidX.Compose.AdaptivePaneRole pane, T? contentKey = default(T?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.ScaffoldDirective.get -> AndroidX.Compose.Material3.Adaptive.Layout.PaneScaffoldDirective!
 AndroidX.Compose.ListItem
 AndroidX.Compose.ListItem.Headline.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ListItem.Headline.set -> void
@@ -1101,6 +1128,16 @@ AndroidX.Compose.NavOptions.PopUpToSaveState.get -> bool
 AndroidX.Compose.NavOptions.PopUpToSaveState.set -> void
 AndroidX.Compose.NavOptions.RestoreState.get -> bool
 AndroidX.Compose.NavOptions.RestoreState.set -> void
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.DefaultBackBehavior.get -> AndroidX.Compose.PaneBackNavigationBehavior?
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.DefaultBackBehavior.set -> void
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.DetailPane.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.DetailPane.set -> void
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.ExtraPane.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.ExtraPane.set -> void
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.ListPane.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.ListPane.set -> void
+AndroidX.Compose.NavigableListDetailPaneScaffold<T>.NavigableListDetailPaneScaffold(AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>! navigator) -> void
 AndroidX.Compose.NavigationBar
 AndroidX.Compose.NavigationBar.NavigationBar() -> void
 AndroidX.Compose.NavigationBarItem
@@ -1255,6 +1292,11 @@ AndroidX.Compose.PagerState.RequestScrollToPage(int page, float pageOffsetFracti
 AndroidX.Compose.PagerState.ScrollToPageAsync(int page, float pageOffsetFraction = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.PagerState.SettledPage.get -> int
 AndroidX.Compose.PagerState.TargetPage.get -> int
+AndroidX.Compose.PaneBackNavigationBehavior
+AndroidX.Compose.PaneBackNavigationBehavior.PopLatest = 0 -> AndroidX.Compose.PaneBackNavigationBehavior
+AndroidX.Compose.PaneBackNavigationBehavior.PopUntilContentChange = 3 -> AndroidX.Compose.PaneBackNavigationBehavior
+AndroidX.Compose.PaneBackNavigationBehavior.PopUntilCurrentDestinationChange = 2 -> AndroidX.Compose.PaneBackNavigationBehavior
+AndroidX.Compose.PaneBackNavigationBehavior.PopUntilScaffoldValueChange = 1 -> AndroidX.Compose.PaneBackNavigationBehavior
 AndroidX.Compose.Path
 AndroidX.Compose.Path.AddArc(AndroidX.Compose.Rect oval, float startAngle, float sweepAngle) -> AndroidX.Compose.Path!
 AndroidX.Compose.Path.AddOval(AndroidX.Compose.Rect oval) -> AndroidX.Compose.Path!
@@ -1957,6 +1999,7 @@ override AndroidX.Compose.LazyVerticalGrid<T>.Render(AndroidX.Compose.Runtime.IC
 override AndroidX.Compose.LazyVerticalStaggeredGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LeadingIconTab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LinearProgressIndicator.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.ListDetailPaneScaffold<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.ListItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.MaterialTheme.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.MediumFlexibleTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1968,6 +2011,7 @@ override AndroidX.Compose.ModalWideNavigationRail.Render(AndroidX.Compose.Runtim
 override AndroidX.Compose.MultiChoiceSegmentedButtonRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.MutableState<T>.ToString() -> string!
 override AndroidX.Compose.NavHost.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.NavigableListDetailPaneScaffold<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationBarItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationDrawerItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -2130,6 +2174,7 @@ static AndroidX.Compose.Composables.CenterAlignedTopAppBar(System.Action! title,
 static AndroidX.Compose.Composables.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.CheckboxColors? colors = null) -> void
 static AndroidX.Compose.Composables.CollectAsStateWithLifecycle<T>(Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.Composables.CollectAsStateWithLifecycle<T>(Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow) -> AndroidX.Compose.CollectedState<T>!
+static AndroidX.Compose.Composables.CollectWindowLayoutInfo(Android.App.Activity! activity) -> AndroidX.Compose.CollectedState<AndroidX.Window.Layout.WindowLayoutInfo?>!
 static AndroidX.Compose.Composables.ColorResource(int id) -> AndroidX.Compose.Color
 static AndroidX.Compose.Composables.ColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.Composables.Column(System.Action! content) -> void
@@ -2214,6 +2259,7 @@ static AndroidX.Compose.Composables.LazyVerticalGrid<T>(AndroidX.Compose.GridCel
 static AndroidX.Compose.Composables.LazyVerticalStaggeredGrid<T>(AndroidX.Compose.StaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyStaggeredGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, System.Func<T, object!>? key = null) -> void
 static AndroidX.Compose.Composables.LazyVerticalStaggeredGrid<T>(AndroidX.Compose.StaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.LazyStaggeredGridState? state, AndroidX.Compose.PaddingValues? contentPadding) -> void
 static AndroidX.Compose.Composables.LeadingIconTab(bool selected, System.Action! onClick, System.Action! text, System.Action! icon, bool enabled = true, AndroidX.Compose.Modifier? modifier = null) -> void
+static AndroidX.Compose.Composables.ListDetailPaneScaffold<T>(AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>! navigator, System.Action! listPane, System.Action! detailPane, AndroidX.Compose.Modifier? modifier = null, System.Action? extraPane = null) -> void
 static AndroidX.Compose.Composables.ListItem(System.Action! headline, AndroidX.Compose.Modifier? modifier = null, System.Action? overline = null, System.Action? supporting = null, System.Action? leading = null, System.Action? trailing = null) -> void
 static AndroidX.Compose.Composables.MandatorySystemGesturesInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.MaterialTheme(System.Action! content, AndroidX.Compose.Material3.ColorScheme? colorScheme = null, bool dynamicColor = true, bool? darkTheme = null) -> void
@@ -2229,6 +2275,7 @@ static AndroidX.Compose.Composables.MutableStateOf(float initial, int line = 0, 
 static AndroidX.Compose.Composables.MutableStateOf(int initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<int>!
 static AndroidX.Compose.Composables.MutableStateOf(long initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<long>!
 static AndroidX.Compose.Composables.MutableStateOf<T>(T initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.Composables.NavigableListDetailPaneScaffold<T>(AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>! navigator, System.Action! listPane, System.Action! detailPane, AndroidX.Compose.Modifier? modifier = null, System.Action? extraPane = null, AndroidX.Compose.PaneBackNavigationBehavior? defaultBackBehavior = null) -> void
 static AndroidX.Compose.Composables.NavigationBar(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.NavigationBarItem(bool selected, System.Action! onClick, System.Action! icon, bool enabled = true, bool alwaysShowLabel = true, AndroidX.Compose.Modifier? modifier = null, System.Action? label = null) -> void
 static AndroidX.Compose.Composables.NavigationBarsInsets() -> AndroidX.Compose.WindowInsets!
@@ -2272,6 +2319,7 @@ static AndroidX.Compose.Composables.RememberKeyed<T>(System.Func<T>! factory, ob
 static AndroidX.Compose.Composables.RememberLazyGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.Composables.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
 static AndroidX.Compose.Composables.RememberLazyStaggeredGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
+static AndroidX.Compose.Composables.RememberListDetailPaneScaffoldNavigator<T>(AndroidX.Compose.AdaptiveHingePolicy verticalHingePolicy = AndroidX.Compose.AdaptiveHingePolicy.AvoidSeparating, bool twoPanesOnMediumWidth = false, bool destinationHistoryAware = true, AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo? windowAdaptiveInfo = null) -> AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>!
 static AndroidX.Compose.Composables.RememberNavigationSuiteScaffoldState(AndroidX.Compose.NavigationSuiteScaffoldState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.NavigationSuiteScaffoldState!
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
@@ -2342,10 +2390,12 @@ static AndroidX.Compose.Composables.WideNavigationRail(System.Action! content, A
 static AndroidX.Compose.Composables.WideNavigationRailItem(bool selected, System.Action! onClick, System.Action! icon, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? label = null) -> void
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
 static AndroidX.Compose.ComposeExtensions.ButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Color? disabledContainerColor = null, AndroidX.Compose.Color? disabledContentColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ButtonColors!
+static AndroidX.Compose.ComposeExtensions.CalculateListDetailPaneScaffoldDirective(this AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo! windowAdaptiveInfo, AndroidX.Compose.AdaptiveHingePolicy verticalHingePolicy = AndroidX.Compose.AdaptiveHingePolicy.AvoidSeparating, bool twoPanesOnMediumWidth = false) -> AndroidX.Compose.Material3.Adaptive.Layout.PaneScaffoldDirective!
 static AndroidX.Compose.ComposeExtensions.CaptionBarInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.CheckboxColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? checkedColor = null, AndroidX.Compose.Color? uncheckedColor = null, AndroidX.Compose.Color? checkmarkColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.CheckboxColors!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
+static AndroidX.Compose.ComposeExtensions.CollectWindowLayoutInfo(this AndroidX.Compose.Runtime.IComposer! composer, Android.App.Activity! activity) -> AndroidX.Compose.CollectedState<AndroidX.Window.Layout.WindowLayoutInfo?>!
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Color
 static AndroidX.Compose.ComposeExtensions.ColorScheme(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.ComposeExtensions.CurrentWindowAdaptiveInfo(this AndroidX.Compose.Runtime.IComposer! composer, bool supportLargeAndXLargeWidth = false) -> AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo!
@@ -2401,6 +2451,7 @@ static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose
 static AndroidX.Compose.ComposeExtensions.RememberLazyGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyStaggeredGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
+static AndroidX.Compose.ComposeExtensions.RememberListDetailPaneScaffoldNavigator<T>(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.AdaptiveHingePolicy verticalHingePolicy = AndroidX.Compose.AdaptiveHingePolicy.AvoidSeparating, bool twoPanesOnMediumWidth = false, bool destinationHistoryAware = true, AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo? windowAdaptiveInfo = null) -> AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>!
 static AndroidX.Compose.ComposeExtensions.RememberNavigationSuiteScaffoldState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.NavigationSuiteScaffoldState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.NavigationSuiteScaffoldState!
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T

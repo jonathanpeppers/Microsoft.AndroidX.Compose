@@ -4,6 +4,7 @@ using Android.OS;
 using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
+using AndroidX.Window.Layout;
 using NavigationSuiteType = AndroidX.Compose.NavigationSuiteType;
 using AndroidProcess = global::Android.OS.Process;
 
@@ -60,7 +61,9 @@ public class ReplyNavigationTests
                 AssertViewport(viewport, CaptureInbox(activity));
             }
 
-            long selectedId = viewport[0].Id;
+            long selectedId = FirstVisibleAvatarEmailId(
+                activity,
+                viewport);
             await ClickAvatar(activity, selectedId);
             await activity.OnUi(() => Assert.IsTrue(activity.State.SelectedEmailIds.Contains(selectedId)));
             AssertEmailSelected(activity, selectedId, expected: true);
@@ -142,6 +145,308 @@ public class ReplyNavigationTests
                     $"Rail/drawer navigation did not render at the start: item={itemBounds}, window={windowBounds}.");
             Console.WriteLine(
                 $"Reply adaptive navigation: size={widthDp:F1}x{heightDp:F1}dp, type={actual}");
+        }
+        finally
+        {
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>
+    /// The live pane directive shows list and detail together only when the
+    /// window has at least two horizontal partitions.
+    /// </summary>
+    [TestMethod]
+    public async Task ListDetailPresentationMatchesAdaptivePaneDirective()
+    {
+        var activity = await Start();
+        try
+        {
+            int partitions = await activity.PanePartitionsObserved.Task
+                .WaitAsync(TimeSpan.FromSeconds(15));
+            var windowLayoutInfo = await activity.WindowLayoutInfoObserved.Task
+                .WaitAsync(TimeSpan.FromSeconds(15));
+            var foldingFeatures = windowLayoutInfo.DisplayFeatures
+                .OfType<IFoldingFeature>()
+                .ToArray();
+            Assert.IsTrue(
+                foldingFeatures.Length <= windowLayoutInfo.DisplayFeatures.Count,
+                "Folding features were not represented in the raw WindowLayoutInfo display-feature list.");
+            foreach (var foldingFeature in foldingFeatures)
+            {
+                Assert.IsNotNull(foldingFeature.Bounds);
+                Assert.IsNotNull(foldingFeature.Orientation);
+                Assert.IsNotNull(foldingFeature.State);
+                Assert.IsNotNull(foldingFeature.OcclusionType);
+                _ = foldingFeature.IsSeparating;
+            }
+            using var root = Root(activity);
+            using var list = FindPane(root, "reply-list-pane");
+            using var detail = FindPane(root, "reply-detail-pane");
+            Assert.IsNotNull(list, "Reply list pane is missing.");
+            if (partitions >= 2)
+            {
+                Assert.IsNotNull(
+                    detail,
+                    "A multi-partition window did not display the detail pane.");
+                using var emptyDetail = Find(
+                    root,
+                    node => node.VisibleToUser &&
+                        node.Text == "Select an email");
+                Assert.IsNotNull(
+                    emptyDetail,
+                    "Expanded Reply did not show its empty detail state.");
+            }
+            else
+            {
+                Assert.IsNull(
+                    detail,
+                    "A single-partition window displayed both Reply panes.");
+            }
+        }
+        finally
+        {
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>
+    /// A simulated separating, occluding hinge becomes an excluded gap while
+    /// NavHost continues to own detail route and recreation state.
+    /// </summary>
+    [TestMethod]
+    public async Task SimulatedHingeSeparatesPanes_AndRouteRestores()
+    {
+        int hingeLeft = 0;
+        int hingeRight = 0;
+        global::AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo?
+            adaptiveInfo =
+            null;
+        var activity = await Start(current =>
+        {
+            var metrics = current.Resources?.DisplayMetrics
+                ?? throw new InvalidOperationException(
+                    "Reply display metrics are unavailable.");
+            hingeLeft = metrics.WidthPixels / 2 - 16;
+            hingeRight = metrics.WidthPixels / 2 + 16;
+            adaptiveInfo ??= AdaptiveTestWindowInfo.ExpandedWithHinge(
+                    hingeLeft,
+                    0,
+                    hingeRight,
+                    metrics.HeightPixels,
+                    isVertical: true,
+                    isSeparating: true,
+                    isOccluding: true);
+            return adaptiveInfo;
+        });
+        try
+        {
+            Assert.AreEqual(
+                2,
+                await activity.PanePartitionsObserved.Task
+                    .WaitAsync(TimeSpan.FromSeconds(15)),
+                "Synthetic expanded adaptive info did not request two panes.");
+            Assert.AreEqual(
+                1,
+                activity.ExcludedBoundsCount,
+                "Separating vertical hinge was not excluded.");
+            AssertPanesAvoidHinge(activity, hingeLeft, hingeRight);
+
+            long selectedId = await ClickFirstVisibleEmail(activity);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            AssertPanesAvoidHinge(activity, hingeLeft, hingeRight);
+
+            selectedId = await ClickFirstVisibleEmail(activity, selectedId);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+            await activity.OnUi(
+                () => Assert.AreEqual(
+                    Route.Inbox,
+                    activity.Controller.Jvm?.PreviousBackStackEntry
+                        ?.Destination.Route,
+                    "Selecting another expanded-list item stacked detail routes."));
+
+            adaptiveInfo = AdaptiveTestWindowInfo.Compact();
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await WaitForPaneState(
+                activity,
+                current => current.PanePartitions == 1 &&
+                    current.ExcludedBoundsCount == 0,
+                "compact one-pane directive");
+            Assert.AreEqual(1, activity.PanePartitions);
+            Assert.AreEqual(0, activity.ExcludedBoundsCount);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+            AssertPaneVisibility(
+                activity,
+                listVisible: false,
+                detailVisible: true);
+
+            var metrics = activity.Resources?.DisplayMetrics
+                ?? throw new InvalidOperationException(
+                    "Reply display metrics are unavailable.");
+            int hingeTop = metrics.HeightPixels / 2 - 16;
+            int hingeBottom = metrics.HeightPixels / 2 + 16;
+            adaptiveInfo = AdaptiveTestWindowInfo.ExpandedWithHinge(
+                0,
+                hingeTop,
+                metrics.WidthPixels,
+                hingeBottom,
+                isVertical: false,
+                isSeparating: true,
+                isOccluding: true,
+                isTabletop: true);
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await WaitForPaneState(
+                activity,
+                current => current.VerticalPartitions == 2 &&
+                    current.ExcludedBoundsCount == 0,
+                "tabletop two-vertical-partition directive");
+            Assert.AreEqual(
+                2,
+                activity.VerticalPartitions,
+                "Tabletop posture did not request two vertical partitions.");
+            Assert.AreEqual(
+                0,
+                activity.ExcludedBoundsCount,
+                "A horizontal hinge was incorrectly treated as a vertical excluded bound.");
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+            AssertPaneVisibility(
+                activity,
+                listVisible: true,
+                detailVisible: true);
+
+            adaptiveInfo = AdaptiveTestWindowInfo.ExpandedWithHinge(
+                hingeLeft,
+                0,
+                hingeRight,
+                metrics.HeightPixels,
+                isVertical: true,
+                isSeparating: false,
+                isOccluding: false);
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await WaitForPaneState(
+                activity,
+                current => current.ExcludedBoundsCount == 0,
+                "nonseparating fold directive");
+            Assert.AreEqual(
+                0,
+                activity.ExcludedBoundsCount,
+                "A nonseparating, nonoccluding hinge was incorrectly excluded.");
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+
+            adaptiveInfo = AdaptiveTestWindowInfo.Expanded();
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await WaitForPaneState(
+                activity,
+                current => current.ExcludedBoundsCount == 0,
+                "hinge-free expanded directive");
+            Assert.AreEqual(
+                0,
+                activity.ExcludedBoundsCount,
+                "Removed hinge remained in the adaptive directive.");
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+            AssertPaneVisibility(
+                activity,
+                listVisible: true,
+                detailVisible: true);
+
+            activity = await Recreate(activity);
+            await AssertRoute(activity, Route.EmailDetailPattern);
+            await AssertDetailId(activity, selectedId);
+            Assert.AreEqual(
+                0,
+                activity.ExcludedBoundsCount,
+                "Hinge disappearance was not preserved through recreation.");
+            AssertPaneVisibility(
+                activity,
+                listVisible: true,
+                detailVisible: true);
+
+            await Back(activity);
+            await AssertRoute(activity, Route.Inbox);
+            Assert.AreEqual(0L, activity.State.OpenedEmailId.Value);
+            AssertPaneVisibility(
+                activity,
+                listVisible: true,
+                detailVisible: true);
+        }
+        finally
+        {
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>
+    /// Adaptive posture changes do not recreate the active destination or
+    /// search composition; normal tab departure and recreation semantics are
+    /// unchanged.
+    /// </summary>
+    [TestMethod]
+    public async Task AdaptiveTransitionsPreserveSearchAndTabState()
+    {
+        global::AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo
+            adaptiveInfo =
+            AdaptiveTestWindowInfo.Expanded();
+        var activity = await Start(_ => adaptiveInfo);
+        try
+        {
+            await TapSearchEditor(activity);
+            await SetEditorText(activity, "Bonjour");
+            AssertTextPresent(activity, "Bonjour from Paris");
+
+            adaptiveInfo = AdaptiveTestWindowInfo.Compact();
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await activity.AtNativeIdle();
+            AssertEditorText(activity, "Bonjour");
+            AssertTextPresent(activity, "Bonjour from Paris");
+            await AssertRoute(activity, Route.Inbox);
+
+            var metrics = activity.Resources?.DisplayMetrics
+                ?? throw new InvalidOperationException(
+                    "Reply display metrics are unavailable.");
+            adaptiveInfo = AdaptiveTestWindowInfo.ExpandedWithHinge(
+                metrics.WidthPixels / 2 - 16,
+                0,
+                metrics.WidthPixels / 2 + 16,
+                metrics.HeightPixels,
+                isVertical: true,
+                isSeparating: true,
+                isOccluding: true);
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await activity.AtNativeIdle();
+            AssertEditorText(activity, "Bonjour");
+            AssertTextPresent(activity, "Bonjour from Paris");
+
+            await Back(activity);
+            activity.ExpectHostWindow();
+            await activity.AtNativeIdle();
+            await AssertRoute(activity, Route.Inbox);
+            await Tap(activity, "Articles");
+            await AssertRoute(activity, Route.Articles);
+
+            adaptiveInfo = AdaptiveTestWindowInfo.Compact();
+            await activity.OnUi(
+                () => activity.SetAdaptiveInfo(adaptiveInfo));
+            await activity.AtNativeIdle();
+            await AssertRoute(activity, Route.Articles);
+
+            activity = await Recreate(activity);
+            await AssertRoute(activity, Route.Articles);
+            await Tap(activity, "Inbox");
+            await AssertRoute(activity, Route.Inbox);
+            await TapSearchEditor(activity);
+            AssertEditorText(activity, "");
+            AssertTextPresent(activity, "No search history");
         }
         finally
         {
@@ -348,9 +653,12 @@ public class ReplyNavigationTests
         finally { await Finish(activity); }
     }
 
-    static async Task<ReplyNavigationTestActivity> Start()
+    static async Task<ReplyNavigationTestActivity> Start(
+        Func<ReplyNavigationTestActivity,
+            global::AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo?>?
+            adaptiveInfoOverrideFactory = null)
     {
-        ReplyNavigationTestActivity.Prepare();
+        ReplyNavigationTestActivity.Prepare(adaptiveInfoOverrideFactory);
         using var intent = new Intent(global::Android.App.Application.Context, typeof(ReplyNavigationTestActivity));
         intent.AddFlags(ActivityFlags.NewTask);
         Runner.RunOnMainSync(() => global::Android.App.Application.Context.StartActivity(intent));
@@ -369,7 +677,7 @@ public class ReplyNavigationTests
 
     static async Task<ReplyNavigationTestActivity> Recreate(ReplyNavigationTestActivity old)
     {
-        ReplyNavigationTestActivity.Prepare();
+        ReplyNavigationTestActivity.PrepareForRecreation();
         await old.OnUi(() =>
         {
             old.ExpectLifecycleEnd();
@@ -409,11 +717,124 @@ public class ReplyNavigationTests
         await activity.AtNativeIdle();
     }
 
+    static AccessibilityNodeInfo? FindPane(
+        AccessibilityNodeInfo root,
+        string tag) =>
+        Find(
+            root,
+            node => node.VisibleToUser &&
+                node.ViewIdResourceName?.EndsWith(
+                    tag,
+                    StringComparison.Ordinal) == true);
+
+    static void AssertPanesAvoidHinge(
+        ReplyNavigationTestActivity activity,
+        int hingeLeft,
+        int hingeRight)
+    {
+        using var root = Root(activity);
+        using var list = FindPane(root, "reply-list-pane")
+            ?? throw new InvalidOperationException(
+                "Reply list pane is not visible.");
+        using var detail = FindPane(root, "reply-detail-pane")
+            ?? throw new InvalidOperationException(
+                "Reply detail pane is not visible.");
+        using var listBounds = new Rect();
+        using var detailBounds = new Rect();
+        list.GetBoundsInScreen(listBounds);
+        detail.GetBoundsInScreen(detailBounds);
+        const int tolerance = 4;
+        Assert.IsTrue(
+            listBounds.Right <= hingeLeft + tolerance,
+            $"List pane overlaps the simulated hinge: list={listBounds}, hinge={hingeLeft}..{hingeRight}.");
+        Assert.IsTrue(
+            detailBounds.Left >= hingeRight - tolerance,
+            $"Detail pane overlaps the simulated hinge: detail={detailBounds}, hinge={hingeLeft}..{hingeRight}.");
+    }
+
+    static void AssertPaneVisibility(
+        ReplyNavigationTestActivity activity,
+        bool listVisible,
+        bool detailVisible)
+    {
+        using var root = Root(activity);
+        using var list = FindPane(root, "reply-list-pane");
+        using var detail = FindPane(root, "reply-detail-pane");
+        Assert.AreEqual(
+            listVisible,
+            list is not null,
+            $"Reply list pane visibility should be {listVisible}.");
+        Assert.AreEqual(
+            detailVisible,
+            detail is not null,
+            $"Reply detail pane visibility should be {detailVisible}.");
+    }
+
+    static async Task SetEditorText(
+        ReplyNavigationTestActivity activity,
+        string text)
+    {
+        using var root = Root(activity);
+        using var editor = Find(root, node => node.VisibleToUser && node.Editable)
+            ?? throw new InvalidOperationException(
+                "Reply search editor is not visible.");
+        using var arguments = new Bundle();
+        arguments.PutCharSequence(
+            AccessibilityNodeInfo.ActionArgumentSetTextCharsequence,
+            text);
+        Assert.IsTrue(
+            editor.PerformAction(
+                global::Android.Views.Accessibility.Action.SetText,
+                arguments),
+            "Reply search query action was rejected.");
+        await activity.AtNativeIdle();
+        AssertEditorText(activity, text);
+    }
+
+    static async Task TapSearchEditor(
+        ReplyNavigationTestActivity activity)
+    {
+        activity.ExpectOwnedPopup();
+        using var root = Root(activity);
+        using var editor = Find(
+            root,
+            node => node.VisibleToUser && node.Editable)
+            ?? throw new InvalidOperationException(
+                "Reply search editor is not visible.");
+        PerformClick(editor, longClick: false);
+        await activity.AtNativeIdle();
+    }
+
+    static void AssertEditorText(
+        ReplyNavigationTestActivity activity,
+        string expected)
+    {
+        using var root = Root(activity);
+        using var editor = Find(root, node => node.VisibleToUser && node.Editable)
+            ?? throw new InvalidOperationException(
+                "Reply search editor is not visible.");
+        Assert.AreEqual(expected, editor.Text ?? "");
+    }
+
+    static void AssertTextPresent(
+        ReplyNavigationTestActivity activity,
+        string text)
+    {
+        using var root = Root(activity);
+        using var node = Find(
+            root,
+            candidate => candidate.VisibleToUser &&
+                candidate.Text == text);
+        Assert.IsNotNull(
+            node,
+            $"Reply text '{text}' is not visible.");
+    }
+
     static async Task Tap(ReplyNavigationTestActivity activity, string description)
     {
         await activity.AtNativeIdle();
         using var root = Root(activity);
-        using var label = Find(root, n => n.VisibleToUser && n.ContentDescription == description)
+        using var label = FindNavigationItem(root, description)
             ?? throw new InvalidOperationException($"Reply '{description}' node was not present.");
         using var bounds = new Rect();
         using var window = new Rect();
@@ -498,11 +919,15 @@ public class ReplyNavigationTests
         await activity.AtNativeIdle();
     }
 
-    static async Task<long> ClickFirstVisibleEmail(ReplyNavigationTestActivity activity)
+    static async Task<long> ClickFirstVisibleEmail(
+        ReplyNavigationTestActivity activity,
+        long excludedId = 0)
     {
         using var root = Root(activity);
         foreach (var email in LocalEmailsDataProvider.AllEmails)
         {
+            if (email.Id == excludedId)
+                continue;
             using var label = Find(root, node => node.VisibleToUser &&
                 node.Text?.Contains(email.Subject, StringComparison.Ordinal) == true);
             if (label is null)
@@ -529,6 +954,33 @@ public class ReplyNavigationTests
         throw new InvalidOperationException("Reply inbox viewport did not stabilize before row activation.");
     }
 
+    static async Task WaitForPaneState(
+        ReplyNavigationTestActivity activity,
+        Func<ReplyNavigationTestActivity, bool> predicate,
+        string expected)
+    {
+        using var timeout = new CancellationTokenSource(
+            TimeSpan.FromSeconds(15));
+        try
+        {
+            while (!predicate(activity))
+            {
+                await Task.Delay(50, timeout.Token);
+                await activity.AtNativeIdle();
+            }
+        }
+        catch (System.OperationCanceledException error)
+            when (timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Reply did not publish the expected {expected}: " +
+                $"horizontal={activity.PanePartitions}, " +
+                $"vertical={activity.VerticalPartitions}, " +
+                $"excluded={activity.ExcludedBoundsCount}.",
+                error);
+        }
+    }
+
     static Task AssertDetailId(ReplyNavigationTestActivity activity, long id) =>
         activity.OnUi(() => Assert.AreEqual(
             id.ToString(),
@@ -545,6 +997,27 @@ public class ReplyNavigationTests
             ?? throw new InvalidOperationException($"Reply email {id} avatar was not visible.");
         PerformClick(avatar, longClick: false);
         await activity.AtNativeIdle();
+    }
+
+    static long FirstVisibleAvatarEmailId(
+        ReplyNavigationTestActivity activity,
+        IReadOnlyList<(long Id, int Top)> viewport)
+    {
+        using var root = Root(activity);
+        foreach (var item in viewport)
+        {
+            var email = LocalEmailsDataProvider.Get(item.Id)
+                ?? throw new InvalidOperationException(
+                    $"Reply email {item.Id} was not found.");
+            using var avatar = Find(
+                root,
+                node => node.VisibleToUser &&
+                    node.ContentDescription == email.Sender.FullName);
+            if (avatar is not null)
+                return item.Id;
+        }
+        throw new InvalidOperationException(
+            "The restored Reply viewport had no fully visible email avatar.");
     }
 
     static void AssertEmailSelected(ReplyNavigationTestActivity activity, long id, bool expected)
@@ -722,10 +1195,12 @@ public class ReplyNavigationTests
     static async Task AssertRoute(ReplyNavigationTestActivity activity, string route)
     {
         await activity.OnUi(() => Assert.AreEqual(route, activity.Controller.CurrentBackStackEntry?.Route));
+        if (activity.OwnedPopupExpected)
+            return;
         using var root = Root(activity);
         string selected = route == Route.EmailDetailPattern ? "Inbox"
             : Label(TopLevelDestinations.All.Single(d => d.Route == route));
-        using var label = Find(root, n => n.ContentDescription == selected)
+        using var label = FindNavigationItem(root, selected)
             ?? throw new InvalidOperationException($"Selected tab '{selected}' is missing.");
         AssertSelected(label);
     }
@@ -790,7 +1265,8 @@ public class ReplyNavigationTests
                 ?? throw new InvalidOperationException("Reply view has no accessibility window.");
             windowId = info.WindowId;
         });
-        if (root.PackageName != "net.compose.devicetests" || root.WindowId != windowId)
+        if (root.PackageName != "net.compose.devicetests" ||
+            (!activity.OwnedPopupExpected && root.WindowId != windowId))
         {
             root.Dispose();
             throw new InvalidOperationException("The active window does not belong to the Reply test host.");

@@ -43,6 +43,11 @@ public static class ReplyInboxScreen
             var content = new Box
             {
                 Modifier.FillMaxSize().StatusBarsPadding(),
+                // Receive Adaptive's initial pane focus without expanding search.
+                new Box
+                {
+                    Modifier = Modifier.Size(1).Focusable(),
+                },
                 list,
                 new ReplySearchBar(emails, navigateToDetail),
             };

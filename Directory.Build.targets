@@ -45,6 +45,10 @@
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3Android" Version="1.4.0.5" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive" Version="1.2.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.Layout" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.LayoutAndroid" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.Navigation" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationAndroid" Version="1.2.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite" Version="1.4.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuiteAndroid" Version="1.4.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core" Version="1.7.8.6" />
@@ -69,6 +73,11 @@
     <PackageReference Update="Xamarin.AndroidX.Navigation.UI" Version="2.9.8.1" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8.1" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8.1" />
+
+    <!-- AndroidX Window -->
+    <PackageReference Update="Xamarin.AndroidX.Window" Version="1.5.1.3" />
+
+    <!-- AndroidX Lifecycle -->
     <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.11.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.9.4" />
