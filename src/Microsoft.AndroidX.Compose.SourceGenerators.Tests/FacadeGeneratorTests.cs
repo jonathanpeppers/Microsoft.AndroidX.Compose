@@ -4281,6 +4281,8 @@ public class FacadeGeneratorTests
 
                 public static partial class ComposeBridges
                 {
+                    internal static string RememberSearchState(
+                        string ignored, IComposer composer) => ignored;
                     internal static SearchPeer RememberSearchState(
                         int rememberValue, IComposer composer) => new();
 
@@ -4481,6 +4483,36 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void NativePayloadContent_OnNonFunction_ReportsCN3006()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    internal static void RenderPayload(
+                        Java.Lang.Object? payload, IComposer composer) { }
+
+                    [ComposeBridge(Class = "x/Host", JvmName = "Host",
+                        Signature = "(ILandroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Host(
+                        [NativePayloadContent(nameof(RenderPayload))] int content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Host");
+
+        Assert.Contains(diags, d => d.Id == "CN3006" &&
+            d.GetMessage().Contains("non-null IFunction3"));
+    }
+
+    [Fact]
     public void PeerReturningRemember_WithoutSharedOwnership_ReportsCN3009()
     {
         var code = """
@@ -4515,6 +4547,47 @@ public class FacadeGeneratorTests
 
         Assert.Contains(diags, d => d.Id == "CN3009" &&
             d.GetMessage().Contains("SharedState = true"));
+    }
+
+    [Fact]
+    public void RememberState_WithMultipleCompatibleOverloads_ReportsCN3009()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+
+            namespace AndroidX.Compose
+            {
+                public sealed class StatePeer : Java.Lang.Object { }
+                public sealed class StateHolder
+                {
+                    internal StatePeer? Jvm;
+                }
+
+                public static partial class ComposeBridges
+                {
+                    internal static System.IntPtr RememberState(
+                        int value, IComposer composer) => default;
+                    internal static StatePeer RememberState(
+                        long value, IComposer composer) => new();
+
+                    [ComposeBridge(Class = "x/Consumer", JvmName = "Consumer",
+                        Signature = "(Ljava/lang/Object;Landroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Consumer(
+                        [StateHolder(Remember = nameof(RememberState),
+                            StateType = typeof(StateHolder),
+                            SharedState = true)]
+                        System.IntPtr state,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Consumer");
+
+        Assert.Contains(diags, d => d.Id == "CN3009" &&
+            d.GetMessage().Contains("multiple compatible"));
     }
 
     // ─── [ConfirmStateChange] — per-instance JNI veto adapter ─────────

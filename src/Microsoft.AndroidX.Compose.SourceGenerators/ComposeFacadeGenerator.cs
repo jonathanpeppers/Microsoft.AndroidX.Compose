@@ -1003,6 +1003,42 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
     {
+        var payloadAttr = p.GetAttributes().FirstOrDefault(a =>
+            a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.NativePayloadContentAttribute");
+        if (payloadAttr is not null)
+        {
+            string? handler = payloadAttr.ConstructorArguments.Length > 0
+                ? payloadAttr.ConstructorArguments[0].Value as string
+                : null;
+            if (KotlinFunctionArity(p.Type) != 3 ||
+                p.NullableAnnotation == NullableAnnotation.Annotated ||
+                handler is not { Length: > 0 } ||
+                !SyntaxFacts.IsValidIdentifier(handler))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
+                    $"[NativePayloadContent] on '{p.Name}' requires a non-null IFunction3 and a valid handler name"));
+                return null;
+            }
+            var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
+            var javaObjectType = c.Compilation.GetTypeByMetadataName("Java.Lang.Object");
+            var handlerMethod = bridgesType?.GetMembers(handler).OfType<IMethodSymbol>()
+                .FirstOrDefault(m =>
+                    m.IsStatic &&
+                    m.ReturnsVoid &&
+                    m.Parameters.Length == 2 &&
+                    SymbolEqualityComparer.Default.Equals(
+                        m.Parameters[0].Type, javaObjectType) &&
+                    ComposeDefaultsGenerator.IsComposer(m.Parameters[1].Type));
+            if (handlerMethod is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
+                    $"[NativePayloadContent] on '{p.Name}' requires static ComposeBridges.{handler}(Java.Lang.Object?, IComposer) returning void"));
+                return null;
+            }
+            return new FacadeSlot(p, FacadeSlotKind.NativePayloadContent,
+                nativePayloadHandler: handler);
+        }
+
         // [StateHolder] — annotates the IntPtr bridge param carrying a
         // Kotlin state-holder handle. The facade emits a RememberXxxState
         // round-trip and an optional `.Jvm` population for a wrapper.
@@ -1089,10 +1125,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': no static method 'ComposeBridges.{remember}' found"));
                 return null;
             }
-            var rememberFit = rememberMethods.FirstOrDefault(m =>
+            var rememberCandidates = rememberMethods.Where(m =>
                 m.IsStatic &&
-                IsComposableBridge(m));
-            if (rememberFit is null)
+                IsComposableBridge(m)).ToArray();
+            if (rememberCandidates.Length == 0)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method whose last parameter is an IComposer"));
@@ -1119,15 +1155,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be accessible (public or internal)"));
                 return null;
             }
-            bool rememberReturnsPeer = SymbolEqualityComparer.Default.Equals(
-                rememberFit.ReturnType, jvmMember.Type);
-            if (!rememberReturnsPeer &&
-                rememberFit.ReturnType.SpecialType != SpecialType.System_IntPtr)
+            var compatibleRememberMethods = rememberCandidates.Where(m =>
+                m.ReturnType.SpecialType == SpecialType.System_IntPtr ||
+                SymbolEqualityComparer.Default.Equals(m.ReturnType, jvmMember.Type)).ToArray();
+            if (compatibleRememberMethods.Length == 0)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must return IntPtr or the Jvm field type '{jvmMember.Type.ToDisplayString()}'"));
                 return null;
             }
+            if (compatibleRememberMethods.Length > 1)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': multiple compatible static composer-shaped overloads named 'ComposeBridges.{remember}' were found"));
+                return null;
+            }
+            var rememberFit = compatibleRememberMethods[0];
+            bool rememberReturnsPeer = SymbolEqualityComparer.Default.Equals(
+                rememberFit.ReturnType, jvmMember.Type);
             if (rememberReturnsPeer && !ReadBool(stateAttr, "SharedState"))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
@@ -1380,40 +1425,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var funcArity = KotlinFunctionArity(p.Type);
         if (funcArity >= 0)
         {
-            var payloadAttr = p.GetAttributes().FirstOrDefault(a =>
-                a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.NativePayloadContentAttribute");
-            if (payloadAttr is not null)
-            {
-                string? handler = payloadAttr.ConstructorArguments.Length > 0
-                    ? payloadAttr.ConstructorArguments[0].Value as string
-                    : null;
-                if (funcArity != 3 || p.NullableAnnotation == NullableAnnotation.Annotated ||
-                    handler is not { Length: > 0 } || !SyntaxFacts.IsValidIdentifier(handler))
-                {
-                    diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
-                        $"[NativePayloadContent] on '{p.Name}' requires a non-null IFunction3 and a valid handler name"));
-                    return null;
-                }
-                var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
-                var javaObjectType = c.Compilation.GetTypeByMetadataName("Java.Lang.Object");
-                var handlerMethod = bridgesType?.GetMembers(handler).OfType<IMethodSymbol>()
-                    .FirstOrDefault(m =>
-                        m.IsStatic &&
-                        m.ReturnsVoid &&
-                        m.Parameters.Length == 2 &&
-                        SymbolEqualityComparer.Default.Equals(
-                            m.Parameters[0].Type, javaObjectType) &&
-                        ComposeDefaultsGenerator.IsComposer(m.Parameters[1].Type));
-                if (handlerMethod is null)
-                {
-                    diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
-                        $"[NativePayloadContent] on '{p.Name}' requires static ComposeBridges.{handler}(Java.Lang.Object?, IComposer) returning void"));
-                    return null;
-                }
-                return new FacadeSlot(p, FacadeSlotKind.NativePayloadContent,
-                    nativePayloadHandler: handler);
-            }
-
             var lambda = LambdaAdapterLowering.Classify(p);
             if (!lambda.Success)
             {
