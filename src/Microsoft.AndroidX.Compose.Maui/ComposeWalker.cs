@@ -96,23 +96,19 @@ internal static class ComposeWalker
         // AndroidView retains its factory result at a composition slot.
         // Keep that result as a stable host and replace its native child
         // from update when the MAUI logical view changes.
-        FallbackViewHost? host = null;
+        var lifetime = new FallbackViewLifetime();
         var androidView = new AndroidView(
-            factory: context => host = new FallbackViewHost(context),
-            update: platformHost => ((FallbackViewHost)platformHost).Update(view, mauiContext))
+            factory: lifetime.Create,
+            update: platformHost => lifetime.Update(platformHost, view, mauiContext))
         {
             Modifier = modifier,
         };
 
         var container = new Box();
         container.Add(androidView);
-        // A stable key retains the first closure, whose factory capture
-        // points at this composition slot's host.
-        container.Add(new DisposableEffect(0, () => () =>
-        {
-            host?.RemoveAllViews();
-            host = null;
-        }));
+        // Update refreshes the holder when Compose reuses a deactivated
+        // AndroidView node, so final release always detaches its child.
+        container.Add(new DisposableEffect(0, lifetime.RegisterRelease));
         return container;
     }
 }
