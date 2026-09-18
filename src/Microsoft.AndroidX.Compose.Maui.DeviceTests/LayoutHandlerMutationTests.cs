@@ -44,6 +44,8 @@ public class LayoutHandlerMutationTests
         var observed = new Dictionary<string, object>();
         var order = new List<string>();
         var disposals = new Dictionary<string, int>();
+        var unrelatedState = new MutableState<int>(0);
+        var unrelatedStatePeer = (Java.Lang.Object)unrelatedState._state;
         using var content = new ComposableLambda2(composer =>
         {
             var container = new MovableTestContainer();
@@ -63,6 +65,16 @@ public class LayoutHandlerMutationTests
             ObserveComposition(snapshots, composition, () => composition.ComposeContent(content));
             composition.ApplyChanges();
             AssertOrder(order, "A", "B");
+            Assert.IsTrue(
+                composition.ObservesAnyOf([handler.ChildrenVersionState]),
+                "The layout composition did not observe its children-version state.");
+            Assert.IsFalse(
+                composition.ObservesAnyOf([unrelatedStatePeer]),
+                "The layout composition unexpectedly observed the unrelated control state.");
+            composition.RecordModificationsOf([unrelatedStatePeer]);
+            Assert.IsFalse(
+                composition.HasInvalidations,
+                "Reporting an unobserved state modification invalidated the layout composition.");
             var aState = observed["A"];
             var bState = observed["B"];
 
