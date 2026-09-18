@@ -12,6 +12,8 @@ public sealed class ListDetailPaneScaffoldNavigator<T>
 {
     IThreePaneScaffoldNavigator? _jvm;
 
+    internal ListDetailPaneScaffoldNavigator() { }
+
     internal void Bind(IThreePaneScaffoldNavigator jvm)
     {
         ArgumentNullException.ThrowIfNull(jvm);

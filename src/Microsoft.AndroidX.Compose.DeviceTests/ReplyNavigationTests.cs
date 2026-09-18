@@ -4,6 +4,9 @@ using Android.OS;
 using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
+using AdaptivePaneRole = AndroidX.Compose.AdaptivePaneRole;
+using PaneBackNavigationBehavior =
+    AndroidX.Compose.PaneBackNavigationBehavior;
 using AndroidX.Window.Layout;
 using NavigationSuiteType = AndroidX.Compose.NavigationSuiteType;
 using AndroidProcess = global::Android.OS.Process;
@@ -203,6 +206,56 @@ public class ReplyNavigationTests
                     detail,
                     "A single-partition window displayed both Reply panes.");
             }
+        }
+        finally
+        {
+            await Finish(activity);
+        }
+    }
+
+    /// <summary>
+    /// The navigable facade installs system Back and honors its configured
+    /// one-entry history policy.
+    /// </summary>
+    [TestMethod]
+    public async Task NavigableScaffoldUsesConfiguredSystemBackBehavior()
+    {
+        var activity = await StartNavigableScaffold();
+        try
+        {
+            Assert.AreEqual(
+                AdaptivePaneRole.List,
+                activity.PaneNavigator.CurrentPane);
+
+            await Tap(activity, "Open detail");
+            await WaitForPaneDestination(
+                activity,
+                AdaptivePaneRole.Detail,
+                1L);
+            await activity.OnUi(
+                () => activity.NavigateToPane(2L));
+            await WaitForPaneDestination(
+                activity,
+                AdaptivePaneRole.Detail,
+                2L);
+
+            await Back(activity);
+            await WaitForPaneDestination(
+                activity,
+                AdaptivePaneRole.Detail,
+                1L);
+            Assert.IsFalse(
+                activity.Destroyed.Task.IsCompleted,
+                "System Back closed the activity instead of popping one pane destination.");
+
+            await Back(activity);
+            await WaitForPaneDestination(
+                activity,
+                AdaptivePaneRole.List,
+                0L);
+            Assert.IsFalse(
+                activity.PaneNavigator.CanNavigateBack(
+                    PaneBackNavigationBehavior.PopLatest));
         }
         finally
         {
@@ -675,6 +728,31 @@ public class ReplyNavigationTests
         }
     }
 
+    static async Task<ReplyNavigationTestActivity>
+        StartNavigableScaffold()
+    {
+        ReplyNavigationTestActivity.PrepareNavigableScaffold();
+        using var intent = new Intent(
+            global::Android.App.Application.Context,
+            typeof(ReplyNavigationTestActivity));
+        intent.AddFlags(ActivityFlags.NewTask);
+        Runner.RunOnMainSync(
+            () => global::Android.App.Application.Context
+                .StartActivity(intent));
+        var activity = await ReplyNavigationTestActivity.Started.Task
+            .WaitAsync(TimeSpan.FromSeconds(15));
+        try
+        {
+            await activity.AtNativeIdle();
+            return activity;
+        }
+        catch
+        {
+            await Finish(activity);
+            throw;
+        }
+    }
+
     static async Task<ReplyNavigationTestActivity> Recreate(ReplyNavigationTestActivity old)
     {
         ReplyNavigationTestActivity.PrepareForRecreation();
@@ -977,6 +1055,33 @@ public class ReplyNavigationTests
                 $"horizontal={activity.PanePartitions}, " +
                 $"vertical={activity.VerticalPartitions}, " +
                 $"excluded={activity.ExcludedBoundsCount}.",
+                error);
+        }
+    }
+
+    static async Task WaitForPaneDestination(
+        ReplyNavigationTestActivity activity,
+        AdaptivePaneRole pane,
+        long contentKey)
+    {
+        using var timeout = new CancellationTokenSource(
+            TimeSpan.FromSeconds(15));
+        try
+        {
+            while (activity.PaneNavigator.CurrentPane != pane ||
+                activity.PaneNavigator.CurrentContentKey != contentKey)
+            {
+                await Task.Delay(50, timeout.Token);
+                await activity.AtNativeIdle();
+            }
+        }
+        catch (System.OperationCanceledException error)
+            when (timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Navigable scaffold did not reach {pane}/{contentKey}; " +
+                $"actual={activity.PaneNavigator.CurrentPane}/" +
+                $"{activity.PaneNavigator.CurrentContentKey}.",
                 error);
         }
     }

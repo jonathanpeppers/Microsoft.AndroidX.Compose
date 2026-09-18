@@ -947,7 +947,6 @@ AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.CurrentContentKey.get -> T?
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.CurrentPane.get -> AndroidX.Compose.AdaptivePaneRole?
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.HasCurrentDestination.get -> bool
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.IsPredictiveBackInProgress.get -> bool
-AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.ListDetailPaneScaffoldNavigator() -> void
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.NavigateBackAsync(AndroidX.Compose.PaneBackNavigationBehavior behavior = AndroidX.Compose.PaneBackNavigationBehavior.PopUntilScaffoldValueChange, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.NavigateToAsync(AndroidX.Compose.AdaptivePaneRole pane, T? contentKey = default(T?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.ListDetailPaneScaffoldNavigator<T>.ScaffoldDirective.get -> AndroidX.Compose.Material3.Adaptive.Layout.PaneScaffoldDirective!

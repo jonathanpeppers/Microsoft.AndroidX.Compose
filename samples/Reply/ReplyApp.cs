@@ -103,12 +103,13 @@ public static class ReplyApp
             var scope = c.RememberCoroutineScope();
             void Open(long id) => Run(scope, async ct =>
             {
-                await paneNavigator.NavigateToAsync(
+                var transition = paneNavigator.NavigateToAsync(
                     AdaptivePaneRole.Detail,
                     id,
                     ct);
                 actions.OpenEmail(id);
                 state.OpenedEmailId.Value = id;
+                await transition;
             });
             void Close() => Run(scope, async ct =>
             {
