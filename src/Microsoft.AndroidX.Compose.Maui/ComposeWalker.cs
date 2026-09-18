@@ -106,8 +106,8 @@ internal static class ComposeWalker
 
         var container = new Box(propagateMinConstraints: true);
         container.Add(androidView);
-        // Update refreshes the holder when Compose reuses a deactivated
-        // AndroidView node, so final release always detaches its child.
+        // Keep this key constant: replacement updates run before effect
+        // disposal, so a view-derived key could clear the new child.
         container.Add(new DisposableEffect(0, lifetime.RegisterRelease));
         return container;
     }
