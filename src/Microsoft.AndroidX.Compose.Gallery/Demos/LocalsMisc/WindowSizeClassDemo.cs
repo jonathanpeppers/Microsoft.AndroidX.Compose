@@ -1,6 +1,7 @@
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.Gallery.Registry;
 using AndroidX.Window.Core.Layout;
+using AndroidX.Window.Layout;
 
 namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
@@ -30,6 +31,16 @@ public static class WindowSizeClassDemo
             var info = composer.CurrentWindowAdaptiveInfo();
             var size = info.WindowSizeClass;
             var posture = info.WindowPosture;
+            int rawDisplayFeatureCount = -1;
+            int rawFoldingFeatureCount = -1;
+            if (LocalContext.Current(composer) is
+                global::Android.App.Activity activity)
+            {
+                var layoutInfo = composer.CollectWindowLayoutInfo(activity).Value;
+                rawDisplayFeatureCount = layoutInfo?.DisplayFeatures.Count ?? 0;
+                rawFoldingFeatureCount = layoutInfo?.DisplayFeatures
+                    .Count(static feature => feature is IFoldingFeature) ?? 0;
+            }
 
             new Column
             {
@@ -48,6 +59,14 @@ public static class WindowSizeClassDemo
                 new Text("Posture (foldable / hinge state):"),
                 new Text($"  IsTabletop  = {posture.IsTabletop}"),
                 new Text($"  Hinge count = {posture.HingeList.Count}"),
+                new Text(""),
+                new Text("Raw WindowLayoutInfo:"),
+                new Text(rawDisplayFeatureCount < 0
+                    ? "  Local context is not an Activity"
+                    : $"  Display features = {rawDisplayFeatureCount}"),
+                new Text(rawFoldingFeatureCount < 0
+                    ? "  Folding features unavailable"
+                    : $"  Folding features = {rawFoldingFeatureCount}"),
             }.Render(composer);
         }
 

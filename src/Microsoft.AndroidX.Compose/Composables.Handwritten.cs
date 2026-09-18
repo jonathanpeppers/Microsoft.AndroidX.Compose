@@ -5,6 +5,63 @@ namespace AndroidX.Compose;
 
 public static partial class Composables
 {
+    /// <summary>
+    /// Renders a fold-aware Material 3 list-detail scaffold whose Back
+    /// behavior is owned by an outer navigation host.
+    /// </summary>
+    [Composable]
+    internal static void ListDetailPaneScaffold<T>(
+        IComposer composer,
+        ListDetailPaneScaffoldNavigator<T> navigator,
+        [ComposableContent] Action<IComposer> listPane,
+        [ComposableContent] Action<IComposer> detailPane,
+        Modifier? modifier = null,
+        [ComposableContent] Action<IComposer>? extraPane = null)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(navigator);
+        ArgumentNullException.ThrowIfNull(listPane);
+        ArgumentNullException.ThrowIfNull(detailPane);
+
+        new global::AndroidX.Compose.ListDetailPaneScaffold<T>(navigator)
+        {
+            Modifier = modifier,
+            ListPane = new ComposableContentNode(listPane),
+            DetailPane = new ComposableContentNode(detailPane),
+            ExtraPane = ComposableContentNode.Create(extraPane),
+        }.Render(composer);
+    }
+
+    /// <summary>
+    /// Renders a fold-aware Material 3 navigable list-detail scaffold with an
+    /// explicit composer.
+    /// </summary>
+    [Composable]
+    internal static void NavigableListDetailPaneScaffold<T>(
+        IComposer composer,
+        ListDetailPaneScaffoldNavigator<T> navigator,
+        [ComposableContent] Action<IComposer> listPane,
+        [ComposableContent] Action<IComposer> detailPane,
+        Modifier? modifier = null,
+        [ComposableContent] Action<IComposer>? extraPane = null,
+        PaneBackNavigationBehavior? defaultBackBehavior = null)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(navigator);
+        ArgumentNullException.ThrowIfNull(listPane);
+        ArgumentNullException.ThrowIfNull(detailPane);
+
+        new global::AndroidX.Compose.NavigableListDetailPaneScaffold<T>(
+            navigator)
+        {
+            Modifier = modifier,
+            ListPane = new ComposableContentNode(listPane),
+            DetailPane = new ComposableContentNode(detailPane),
+            ExtraPane = ComposableContentNode.Create(extraPane),
+            DefaultBackBehavior = defaultBackBehavior,
+        }.Render(composer);
+    }
+
     /// <summary>Renders a Material theme with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
     internal static void MaterialTheme(

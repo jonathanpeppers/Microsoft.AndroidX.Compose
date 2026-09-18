@@ -23,6 +23,30 @@ namespace AndroidX.Compose;
 // call — it doesn't fit any `[ComposeBridge]` shape.
 internal static partial class ComposeBridges
 {
+    // ThreePaneScaffoldNavigator.navigateTo(..., Continuation): Object
+    //
+    // The binding exposes this suspend member as Java.Lang.Object. Raw JNI
+    // preserves COROUTINE_SUSPENDED as an IntPtr for SuspendBridge.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigation/ThreePaneScaffoldNavigator",
+        JvmName = "navigateTo",
+        Signature = "(Landroidx/compose/material3/adaptive/layout/ThreePaneScaffoldRole;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr ThreePaneScaffoldNavigatorNavigateTo(
+        IntPtr navigator,
+        AndroidX.Compose.Material3.Adaptive.Layout.ThreePaneScaffoldRole pane,
+        Java.Lang.Object? contentKey,
+        IContinuation cont);
+
+    // ThreePaneScaffoldNavigator.navigateBack(..., Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigation/ThreePaneScaffoldNavigator",
+        JvmName = "navigateBack-5OWwzt4",
+        Signature = "(Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr ThreePaneScaffoldNavigatorNavigateBack(
+        IntPtr navigator,
+        string backBehavior,
+        IContinuation cont);
+
     // androidx.compose.foundation.ScrollState.scrollTo(int, Continuation): Object
     //
     // The two-arg suspend overload IS exposed in the binding (returns
