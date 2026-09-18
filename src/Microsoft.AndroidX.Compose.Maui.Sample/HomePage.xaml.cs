@@ -111,6 +111,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#4CAF50"),
                 "visuals"),
             new DemoEntry(
+                "Fallback replacement",
+                "ContentView swaps fixed-size stock Android views across repeat, null, and restore transitions.",
+                Color.FromArgb("#006A6A"),
+                "fallback-replacement"),
+            new DemoEntry(
                 "Alerts",
                 "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
                 Color.FromArgb("#FF5722"),

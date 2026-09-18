@@ -2374,9 +2374,21 @@ translate to `Modifier.Size` / `Modifier.Width` /
   fallback path now reads `WidthRequest` / `HeightRequest` off the
   MAUI `VisualElement` and applies a matching Compose `Modifier`
   to the `AndroidView`. Internal change; no public-API delta.
+- The fallback now materialises a stable `FrameLayout` host and swaps
+  its child from `AndroidView`'s update callback. Replacing a
+  `ContentView` child at the same composition slot therefore replaces
+  the native Android view instead of retaining the first factory
+  result. Identity-equal views are reused, old parents are detached
+  before reparenting, and clearing content removes the hosted child
+  through composition-release cleanup without disconnecting its MAUI
+  handler, matching stock `ContentViewHandler` ownership.
 - `src/Microsoft.AndroidX.Compose.Maui.Sample/Pages/ShapesPage.xaml(.cs)`
   + `GraphicsViewPage.xaml(.cs)` — on-device reproducers for the
   bug above and proofs of the fix.
+- `FallbackReplacementPage.cs` — fixed-size A/B stock `Grid` views
+  exercise replacement, same-instance reassignment, null removal, and
+  subsequent restoration without conflating the result with intrinsic
+  sizing.
 - `AppShell.xaml.cs` routes + `HomePage.xaml.cs` catalog entries
   for those two pages.
 - This investigation report.
