@@ -2380,8 +2380,8 @@ translate to `Modifier.Size` / `Modifier.Width` /
   the native Android view instead of retaining the first factory
   result. Identity-equal views are reused, old parents are detached
   before reparenting, and clearing content removes the hosted child
-  without disconnecting its MAUI handler, matching stock
-  `ContentViewHandler` ownership.
+  through composition-release cleanup without disconnecting its MAUI
+  handler, matching stock `ContentViewHandler` ownership.
 - `src/Microsoft.AndroidX.Compose.Maui.Sample/Pages/ShapesPage.xaml(.cs)`
   + `GraphicsViewPage.xaml(.cs)` — on-device reproducers for the
   bug above and proofs of the fix.

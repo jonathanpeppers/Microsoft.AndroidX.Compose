@@ -14,14 +14,8 @@ sealed class FallbackViewHost : FrameLayout
             ViewGroup.LayoutParams.MatchParent);
     }
 
-    internal void Update(IView? view, IMauiContext context)
+    internal void Update(IView view, IMauiContext context)
     {
-        if (view is null)
-        {
-            RemoveAllViews();
-            return;
-        }
-
         var platformView = view.ToPlatform(context);
         if (ChildCount == 1 && ReferenceEquals(GetChildAt(0), platformView))
             return;

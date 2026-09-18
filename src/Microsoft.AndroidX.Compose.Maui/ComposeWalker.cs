@@ -96,11 +96,6 @@ internal static class ComposeWalker
         // AndroidView retains its factory result at a composition slot.
         // Keep that result as a stable host and replace its native child
         // from update when the MAUI logical view changes.
-        return new AndroidView(
-            factory: context => new FallbackViewHost(context),
-            update: host => ((FallbackViewHost)host).Update(view, mauiContext))
-        {
-            Modifier = modifier,
-        };
+        return new FallbackViewNode(view, mauiContext, modifier);
     }
 }
