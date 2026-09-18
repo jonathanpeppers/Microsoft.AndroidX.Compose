@@ -147,6 +147,9 @@ public class LayoutHandlerMutationTests
             snapshots.IsApplyObserverNotificationPending,
             "An unrelated snapshot-state notification was pending before the layout mutation.");
         Assert.IsFalse(
+            snapshots.Current.HasPendingChanges,
+            "An unrelated snapshot-state write was pending before the layout mutation.");
+        Assert.IsFalse(
             composition.HasInvalidations,
             "The composition was already invalidated before the layout mutation.");
     }
@@ -158,8 +161,8 @@ public class LayoutHandlerMutationTests
         IList<string> order)
     {
         Assert.IsTrue(
-            snapshots.IsApplyObserverNotificationPending,
-            "The layout command did not publish a pending snapshot-state notification.");
+            snapshots.Current.HasPendingChanges,
+            "The layout command did not publish a pending snapshot-state write.");
         snapshots.SendApplyNotifications();
         Assert.IsTrue(composition.HasInvalidations, "The layout command did not invalidate its composed child snapshot.");
         observed.Clear();
