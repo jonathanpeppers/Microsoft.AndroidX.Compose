@@ -1,37 +1,6 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Material 3 <c>TopSearchBar</c> (state-based) — variant of
-/// <see cref="SearchBar"/> that snaps to a scrolling top app bar
-/// position. Same shape as <see cref="SearchBar"/>: provide a
-/// <see cref="SearchBarState"/> and an <see cref="InputField"/>; pair
-/// with an <see cref="ExpandedFullScreenSearchBar"/> or
-/// <see cref="ExpandedDockedSearchBar"/> popup that shares the state.
+/// Material 3 state-based search bar positioned as a scrolling top app bar.
 /// </summary>
-public sealed class TopSearchBar : ComposableNode
-{
-    readonly SearchBarState _state;
-
-    public TopSearchBar(SearchBarState state) => _state = state;
-
-    /// <summary>Required: composable that renders the search input field.</summary>
-    public required ComposableNode InputField { get; set; }
-
-    public override void Render(IComposer composer)
-    {
-        if (InputField is null)
-            throw new InvalidOperationException(
-                "TopSearchBar.InputField is required (the Kotlin parameter has no default).");
-
-        var stateHandle = SearchBar.ResolveStateHandle(_state, composer);
-        var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
-        var __modifierKey = BuildModifierStructuralKey();
-        int __changed = 0;
-        __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
-        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
-        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        ComposeBridges.TopSearchBar(stateHandle, inputField, BuildModifier(), composer, _changed: __changed);
-    }
-}
+public sealed partial class TopSearchBar;

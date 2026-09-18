@@ -75,9 +75,14 @@ public class ReplySearchTests
                 Assert.IsTrue(editor.PerformAction((global::Android.Views.Accessibility.Action)imeAction.Id));
             }
             await Settle(activity);
-            AssertSearchContentAbsent("IME Search");
+            await AssertSearchContentAbsent("IME Search");
             await Click(activity, node => node.Text == "Bonjour", "IME-retained query");
             AssertPresent("Bonjour from Paris");
+            await WaitForSearchValue(
+                activity,
+                global::AndroidX.Compose.Material3.SearchBarValue.Expanded
+                    ?? throw new InvalidOperationException("Expanded search value was unavailable."));
+            await EnsureImeHidden(activity);
 
             ReportStage("System Back collapses expanded search", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
@@ -85,11 +90,11 @@ public class ReplySearchTests
             ReportStage("After search Back", activity);
             AssertEditor("Bonjour");
             Assert.IsTrue(activity.InInbox.Value, "Search dismissal must not navigate.");
-            AssertSearchContentAbsent("System Back");
+            await AssertSearchContentAbsent("System Back");
             await Click(activity, node => node.Text == "Bonjour", "retained query");
             AssertEditor("Bonjour");
             await Click(activity, node => node.ContentDescription == "Back", "search Back arrow");
-            AssertSearchContentAbsent("Leading Back arrow");
+            await AssertSearchContentAbsent("Leading Back arrow");
             await Click(activity, node => node.Text == "Search emails", "cleared search");
             AssertPresent("No search history");
             await SetText(activity, "no-such-email");
@@ -103,7 +108,7 @@ public class ReplySearchTests
             await Settle(activity);
             Runner.RunOnMainSync(() => activity.InInbox.Value = true);
             await Settle(activity);
-            AssertSearchContentAbsent("Navigation return");
+            await AssertSearchContentAbsent("Navigation return");
             await Click(activity, node => node.Text == "Search emails", "search after navigation away/back");
             AssertPresent("No search history");
             await SetText(activity, "Bonjour");
@@ -115,7 +120,7 @@ public class ReplySearchTests
 
             Runner.RunOnMainSync(() => activity.InInbox.Value = true);
             await Settle(activity);
-            AssertSearchContentAbsent("Return from selected email");
+            await AssertSearchContentAbsent("Return from selected email");
             await Click(activity, node => node.Text == "Search emails", "returned search");
             AssertPresent("No search history");
             AssertEditor("");
@@ -132,6 +137,12 @@ public class ReplySearchTests
     [TestMethod]
     public async Task NativeBack_DismissesPopupThenReachesUnderlyingActivity()
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+        {
+            Assert.Inconclusive("Native search Back regression requires Android 11 or later.");
+            return;
+        }
+
         ReportStage("Starting native Back ownership activity");
         var activity = await Start();
         try
@@ -141,6 +152,11 @@ public class ReplySearchTests
             await SetText(activity, "Bonjour");
             AssertPresent("Bonjour from Paris");
             AssertPopupHorizontalBounds(collapsedBounds);
+            await WaitForSearchValue(
+                activity,
+                global::AndroidX.Compose.Material3.SearchBarValue.Expanded
+                    ?? throw new InvalidOperationException("Expanded search value was unavailable."));
+            await EnsureImeHidden(activity);
             ReportStage("Before first native Back: expanded popup", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
             await Settle(activity);
@@ -148,7 +164,7 @@ public class ReplySearchTests
             AssertEditor("Bonjour");
             Assert.IsTrue(activity.InInbox.Value);
             Assert.AreEqual(0, activity.SelectionCalls);
-            AssertSearchContentAbsent("First native Back");
+            await AssertSearchContentAbsent("First native Back");
 
             ReportStage("Before second native Back: underlying activity", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
@@ -251,11 +267,67 @@ public class ReplySearchTests
         Assert.IsNotNull(node, $"Search text '{text}' is missing from the owned native hierarchy.");
     }
 
-    static void AssertSearchContentAbsent(string action)
+    static async Task AssertSearchContentAbsent(string action)
     {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            using var pending = Find(node => node.Text is
+                "Bonjour from Paris" or "No search history" or "No item found");
+            if (pending is null)
+                return;
+            await Task.Delay(50);
+        }
+
         using var content = Find(node => node.Text is
             "Bonjour from Paris" or "No search history" or "No item found");
         Assert.IsNull(content, $"{action} left expanded search content in the owned native hierarchy.");
+    }
+
+    static async Task WaitForSearchValue(
+        ReplySearchTestActivity activity,
+        global::AndroidX.Compose.Material3.SearchBarValue expected)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (DateTime.UtcNow < deadline)
+        {
+            var session = activity.SearchSession;
+            if (session is not null &&
+                session.Expansion.TargetValue.Equals(expected) &&
+                session.Expansion.Progress >= 0.98f &&
+                !session.Expansion.IsAnimating)
+                return;
+            await Task.Delay(50);
+        }
+
+        var current = activity.SearchSession?.Expansion;
+        Assert.Fail(
+            $"Search state did not settle at {expected}; current={current?.CurrentValue}, " +
+            $"target={current?.TargetValue}, progress={current?.Progress}, animating={current?.IsAnimating}.");
+    }
+
+    [global::System.Runtime.Versioning.SupportedOSPlatform("android30.0")]
+    static async Task EnsureImeHidden(ReplySearchTestActivity activity)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+            return;
+
+        bool visible = false;
+        Runner.RunOnMainSync(() =>
+        {
+            var decor = activity.Window?.DecorView
+                ?? throw new InvalidOperationException("Reply search decor view was unavailable.");
+            visible = decor.RootWindowInsets?.IsVisible(global::Android.Views.WindowInsets.Type.Ime()) == true;
+        });
+        if (!visible)
+            return;
+
+        Runner.SendKeyDownUpSync(Keycode.Back);
+        await Settle(activity);
+        await WaitForSearchValue(
+            activity,
+            global::AndroidX.Compose.Material3.SearchBarValue.Expanded
+                ?? throw new InvalidOperationException("Expanded search value was unavailable."));
     }
 
     static (int Left, int Right) EditorHorizontalBounds()

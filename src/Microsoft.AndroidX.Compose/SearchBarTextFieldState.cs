@@ -1,15 +1,13 @@
 using AndroidX.Compose.Foundation.Text.Input;
-using AndroidX.Compose.Runtime;
 
 namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for the text inside a
 /// <see cref="SearchBarInputField"/>. Mirrors <see cref="SearchBarState"/>:
-/// the underlying JVM
-/// <c>androidx.compose.foundation.text.input.TextFieldState</c> is created
-/// lazily the first time a <see cref="SearchBarInputField"/> bound to this
-/// state is rendered, via Compose's <c>rememberTextFieldState</c>.
+/// the underlying JVM <c>androidx.compose.foundation.text.input.TextFieldState</c>
+/// is owned by the active composition and shared by every rendered input
+/// field using this wrapper.
 /// </summary>
 /// <remarks>
 /// Both halves of the SearchBar pair — the collapsed
@@ -45,15 +43,16 @@ namespace AndroidX.Compose;
 ///     },
 /// }
 /// </code>
+///
+/// Removing every input field retires the native peer while retaining the
+/// exact text and packed selection. Re-entry creates a new composition-owned
+/// peer initialized from those retained values.
 /// </remarks>
 public sealed class SearchBarTextFieldState
 {
     string _pendingText;
-    bool _selectAllPending;
+    long _pendingSelection;
 
-    // Bound peer for the JVM androidx.compose.foundation.text.input.TextFieldState.
-    // Set on first SearchBarInputField render and reused by every subsequent
-    // render so collapsed + expanded halves share one TextFieldState.
     internal TextFieldState? Jvm;
 
     /// <summary>
@@ -64,14 +63,16 @@ public sealed class SearchBarTextFieldState
     {
         ArgumentNullException.ThrowIfNull(initialText);
         _pendingText = initialText;
+        _pendingSelection = AndroidX.Compose.UI.Text.TextRangeKt.TextRange(
+            initialText.Length, initialText.Length);
     }
 
     /// <summary>
     /// Current text in the search input. Reads through to the live
     /// JVM <c>TextFieldState.text</c> (a Compose snapshot value), so
     /// reading this inside composition subscribes to recomposition.
-    /// Before the first render binds the peer, returns the latest pending
-    /// value from construction or a text mutation method.
+    /// While unbound, returns the latest retained value from construction,
+    /// a text mutation method, or native-owner retirement.
     /// </summary>
     public string Text => Jvm?.Text ?? _pendingText;
 
@@ -82,7 +83,8 @@ public sealed class SearchBarTextFieldState
         if (Jvm is null)
         {
             _pendingText = text;
-            _selectAllPending = false;
+            _pendingSelection = AndroidX.Compose.UI.Text.TextRangeKt.TextRange(
+                text.Length, text.Length);
             return;
         }
         TextFieldStateKt.SetTextAndPlaceCursorAtEnd(Jvm, text);
@@ -95,7 +97,8 @@ public sealed class SearchBarTextFieldState
         if (Jvm is null)
         {
             _pendingText = text;
-            _selectAllPending = true;
+            _pendingSelection = AndroidX.Compose.UI.Text.TextRangeKt.TextRange(
+                0, text.Length);
             return;
         }
         TextFieldStateKt.SetTextAndSelectAll(Jvm, text);
@@ -107,26 +110,31 @@ public sealed class SearchBarTextFieldState
         if (Jvm is null)
         {
             _pendingText = "";
-            _selectAllPending = false;
+            _pendingSelection = 0L;
             return;
         }
         TextFieldStateKt.ClearText(Jvm);
     }
 
-    // Lazy-resolve the bound JVM peer. Multiple SearchBarInputField
-    // siblings sharing this state hit the JNI bridge once on the FIRST
-    // render and reuse the peer for every subsequent half.
-    internal TextFieldState Resolve(IComposer composer)
-    {
-        if (Jvm is not null)
-            return Jvm;
+    internal string RememberText => _pendingText;
+    internal long RememberSelection => _pendingSelection;
 
-        long selection = _selectAllPending
-            ? AndroidX.Compose.UI.Text.TextRangeKt.TextRange(0, _pendingText.Length)
-            : 0L;
-        int defaults = _selectAllPending ? 0 : 2;
-        Jvm = TextFieldStateKt.RememberTextFieldState(
-            _pendingText, selection, composer, 0, defaults);
-        return Jvm;
+    internal void BindJvm(TextFieldState jvm) => Jvm = jvm;
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        try
+        {
+            string retainedText = jvm.Text ?? "";
+            long retainedSelection = jvm.Selection;
+            _pendingText = retainedText;
+            _pendingSelection = retainedSelection;
+        }
+        finally
+        {
+            Jvm = null;
+        }
     }
 }
