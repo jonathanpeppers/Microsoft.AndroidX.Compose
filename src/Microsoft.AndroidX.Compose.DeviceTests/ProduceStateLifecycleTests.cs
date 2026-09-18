@@ -182,6 +182,69 @@ public class ProduceStateLifecycleTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    public void ThrowingCancellationCallback_DoesNotBlockReplacement(bool composerless)
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = CreateRecomposer();
+        var composition = CreateComposition(applier, recomposer);
+        string key = "A";
+        int startsA = 0;
+        int startsB = 0;
+        var completionA = NewCompletion();
+        var completionB = NewCompletion();
+#pragma warning disable CN5009
+        using var content = new ComposableLambda2(composer =>
+        {
+            string capturedKey = key;
+            _ = Produce(
+                composer,
+                composerless,
+                initialValue: 0,
+                key,
+                (_, token) =>
+                {
+                    if (capturedKey == "A")
+                    {
+                        startsA++;
+                        token.Register(static () =>
+                            throw new InvalidOperationException(
+                                "Expected cancellation callback failure."));
+                        return completionA.Task;
+                    }
+
+                    startsB++;
+                    return completionB.Task;
+                });
+        });
+#pragma warning restore CN5009
+
+        try
+        {
+            composition.ComposeContent(content);
+            Apply(composition);
+            Assert.AreEqual(1, startsA);
+            Assert.AreEqual(0, startsB);
+
+            key = "B";
+            composition.ComposeContent(content);
+            Apply(composition);
+
+            Assert.AreEqual(1, startsA);
+            Assert.AreEqual(1, startsB,
+                "A throwing cancellation callback blocked producer B startup.");
+        }
+        finally
+        {
+            completionA.TrySetResult();
+            completionB.TrySetResult();
+            composition.Dispose();
+            recomposer.Cancel();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     public void AbandonedAndFailedReplacement_LeaveCommittedProducerRunning(bool composerless)
     {
         using var applier = new IdentityTestApplier();

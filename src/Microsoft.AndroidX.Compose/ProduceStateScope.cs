@@ -124,6 +124,12 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
         {
             cts?.Cancel();
         }
+        catch (Exception ex)
+        {
+            Android.Util.Log.Error(
+                "AndroidX.Compose",
+                "ProduceState producer cancellation callback faulted: " + ex);
+        }
         finally
         {
             cts?.Dispose();
