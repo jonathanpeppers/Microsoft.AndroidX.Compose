@@ -4,9 +4,9 @@ namespace AndroidX.Compose.Samples.JetNews;
 /// <summary>
 /// One news article. A condensed version of the upstream sample's
 /// <c>Post</c> model: no <c>Publication</c> reference object, no
-/// inline-markup spans, no per-post bookmark flag (we track bookmarks
-/// externally in a <see cref="MutableStateList{T}"/> of post
-/// ids).
+/// per-post bookmark flag (we track bookmarks externally in a
+/// <see cref="MutableStateList{T}"/> of post ids). Inline markup is
+/// represented by each <see cref="Paragraph"/>'s <see cref="Markup"/> ranges.
 /// </summary>
 /// <param name="Id">Stable id used as the navigation route key.</param>
 /// <param name="Title">Headline rendered in cards and the article top bar.</param>

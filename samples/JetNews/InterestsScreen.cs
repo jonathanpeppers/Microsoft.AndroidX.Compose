@@ -11,77 +11,127 @@ namespace AndroidX.Compose.Samples.JetNews;
 public static class InterestsScreen
 {
     /// <summary>Materialize the interests screen.</summary>
-    public static Scaffold Build(
+    public static ComposableNode Build(
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
         MutableState<int>        selectedTab,
         DrawerStateHolder        drawerState) =>
-        new()
+        new Composed(c =>
         {
-            TopBar = new CenterAlignedTopAppBar
+            var typography = c.Typography();
+            var scheme = c.ColorScheme();
+            string title = c.StringResource(Resource.String.interests_title);
+            string topics = c.StringResource(Resource.String.interests_section_topics);
+            string people = c.StringResource(Resource.String.interests_section_people);
+            string publications = c.StringResource(Resource.String.interests_section_publications);
+            string openNavigation = c.StringResource(Resource.String.cd_open_navigation_drawer);
+            string subscribed = c.StringResource(Resource.String.cd_subscribed);
+            string subscribe = c.StringResource(Resource.String.cd_subscribe);
+            return new Scaffold
             {
-                NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+                TopBar = new CenterAlignedTopAppBar
                 {
-                    new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
+                    NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+                    {
+                        new Icon(Resource.Drawable.ic_menu, openNavigation),
+                    },
+                    Title = new Text(title)
+                    {
+                        Color = Color.FromPacked(scheme.Primary),
+                    }.WithTypography(typography.TitleLarge),
                 },
-                Title = new Text("Interests")
-                {
-                    FontSize   = 18,
-                    FontWeight = FontWeight.SemiBold,
-                },
-            },
-            Body = BuildBody(selectedTab, selectedTopics, selectedPeople, selectedPublications),
-        };
+                Body = BuildBody(
+                    selectedTab,
+                    selectedTopics,
+                    selectedPeople,
+                    selectedPublications,
+                    topics,
+                    people,
+                    publications,
+                    subscribed,
+                    subscribe,
+                    typography),
+            };
+        });
 
     static Column BuildBody(
         MutableState<int>        selectedTab,
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
-        MutableStateList<string> selectedPublications) =>
+        MutableStateList<string> selectedPublications,
+        string topics,
+        string people,
+        string publications,
+        string subscribed,
+        string subscribe,
+        AndroidX.Compose.Material3.Typography typography) =>
         new()
         {
             Modifier.FillMaxSize(),
             new PrimaryTabRow(selectedTabIndex: selectedTab.Value)
             {
-                BuildTab(selectedTab, 0, "Topics"),
-                BuildTab(selectedTab, 1, "People"),
-                BuildTab(selectedTab, 2, "Publications"),
+                BuildTab(selectedTab, 0, topics, typography),
+                BuildTab(selectedTab, 1, people, typography),
+                BuildTab(selectedTab, 2, publications, typography),
             },
             selectedTab.Value switch
             {
-                0 => BuildTopics(selectedTopics),
-                1 => BuildSimpleList(InterestsRepo.People, selectedPeople),
-                _ => BuildSimpleList(InterestsRepo.Publications, selectedPublications),
+                0 => BuildTopics(selectedTopics, subscribed, subscribe),
+                1 => BuildSimpleList(
+                    InterestsRepo.People,
+                    selectedPeople,
+                    subscribed,
+                    subscribe,
+                    typography),
+                _ => BuildSimpleList(
+                    InterestsRepo.Publications,
+                    selectedPublications,
+                    subscribed,
+                    subscribe,
+                    typography),
             },
         };
 
-    static Tab BuildTab(MutableState<int> selectedTab, int index, string label) =>
+    static Tab BuildTab(
+        MutableState<int> selectedTab,
+        int index,
+        string label,
+        AndroidX.Compose.Material3.Typography typography) =>
         new(
             selected: selectedTab.Value == index,
             onClick:  () => selectedTab.Value = index)
         {
-            Text = new Text(label) { FontSize = 14 },
+            Text = new Text(label).WithTypography(typography.LabelLarge),
         };
 
-    static ComposableNode BuildTopics(MutableStateList<string> selected) =>
+    static ComposableNode BuildTopics(
+        MutableStateList<string> selected,
+        string subscribed,
+        string subscribe) =>
         new Composed(c =>
         {
-            // Topics content can exceed viewport height (especially landscape),
-            // so the outer column needs vertical scrolling.
             var scroll = c.Remember(() => new ScrollState());
+            var typography = c.Typography();
+            var scheme = c.ColorScheme();
             var col = new Column
             {
                 Modifier.FillMaxWidth().VerticalScroll(scroll),
             };
             foreach (var section in InterestsRepo.Topics)
             {
-                col.Add(BuildSectionHeader(section.Key));
-                var rows = new List<ComposableNode>();
+                col.Add(BuildSectionHeader(section.Key, typography, scheme));
+                List<ComposableNode> rows = [];
                 foreach (var topic in section.Value)
                 {
                     var key = $"{section.Key}/{topic}";
-                    rows.Add(BuildToggleRow(topic, selected.Contains(key), () => Toggle(selected, key)));
+                    rows.Add(BuildToggleRow(
+                        topic,
+                        selected.Contains(key),
+                        () => Toggle(selected, key),
+                        subscribed,
+                        subscribe,
+                        typography));
                 }
                 col.Add(BuildAdaptiveTopicSection(rows));
                 col.Add(new HorizontalDivider
@@ -169,27 +219,43 @@ public static class InterestsScreen
     }
 
     static LazyColumn<string> BuildSimpleList(IReadOnlyList<string> items,
-                                              MutableStateList<string> selected) =>
+                                              MutableStateList<string> selected,
+                                              string subscribed,
+                                              string subscribe,
+                                              AndroidX.Compose.Material3.Typography typography) =>
         new(items: items,
             itemContent: item =>
-                BuildToggleRow(item, selected.Contains(item), () => Toggle(selected, item)))
+                BuildToggleRow(
+                    item,
+                    selected.Contains(item),
+                    () => Toggle(selected, item),
+                    subscribed,
+                    subscribe,
+                    typography))
         {
             Modifier = Modifier.FillMaxSize(),
         };
 
-    static Box BuildSectionHeader(string label) =>
+    static Box BuildSectionHeader(
+        string label,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme) =>
         new()
         {
             Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
             new Text(label)
             {
-                FontSize   = 14,
-                FontWeight = FontWeight.SemiBold,
-                Color      = Color.FromHex("#666666"),
-            },
+                Color = Color.FromPacked(scheme.OnSurfaceVariant),
+            }.WithTypography(typography.TitleMedium),
         };
 
-    static Row BuildToggleRow(string label, bool selected, Action onToggle) =>
+    static Row BuildToggleRow(
+        string label,
+        bool selected,
+        Action onToggle,
+        string subscribed,
+        string subscribe,
+        AndroidX.Compose.Material3.Typography typography) =>
         new()
         {
             Modifier
@@ -198,12 +264,11 @@ public static class InterestsScreen
                 .Clickable(onToggle),
             new Text(label)
             {
-                FontSize = 16,
                 Modifier = Modifier.Weight(1f, fill: true),
-            },
+            }.WithTypography(typography.TitleMedium),
             new Icon(
                 selected ? Resource.Drawable.ic_check : Resource.Drawable.ic_add,
-                selected ? "Subscribed" : "Subscribe"),
+                selected ? subscribed : subscribe),
         };
 
     static void Toggle(MutableStateList<string> set, string key)
