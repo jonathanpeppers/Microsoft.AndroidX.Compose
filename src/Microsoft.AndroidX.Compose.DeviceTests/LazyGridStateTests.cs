@@ -2,7 +2,7 @@ using AndroidX.Compose;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
-/// <summary>Verifies managed lazy-grid state binding and Kotlin default masks.</summary>
+/// <summary>Verifies managed lazy-state binding, initialization, and Kotlin default masks.</summary>
 [TestClass]
 [DoNotParallelize]
 public class LazyGridStateTests
@@ -83,6 +83,62 @@ public class LazyGridStateTests
     }
 
     [TestMethod]
+    public async Task RememberHelpers_HonorInitialIndexAndScrollOffset()
+    {
+        var activity = await StartActivity(LazyGridStateTestActivity.RememberInitialValues);
+        try
+        {
+            await WaitFor(
+                () => LazyGridStateTestActivity.FirstRememberedListState is not null
+                    && LazyGridStateTestActivity.FirstRememberedGridState is not null
+                    && LazyGridStateTestActivity.FirstRememberedStaggeredState is not null,
+                "Remember helpers did not complete their first composition.");
+
+            AssertInitialPosition(
+                LazyGridStateTestActivity.FirstRememberedListState,
+                "lazy-list");
+            AssertInitialPosition(
+                LazyGridStateTestActivity.FirstRememberedGridState,
+                "lazy-grid");
+            AssertInitialPosition(
+                LazyGridStateTestActivity.FirstRememberedStaggeredState,
+                "lazy-staggered-grid");
+        }
+        finally
+        {
+            await FinishActivity(activity);
+        }
+    }
+
+    [TestMethod]
+    public async Task RememberHelpers_OmittedArgumentsUseZeroDefaults()
+    {
+        var activity = await StartActivity(LazyGridStateTestActivity.RememberIdentity);
+        try
+        {
+            await WaitFor(
+                () => LazyGridStateTestActivity.FirstRememberedListState is not null
+                    && LazyGridStateTestActivity.FirstRememberedGridState is not null
+                    && LazyGridStateTestActivity.FirstRememberedStaggeredState is not null,
+                "Remember helpers did not complete their first composition.");
+
+            AssertDefaultPosition(
+                LazyGridStateTestActivity.FirstRememberedListState,
+                "lazy-list");
+            AssertDefaultPosition(
+                LazyGridStateTestActivity.FirstRememberedGridState,
+                "lazy-grid");
+            AssertDefaultPosition(
+                LazyGridStateTestActivity.FirstRememberedStaggeredState,
+                "lazy-staggered-grid");
+        }
+        finally
+        {
+            await FinishActivity(activity);
+        }
+    }
+
+    [TestMethod]
     public async Task RememberHelpers_PreserveManagedIdentityAcrossRecomposition()
     {
         var activity = await StartActivity(LazyGridStateTestActivity.RememberIdentity);
@@ -91,6 +147,9 @@ public class LazyGridStateTests
             await WaitFor(
                 () => LazyGridStateTestActivity.RecompositionTrigger is not null,
                 "Remember helpers did not complete their first composition.");
+            var firstList = LazyGridStateTestActivity.FirstRememberedListState
+                ?? throw new InvalidOperationException(
+                    "RememberLazyListState did not return a state.");
             var firstGrid = LazyGridStateTestActivity.FirstRememberedGridState
                 ?? throw new InvalidOperationException(
                     "RememberLazyGridState did not return a state.");
@@ -106,17 +165,86 @@ public class LazyGridStateTests
             await WaitFor(
                 () => LazyGridStateTestActivity.RememberCompositionCount >= 2
                     && ReferenceEquals(
-                    firstGrid,
-                    LazyGridStateTestActivity.LastRememberedGridState)
+                        firstList,
+                        LazyGridStateTestActivity.LastRememberedListState)
+                    && ReferenceEquals(
+                        firstGrid,
+                        LazyGridStateTestActivity.LastRememberedGridState)
                     && ReferenceEquals(
                         firstStaggered,
                         LazyGridStateTestActivity.LastRememberedStaggeredState),
-                "Managed lazy-grid state identity changed across recomposition.");
+                "Managed lazy state identity changed across recomposition.");
         }
         finally
         {
             await FinishActivity(activity);
         }
+    }
+
+    static void AssertInitialPosition(LazyListState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialIndex,
+            value.FirstVisibleItemIndex,
+            $"{name} initial index was mapped to the wrong native parameter.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialOffset,
+            value.FirstVisibleItemScrollOffset,
+            $"{name} initial offset was mapped to the wrong native parameter.");
+    }
+
+    static void AssertInitialPosition(LazyGridState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialIndex,
+            value.FirstVisibleItemIndex,
+            $"{name} initial index was mapped to the wrong native parameter.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialOffset,
+            value.FirstVisibleItemScrollOffset,
+            $"{name} initial offset was mapped to the wrong native parameter.");
+    }
+
+    static void AssertInitialPosition(LazyStaggeredGridState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialIndex,
+            value.FirstVisibleItemIndex,
+            $"{name} initial index was mapped to the wrong native parameter.");
+        Assert.AreEqual(
+            LazyGridStateTestActivity.RememberedInitialOffset,
+            value.FirstVisibleItemScrollOffset,
+            $"{name} initial offset was mapped to the wrong native parameter.");
+    }
+
+    static void AssertDefaultPosition(LazyListState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(0, value.FirstVisibleItemIndex, $"{name} default index was not zero.");
+        Assert.AreEqual(0, value.FirstVisibleItemScrollOffset, $"{name} default offset was not zero.");
+    }
+
+    static void AssertDefaultPosition(LazyGridState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(0, value.FirstVisibleItemIndex, $"{name} default index was not zero.");
+        Assert.AreEqual(0, value.FirstVisibleItemScrollOffset, $"{name} default offset was not zero.");
+    }
+
+    static void AssertDefaultPosition(LazyStaggeredGridState? state, string name)
+    {
+        var value = state
+            ?? throw new InvalidOperationException($"{name} state was not remembered.");
+        Assert.AreEqual(0, value.FirstVisibleItemIndex, $"{name} default index was not zero.");
+        Assert.AreEqual(0, value.FirstVisibleItemScrollOffset, $"{name} default offset was not zero.");
     }
 
     static async Task FinishActivity(LazyGridStateTestActivity activity)
