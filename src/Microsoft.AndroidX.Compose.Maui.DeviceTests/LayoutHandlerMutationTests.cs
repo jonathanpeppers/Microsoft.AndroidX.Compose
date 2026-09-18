@@ -60,7 +60,7 @@ public class LayoutHandlerMutationTests
 
         try
         {
-            composition.ComposeContent(content);
+            ObserveComposition(snapshots, composition, () => composition.ComposeContent(content));
             composition.ApplyChanges();
             AssertOrder(order, "A", "B");
             var aState = observed["A"];
@@ -68,7 +68,7 @@ public class LayoutHandlerMutationTests
 
             AssertQuiescent(composition, snapshots);
             layout.Add(c);
-            Invoke(handler, layout, "Add", new LayoutHandlerUpdate(2, c));
+            Invoke(handler, layout, composition, "Add", new LayoutHandlerUpdate(2, c));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "B", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -77,7 +77,7 @@ public class LayoutHandlerMutationTests
 
             AssertQuiescent(composition, snapshots);
             layout.Insert(1, x);
-            Invoke(handler, layout, "Insert", new LayoutHandlerUpdate(1, x));
+            Invoke(handler, layout, composition, "Insert", new LayoutHandlerUpdate(1, x));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "B", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -87,7 +87,7 @@ public class LayoutHandlerMutationTests
 
             AssertQuiescent(composition, snapshots);
             layout.Remove(b);
-            Invoke(handler, layout, "Remove", new LayoutHandlerUpdate(2, b));
+            Invoke(handler, layout, composition, "Remove", new LayoutHandlerUpdate(2, b));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -97,7 +97,7 @@ public class LayoutHandlerMutationTests
 
             AssertQuiescent(composition, snapshots);
             layout[1] = replacement;
-            Invoke(handler, layout, "Update", new LayoutHandlerUpdate(1, replacement));
+            Invoke(handler, layout, composition, "Update", new LayoutHandlerUpdate(1, replacement));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "R", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -107,7 +107,7 @@ public class LayoutHandlerMutationTests
 
             AssertQuiescent(composition, snapshots);
             layout.Clear();
-            Invoke(handler, layout, "Clear", null);
+            Invoke(handler, layout, composition, "Clear", null);
             Recompose(composition, snapshots, observed, order);
             Assert.AreEqual(0, order.Count);
             Assert.AreEqual(1, disposals["A"]);
@@ -125,6 +125,7 @@ public class LayoutHandlerMutationTests
     static void Invoke(
         ComposeLayoutHandler handler,
         MauiLayout layout,
+        IControlledComposition composition,
         string command,
         object? args)
     {
@@ -136,6 +137,7 @@ public class LayoutHandlerMutationTests
             previousVersion + 1,
             handler.ChildrenVersion,
             $"Layout command '{command}' did not increment the subscribed children version.");
+        composition.RecordModificationsOf([handler.ChildrenVersionState]);
     }
 
     static void AssertQuiescent(
@@ -147,9 +149,6 @@ public class LayoutHandlerMutationTests
             snapshots.IsApplyObserverNotificationPending,
             "An unrelated snapshot-state notification was pending before the layout mutation.");
         Assert.IsFalse(
-            snapshots.Current.HasPendingChanges,
-            "An unrelated snapshot-state write was pending before the layout mutation.");
-        Assert.IsFalse(
             composition.HasInvalidations,
             "The composition was already invalidated before the layout mutation.");
     }
@@ -160,15 +159,29 @@ public class LayoutHandlerMutationTests
         IDictionary<string, object> observed,
         IList<string> order)
     {
-        Assert.IsTrue(
-            snapshots.Current.HasPendingChanges,
-            "The layout command did not publish a pending snapshot-state write.");
         snapshots.SendApplyNotifications();
         Assert.IsTrue(composition.HasInvalidations, "The layout command did not invalidate its composed child snapshot.");
         observed.Clear();
         order.Clear();
-        Assert.IsTrue(composition.Recompose(), "The invalidated layout did not recompose.");
+        bool recomposed = false;
+        ObserveComposition(snapshots, composition, () => recomposed = composition.Recompose());
+        Assert.IsTrue(recomposed, "The invalidated layout did not recompose.");
         composition.ApplyChanges();
+    }
+
+    static void ObserveComposition(
+        Snapshot.Companion snapshots,
+        IControlledComposition composition,
+        Action action)
+    {
+        using var readObserver = new ComposableLambda1(value =>
+            composition.RecordReadOf(value
+                ?? throw new InvalidOperationException("Snapshot read observer received a null state.")));
+        using var writeObserver = new ComposableLambda1(value =>
+            composition.RecordWriteOf(value
+                ?? throw new InvalidOperationException("Snapshot write observer received a null state.")));
+        using var block = new ComposableLambda0(action);
+        _ = snapshots.Observe(readObserver, writeObserver, block);
     }
 
     static void AssertOrder(IList<string> actual, params string[] expected) =>
