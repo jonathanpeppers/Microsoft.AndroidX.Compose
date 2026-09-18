@@ -18,20 +18,32 @@ public static class PostScreen
     /// fires <see cref="Android.Content.Intent.ActionSend"/>. When
     /// <c>null</c>, the dialog only shows the "not available" message.
     /// </param>
+    /// <param name="onOpenLink">Opens a URL from an annotated article link.</param>
     public static ComposableNode Build(
         Post post,
         BookmarksViewModel bookmarks,
         Action onBack,
         SnackbarController snackbars,
+        Action<string> onOpenLink,
         Action<Post>? onShare = null) =>
         new Composed(c =>
         {
             var showShareDialog = c.MutableStateOf(false);
             var snackbarMessage = snackbars.Message.Value;
+            var topBarState = c.RememberTopAppBarState();
+            var scrollBehavior = c.EnterAlwaysScrollBehavior(topBarState);
+            var typography = c.Typography();
+            string navigateUp = c.StringResource(Resource.String.cd_navigate_up);
+            string share = c.StringResource(Resource.String.cd_share);
+            string added = c.StringResource(Resource.String.bookmark_added);
+            string removed = c.StringResource(Resource.String.bookmark_removed);
+            string shareArticle = c.StringResource(Resource.String.post_share_article);
+            string unavailable = c.StringResource(Resource.String.post_functionality_not_available);
+            string shareAnyway = c.StringResource(Resource.String.post_share_anyway);
+            string sharingUnavailable = c.StringResource(Resource.String.post_share_unavailable);
+            string ok = c.StringResource(Resource.String.post_ok);
+            string cancel = c.StringResource(Resource.String.post_cancel);
 
-            // Wrap the Scaffold + the conditional dialog in a Box so the
-            // dialog renders as an overlay above the chrome regardless of
-            // where it sits in the tree (mirrors AlertDialogDemo's shape).
             return new Box
             {
                 Modifier.FillMaxSize(),
@@ -41,14 +53,12 @@ public static class PostScreen
                     TopBar = new TopAppBar
                     {
                         Title = new Text(post.Metadata.Author)
-                        {
-                            FontSize   = 16,
-                            FontWeight = FontWeight.Medium,
-                        },
+                            .WithTypography(typography.LabelLarge),
                         NavigationIcon = new IconButton(onClick: onBack)
                         {
-                            new Icon(Resource.Drawable.ic_arrow_back, "Back"),
+                            new Icon(Resource.Drawable.ic_arrow_back, navigateUp),
                         },
+                        ScrollBehavior = scrollBehavior,
                     },
                     BottomBar = new BottomAppBar
                     {
@@ -56,21 +66,31 @@ public static class PostScreen
                             post.Id,
                             bookmarks,
                             onToggled: isChecked => snackbars.Show(isChecked
-                                ? "Added to bookmarks"
-                                : "Removed from bookmarks")),
+                                ? added
+                                : removed)),
                         new IconButton(onClick: () => showShareDialog.Value = true)
                         {
-                            new Icon(Resource.Drawable.ic_share, "Share"),
+                            new Icon(Resource.Drawable.ic_share, share),
                         },
                     },
                     SnackbarHost = snackbarMessage is null
                         ? null
                         : new Snackbar { Body = new Text(snackbarMessage) },
-                    Body = BuildBody(post),
+                    Body = BuildBody(post, onOpenLink, scrollBehavior),
                 },
 
                 showShareDialog.Value
-                    ? BuildShareDialog(post, showShareDialog, snackbars, onShare)
+                    ? BuildShareDialog(
+                        post,
+                        showShareDialog,
+                        snackbars,
+                        onShare,
+                        shareArticle,
+                        unavailable,
+                        shareAnyway,
+                        sharingUnavailable,
+                        ok,
+                        cancel)
                     : (ComposableNode?)null,
             };
         });
@@ -78,12 +98,18 @@ public static class PostScreen
     static AlertDialog BuildShareDialog(Post post,
                                         MutableState<bool> showShareDialog,
                                         SnackbarController snackbars,
-                                        Action<Post>? onShare) =>
+                                        Action<Post>? onShare,
+                                        string shareArticle,
+                                        string unavailable,
+                                        string shareAnyway,
+                                        string sharingUnavailable,
+                                        string ok,
+                                        string cancel) =>
         new(onDismissRequest: () => showShareDialog.Value = false)
         {
             Shape = new RoundedCornerShape(20.Dp()),
-            Title = new Text("Share article"),
-            Text  = new Text("Functionality not available 😞"),
+            Title = new Text(shareArticle),
+            Text  = new Text(unavailable),
             ConfirmButton = new Button(onClick: () =>
             {
                 showShareDialog.Value = false;
@@ -93,71 +119,82 @@ public static class PostScreen
                 }
                 else
                 {
-                    snackbars.Show("Sharing isn't wired up in this build");
+                    snackbars.Show(sharingUnavailable);
                 }
             })
             {
-                new Text(onShare is null ? "OK" : "Share anyway"),
+                new Text(onShare is null ? ok : shareAnyway),
             },
             DismissButton = new Button(onClick: () => showShareDialog.Value = false)
             {
-                new Text("Cancel"),
+                new Text(cancel),
             },
         };
 
-    static LazyColumn<PostRow> BuildBody(Post post)
+    static LazyColumn<PostRow> BuildBody(
+        Post post,
+        Action<string> onOpenLink,
+        AndroidX.Compose.Material3.ITopAppBarScrollBehavior scrollBehavior)
     {
-        var rows = new List<PostRow> { new PostRow.Hero(post) };
+        List<PostRow> rows = [new PostRow.Hero(post)];
         for (int i = 0; i < post.Paragraphs.Count; i++)
             rows.Add(new PostRow.Body(post.Paragraphs[i], i));
 
-        return new LazyColumn<PostRow>(items: rows, itemContent: BuildRow)
+        return new LazyColumn<PostRow>(
+            items: rows,
+            itemContent: row => BuildRow(row, onOpenLink))
         {
-            Modifier = Modifier.FillMaxSize(),
+            Modifier = Modifier
+                .FillMaxSize()
+                .NestedScroll(scrollBehavior.NestedScrollConnection),
         };
     }
 
-    static ComposableNode BuildRow(PostRow row) => row switch
+    static ComposableNode BuildRow(PostRow row, Action<string> onOpenLink) => row switch
     {
         PostRow.Hero h => BuildHero(h.Post),
-        PostRow.Body b => PostBody.BuildParagraph(b.Paragraph),
+        PostRow.Body b => PostBody.BuildParagraph(b.Paragraph, onOpenLink),
         _              => new Spacer(),
     };
 
-    static Column BuildHero(Post post) =>
-        new()
+    static ComposableNode BuildHero(Post post) =>
+        new Composed(c =>
         {
-            Modifier.FillMaxWidth(),
-            new Image(post.HeroId, "")
+            var typography = c.Typography();
+            var scheme = c.ColorScheme();
+            string metadata = c.StringResource(
+                Resource.String.post_min_read,
+                post.Metadata.Author,
+                post.Metadata.Date,
+                post.Metadata.ReadTimeMinutes);
+            return new Column
             {
-                Modifier = Modifier
-                    .FillMaxWidth()
-                    .AspectRatio(992f / 296f),
-            },
-            new Column
-            {
-                Modifier.FillMaxWidth().Padding(16),
-                new Text(post.Title)
+                Modifier.FillMaxWidth(),
+                new Image(post.HeroId, "")
                 {
-                    FontSize   = 22,
-                    FontWeight = FontWeight.SemiBold,
+                    Modifier = Modifier
+                        .FillMaxWidth()
+                        .AspectRatio(992f / 296f),
                 },
-                Spacer.Height(4),
-                new Text(post.Subtitle)
+                new Column
                 {
-                    FontSize = 14,
-                    Color    = Color.FromHex("#666666"),
+                    Modifier.FillMaxWidth().Padding(16),
+                    new Text(post.Title).WithTypography(typography.HeadlineLarge),
+                    Spacer.Height(4),
+                    new Text(post.Subtitle)
+                    {
+                        Color = Color.FromPacked(scheme.OnSurfaceVariant),
+                    }.WithTypography(typography.BodyMedium),
+                    Spacer.Height(8),
+                    new Text(metadata)
+                    {
+                        Color = Color.FromPacked(scheme.OnSurfaceVariant),
+                    }.WithTypography(typography.BodySmall),
                 },
-                Spacer.Height(8),
-                new Text($"{post.Metadata.Author} · {post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+                new HorizontalDivider
                 {
-                    FontSize = 12,
-                    Color    = Color.FromHex("#666666"),
+                    Modifier = Modifier.Padding(horizontal: 16, vertical: 8),
                 },
-            },
-            new HorizontalDivider
-            {
-                Modifier = Modifier.Padding(horizontal: 16, vertical: 8),
-            },
-        };
+            };
+        });
 }

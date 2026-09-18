@@ -11,66 +11,119 @@ namespace AndroidX.Compose.Samples.JetNews;
 /// </summary>
 internal static class PostBody
 {
-    static readonly Color Subtle   = Color.FromHex("#666666");
-    static readonly Color QuoteBar = Color.FromHex("#BBBBBB");
-    static readonly Color CodeBg   = Color.FromHex("#F1F3F5");
-    static readonly Color CodeFg   = Color.FromHex("#1F2328");
+    public static ComposableNode BuildParagraph(
+        Paragraph paragraph,
+        Action<string> onOpenLink) =>
+        new Composed(c =>
+        {
+            var typography = c.Typography();
+            var scheme = c.ColorScheme();
+            return paragraph.Type switch
+            {
+                ParagraphType.Title     => Title(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Caption   => Caption(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Header    => Header(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Subhead   => Subhead(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Text      => Body(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.CodeBlock => CodeBlock(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Quote     => Quote(paragraph, typography, scheme, onOpenLink),
+                ParagraphType.Bullet    => Bullet(paragraph, typography, scheme, onOpenLink),
+                _                       => Body(paragraph, typography, scheme, onOpenLink),
+            };
+        });
 
-    public static ComposableNode BuildParagraph(Paragraph p) => p.Type switch
+    static ComposableNode Title(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
+        Styled(
+            paragraph,
+            typography.HeadlineLarge,
+            scheme,
+            onOpenLink,
+            modifier: Modifier.Padding(horizontal: 16, vertical: 8));
+
+    static ComposableNode Caption(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
+        Styled(
+            paragraph,
+            typography.LabelMedium,
+            scheme,
+            onOpenLink,
+            color: Color.FromPacked(scheme.OnSurfaceVariant),
+            modifier: Modifier.Padding(horizontal: 16, vertical: 4));
+
+    static ComposableNode Header(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
+        Styled(
+            paragraph,
+            typography.HeadlineMedium,
+            scheme,
+            onOpenLink,
+            modifier: Modifier.Padding(start: 16, top: 16, end: 16, bottom: 4));
+
+    static ComposableNode Subhead(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
+        Styled(
+            paragraph,
+            typography.HeadlineSmall,
+            scheme,
+            onOpenLink,
+            modifier: Modifier.Padding(start: 16, top: 12, end: 16, bottom: 4));
+
+    static ComposableNode Body(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
+        Styled(
+            paragraph,
+            typography.BodyLarge,
+            scheme,
+            onOpenLink,
+            modifier: Modifier.Padding(horizontal: 16, vertical: 4));
+
+    static Row CodeBlock(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink)
     {
-        ParagraphType.Title     => Title(p),
-        ParagraphType.Caption   => Caption(p),
-        ParagraphType.Header    => Header(p),
-        ParagraphType.Subhead   => Subhead(p),
-        ParagraphType.Text      => Body(p),
-        ParagraphType.CodeBlock => CodeBlock(p),
-        ParagraphType.Quote     => Quote(p),
-        ParagraphType.Bullet    => Bullet(p),
-        _                       => Body(p),
-    };
-
-    static ComposableNode Title(Paragraph p) => Styled(p,
-        fontSize: 22,
-        fontWeight: FontWeight.SemiBold,
-        modifier:  Modifier.Padding(horizontal: 16, vertical: 8));
-
-    static ComposableNode Caption(Paragraph p) => Styled(p,
-        fontSize: 13,
-        color:    Subtle,
-        modifier: Modifier.Padding(horizontal: 16, vertical: 4));
-
-    static ComposableNode Header(Paragraph p) => Styled(p,
-        fontSize:   20,
-        fontWeight: FontWeight.SemiBold,
-        modifier:   Modifier.Padding(start: 16, top: 16, end: 16, bottom: 4));
-
-    static ComposableNode Subhead(Paragraph p) => Styled(p,
-        fontSize:   18,
-        fontWeight: FontWeight.Medium,
-        modifier:   Modifier.Padding(start: 16, top: 12, end: 16, bottom: 4));
-
-    static ComposableNode Body(Paragraph p) => Styled(p,
-        fontSize: 16,
-        modifier: Modifier.Padding(horizontal: 16, vertical: 4));
-
-    static Row CodeBlock(Paragraph p) =>
-        new()
+        var codeBackground = Color.FromPacked(scheme.OnSurface).WithOpacity(.15f);
+        return new Row
         {
             Modifier
                 .FillMaxWidth()
                 .Padding(horizontal: 16, vertical: 4),
-            Styled(p,
-                fontSize:   14,
+            Styled(
+                paragraph,
+                typography.BodyLarge,
+                scheme,
+                onOpenLink,
                 fontFamily: FontFamily.Monospace,
-                color:      CodeFg,
-                modifier:   Modifier
+                modifier: Modifier
                     .FillMaxWidth()
                     .Clip(6)
-                    .Background(CodeBg)
+                    .Background(codeBackground)
                     .Padding(horizontal: 12, vertical: 8)),
         };
+    }
 
-    static Row Quote(Paragraph p) =>
+    static Row Quote(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
         new()
         {
             Modifier
@@ -78,15 +131,25 @@ internal static class PostBody
                 .Padding(start: 16, top: 8, end: 16, bottom: 8),
             new Box
             {
-                Modifier.Width(4).Height(40).Background(QuoteBar),
+                Modifier
+                    .Width(4)
+                    .Height(40)
+                    .Background(Color.FromPacked(scheme.OnSurface).WithOpacity(.3f)),
             },
             Spacer.Width(12),
-            Styled(p,
-                fontSize:  16,
+            Styled(
+                paragraph,
+                typography.BodyLarge,
+                scheme,
+                onOpenLink,
                 fontStyle: FontStyle.Italic),
         };
 
-    static Row Bullet(Paragraph p) =>
+    static Row Bullet(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.Typography typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink) =>
         new()
         {
             Modifier
@@ -94,82 +157,84 @@ internal static class PostBody
                 .Padding(start: 16, top: 4, end: 16, bottom: 4),
             new Text("•")
             {
-                FontSize = 16,
                 Modifier = Modifier.Padding(end: 8),
-            },
-            Styled(p, fontSize: 16),
+            }.WithTypography(typography.BodyLarge),
+            Styled(paragraph, typography.BodyLarge, scheme, onOpenLink),
         };
 
-    /// <summary>
-    /// Render <paramref name="p"/> with shared paragraph-level styling.
-    /// Routes to <see cref="Text"/> when no inline markups are present
-    /// and to <see cref="AnnotatedText"/> otherwise; both facades share
-    /// the same styling surface so the call site doesn't branch.
-    /// </summary>
     static ComposableNode Styled(
-        Paragraph p,
-        Sp? fontSize = null,
-        FontWeight? fontWeight = null,
+        Paragraph paragraph,
+        AndroidX.Compose.UI.Text.TextStyle typography,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink,
         FontStyle? fontStyle = null,
         Color? color = null,
         FontFamily? fontFamily = null,
         Modifier? modifier = null)
     {
-        if (p.Markups is null || p.Markups.Count == 0)
+        if (paragraph.Markups is null || paragraph.Markups.Count == 0)
         {
-            return new Text(p.Text)
+            var text = new Text(paragraph.Text)
             {
-                FontSize   = fontSize,
-                FontWeight = fontWeight,
-                FontStyle  = fontStyle,
-                Color      = color,
+                FontStyle = fontStyle,
+                Color = color,
                 FontFamily = fontFamily,
-                Modifier   = modifier,
-            };
+                Modifier = modifier,
+            }.WithTypography(typography);
+            return text;
         }
-        return new AnnotatedText(BuildAnnotated(p))
+
+        var annotated = new AnnotatedText(BuildAnnotated(paragraph, scheme, onOpenLink))
         {
-            FontSize   = fontSize,
-            FontWeight = fontWeight,
-            FontStyle  = fontStyle,
-            Color      = color,
+            FontStyle = fontStyle,
+            Color = color,
             FontFamily = fontFamily,
-            Modifier   = modifier,
-        };
+            Modifier = modifier,
+        }.WithTypography(typography);
+        return annotated;
     }
 
-    static AnnotatedString BuildAnnotated(Paragraph p)
+    static AnnotatedString BuildAnnotated(
+        Paragraph paragraph,
+        AndroidX.Compose.Material3.ColorScheme scheme,
+        Action<string> onOpenLink)
     {
         var b = new AnnotatedStringBuilder();
-        b.Append(p.Text);
-        var len = p.Text.Length;
-        foreach (var m in p.Markups!)
+        b.Append(paragraph.Text);
+        var len = paragraph.Text.Length;
+        var markups = paragraph.Markups
+            ?? throw new InvalidOperationException("Paragraph markups were not available while building annotated text.");
+        foreach (var markup in markups)
         {
-            // Clamp to the paragraph's actual length so a malformed
-            // (start, end) range can't blow up the AnnotatedString
-            // builder — upstream silently truncates the same way.
-            var start = Math.Clamp(m.Start, 0, len);
-            var end   = Math.Clamp(m.End,   start, len);
+            var start = Math.Clamp(markup.Start, 0, len);
+            var end = Math.Clamp(markup.End, start, len);
             if (end == start)
                 continue;
-            b.AddStyle(StyleFor(m.Type), start, end);
+
+            var style = StyleFor(markup.Type, scheme);
+            if (markup.Type == MarkupType.Link && markup.Href is { Length: > 0 } href)
+                b.AddLink(LinkAnnotation.Clickable(href, onOpenLink, style), start, end);
+            else
+                b.AddStyle(style, start, end);
         }
         return b.ToAnnotatedString();
     }
 
-    static SpanStyle StyleFor(MarkupType type) => type switch
+    static SpanStyle StyleFor(
+        MarkupType type,
+        AndroidX.Compose.Material3.ColorScheme scheme) => type switch
     {
-        MarkupType.Italic => new SpanStyle { FontStyle  = FontStyle.Italic   },
-        MarkupType.Bold   => new SpanStyle { FontWeight = FontWeight.Bold    },
-        MarkupType.Link   => new SpanStyle { Decoration = TextDecoration.Underline },
-        MarkupType.Code   => new SpanStyle
+        MarkupType.Italic => new SpanStyle { FontStyle = FontStyle.Italic },
+        MarkupType.Bold => new SpanStyle { FontWeight = FontWeight.Bold },
+        MarkupType.Link => new SpanStyle
+        {
+            Color = Color.FromPacked(scheme.Primary),
+            Decoration = TextDecoration.Underline,
+        },
+        MarkupType.Code => new SpanStyle
         {
             FontFamily = FontFamily.Monospace,
-            // CodeFg is forced for legibility against the fixed-light
-            // CodeBg, mirroring the same dark-mode workaround the
-            // CodeBlock paragraph type already applies (commit b69af97).
-            Color      = CodeFg,
-            Background = CodeBg,
+            Background = Color.FromPacked(scheme.OnSurface).WithOpacity(.15f),
         },
         _ => new SpanStyle(),
     };

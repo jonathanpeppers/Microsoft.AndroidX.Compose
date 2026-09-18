@@ -16,47 +16,66 @@ namespace AndroidX.Compose.Samples.JetNews;
 public static class JetnewsDrawer
 {
     /// <summary>Materialize the drawer sheet.</summary>
-    public static ModalDrawerSheet Build(
+    public static ComposableNode Build(
         NavController        nav,
         MutableState<string> currentRoute,
         DrawerStateHolder    drawerState) =>
-        new()
+        new Composed(c =>
         {
-            new Column
+            var typography = c.Typography();
+            string home = c.StringResource(Resource.String.home_title);
+            string interests = c.StringResource(Resource.String.interests_title);
+            string navigateHome = c.StringResource(Resource.String.cd_navigate_home);
+            string navigateInterests = c.StringResource(Resource.String.cd_navigate_interests);
+            string logo = c.StringResource(Resource.String.drawer_logo);
+            string appName = c.StringResource(Resource.String.app_name);
+            return new ModalDrawerSheet
             {
-                Modifier.FillMaxWidth(),
-                BuildHeader(),
-                BuildItem(
-                    label:        "Home",
-                    iconRes:      Resource.Drawable.ic_home,
-                    route:        Routes.Home,
-                    nav:          nav,
-                    currentRoute: currentRoute,
-                    drawerState:  drawerState),
-                BuildItem(
-                    label:        "Interests",
-                    iconRes:      Resource.Drawable.ic_interests,
-                    route:        Routes.Interests,
-                    nav:          nav,
-                    currentRoute: currentRoute,
-                    drawerState:  drawerState),
-            },
-        };
+                new Column
+                {
+                    Modifier.FillMaxWidth(),
+                    BuildHeader(logo, appName),
+                    BuildItem(
+                        label:        home,
+                        description:  navigateHome,
+                        iconRes:      Resource.Drawable.ic_home,
+                        route:        Routes.Home,
+                        nav:          nav,
+                        currentRoute: currentRoute,
+                        drawerState:  drawerState,
+                        typography:   typography),
+                    BuildItem(
+                        label:        interests,
+                        description:  navigateInterests,
+                        iconRes:      Resource.Drawable.ic_interests,
+                        route:        Routes.Interests,
+                        nav:          nav,
+                        currentRoute: currentRoute,
+                        drawerState:  drawerState,
+                        typography:   typography),
+                },
+            };
+        });
 
-    static Row BuildHeader() =>
+    static Row BuildHeader(string logo, string appName) =>
         new()
         {
             Modifier.FillMaxWidth().Padding(horizontal: 28, vertical: 24),
-            new Icon(Resource.Drawable.ic_jetnews_logo, "JetNews logo"),
+            new Icon(Resource.Drawable.ic_jetnews_logo, logo),
             Spacer.Width(8),
-            new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews"),
+            new Icon(Resource.Drawable.ic_jetnews_wordmark, appName),
         };
 
-    static NavigationDrawerItem BuildItem(string label, int iconRes, string route,
+    static NavigationDrawerItem BuildItem(string label, string description, int iconRes, string route,
                                           NavController nav, MutableState<string> currentRoute,
-                                          DrawerStateHolder drawerState)
+                                          DrawerStateHolder drawerState,
+                                          AndroidX.Compose.Material3.Typography typography)
     {
         bool selected = currentRoute.Value == route;
+        var labelText = new Text(label).WithTypography(typography.LabelLarge);
+        if (selected)
+            labelText.FontWeight = FontWeight.SemiBold;
+
         return new NavigationDrawerItem(
             selected: selected,
             onClick:  () =>
@@ -70,12 +89,8 @@ public static class JetnewsDrawer
             })
         {
             Modifier = Modifier.Padding(horizontal: 12),
-            Label    = new Text(label)
-            {
-                FontSize   = 16,
-                FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
-            },
-            Icon = new Icon(iconRes, label),
+            Label = labelText,
+            Icon = new Icon(iconRes, description),
         };
     }
 }

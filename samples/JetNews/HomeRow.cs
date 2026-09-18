@@ -17,6 +17,9 @@ public abstract record HomeRow
     /// <summary>A standard recommended/recent post row (PostCardSimple layout).</summary>
     public sealed record Recommended(Post Post) : HomeRow;
 
+    /// <summary>Empty-state message shown when a search has no matches.</summary>
+    public sealed record SearchEmpty(string Message) : HomeRow;
+
     /// <summary>Horizontally-scrolling row of <see cref="HomeCards.BuildPopular"/> cards.</summary>
     public sealed record PopularCarousel(IReadOnlyList<Post> Posts) : HomeRow;
 
