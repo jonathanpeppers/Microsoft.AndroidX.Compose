@@ -212,8 +212,8 @@ internal static class PostBody
                 continue;
 
             var style = StyleFor(markup.Type, scheme);
-            if (markup.Type == MarkupType.Link && markup.Href is { Length: > 0 } href)
-                b.AddLink(LinkAnnotation.Clickable(href, onOpenLink, style), start, end);
+            if (markup.Type == MarkupType.Link)
+                b.AddLink(LinkAnnotation.Clickable(markup.Href ?? string.Empty, onOpenLink, style), start, end);
             else
                 b.AddStyle(style, start, end);
         }

@@ -198,7 +198,7 @@ public static class HomeScreen
         List<HomeRow> rows = [];
         if (query.Trim().Length > 0)
         {
-            rows.Add(new HomeRow.SectionHeader(searchResults));
+            rows.Add(new HomeRow.SectionHeader("search-results", searchResults));
             var matches = PostSearch.Filter(feed, query);
             if (matches.Count == 0)
             {
@@ -207,26 +207,26 @@ public static class HomeScreen
             else
             {
                 foreach (var post in matches)
-                    rows.Add(new HomeRow.Recommended(post));
+                    rows.Add(new HomeRow.Recommended("search-result", post));
             }
         }
         else
         {
-            rows.Add(new HomeRow.SectionHeader(topStories));
+            rows.Add(new HomeRow.SectionHeader("top-stories", topStories));
             rows.Add(new HomeRow.Highlight(feed.Highlighted));
-            rows.Add(new HomeRow.Divider());
+            rows.Add(new HomeRow.Divider("top-stories"));
 
             foreach (var post in feed.Recommended)
-                rows.Add(new HomeRow.Recommended(post));
-            rows.Add(new HomeRow.Divider());
+                rows.Add(new HomeRow.Recommended("recommended", post));
+            rows.Add(new HomeRow.Divider("recommended"));
 
-            rows.Add(new HomeRow.SectionHeader(popular));
+            rows.Add(new HomeRow.SectionHeader("popular", popular));
             rows.Add(new HomeRow.PopularCarousel(feed.Popular));
-            rows.Add(new HomeRow.Divider());
+            rows.Add(new HomeRow.Divider("popular"));
 
-            rows.Add(new HomeRow.SectionHeader(history));
+            rows.Add(new HomeRow.SectionHeader("history", history));
             foreach (var post in feed.Recent)
-                rows.Add(new HomeRow.Recommended(post));
+                rows.Add(new HomeRow.Recommended("history", post));
         }
 
         return new PullToRefreshBox(
@@ -253,6 +253,7 @@ public static class HomeScreen
                     typography))
             {
                 ContentPadding = padding,
+                Key            = static row => row.Identity,
                 Modifier       = Modifier
                     .FillMaxSize()
                     .NestedScroll(scrollBehavior.NestedScrollConnection),
@@ -289,6 +290,7 @@ public static class HomeScreen
         {
             Modifier              = Modifier.FillMaxWidth().Height(244).Padding(start: 16, top: 4, end: 16, bottom: 16),
             HorizontalArrangement = Arrangement.SpacedBy(8.Dp()),
+            Key                   = static post => post.Id,
         };
 
     static Box BuildSectionHeader(
