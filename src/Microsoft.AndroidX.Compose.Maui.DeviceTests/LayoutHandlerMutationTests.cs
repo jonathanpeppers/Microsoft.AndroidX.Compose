@@ -1,7 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Android.Runtime;
-using Microsoft.Maui.Handlers;
 using ComposeLayoutHandler = Microsoft.AndroidX.Compose.Maui.Handlers.LayoutHandler;
 using MauiLayout = Microsoft.Maui.Controls.Layout;
 using Snapshot = AndroidX.Compose.Runtime.Snapshots.Snapshot;
@@ -27,38 +26,32 @@ public class LayoutHandlerMutationTests
         var layout = vertical
             ? (MauiLayout)new Microsoft.Maui.Controls.VerticalStackLayout()
             : new Microsoft.Maui.Controls.HorizontalStackLayout();
-        var handler = new ComposeLayoutHandler();
-        var a = Child("A");
-        var b = Child("B");
-        var c = Child("C");
-        var x = Child("X");
-        var replacement = Child("R");
+        var observed = new Dictionary<string, object>();
+        var order = new List<string>();
+        var disposals = new Dictionary<string, int>();
+        var a = Child("A", observed, order, disposals);
+        var b = Child("B", observed, order, disposals);
+        var c = Child("C", observed, order, disposals);
+        var x = Child("X", observed, order, disposals);
+        var replacement = Child("R", observed, order, disposals);
         layout.Add(a);
         layout.Add(b);
+
+        using var services = new ServiceCollection().BuildServiceProvider();
+        var androidContext = global::Android.App.Application.Context
+            ?? throw new InvalidOperationException("Android application context is unavailable.");
+        var handler = new ComposeLayoutHandler();
+        handler.SetMauiContext(new MauiContext(services, androidContext));
+        layout.Handler = handler;
 
         using var applier = new StateOnlyApplier();
         using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
             ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
         using var snapshots = GetSnapshotCompanion();
         var composition = CompositionKt.ControlledComposition(applier, recomposer);
-        var observed = new Dictionary<string, object>();
-        var order = new List<string>();
-        var disposals = new Dictionary<string, int>();
         var unrelatedState = new MutableState<int>(0);
         var unrelatedStatePeer = (Java.Lang.Object)unrelatedState._state;
-        using var content = new ComposableLambda2(composer =>
-        {
-            var container = new MovableTestContainer();
-            foreach (var child in handler.SnapshotChildren(layout))
-            {
-                var label = child as Microsoft.Maui.Controls.Label
-                    ?? throw new InvalidOperationException("Layout mutation test child is not a Label.");
-                container.AddMovable(
-                    handler.GetChildIdentity(child),
-                    new MovableStateProbeNode(label.Text, observed, order, disposals));
-            }
-            container.Render(composer);
-        });
+        using var content = new ComposableLambda2(composer => RenderLayout(handler, vertical, composer));
 
         try
         {
@@ -79,8 +72,7 @@ public class LayoutHandlerMutationTests
             var bState = observed["B"];
 
             AssertQuiescent(composition, snapshots);
-            layout.Add(c);
-            Invoke(handler, layout, composition, "Add", new LayoutHandlerUpdate(2, c));
+            Mutate(handler, composition, "Add", () => layout.Add(c));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "B", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -88,8 +80,7 @@ public class LayoutHandlerMutationTests
             var cState = observed["C"];
 
             AssertQuiescent(composition, snapshots);
-            layout.Insert(1, x);
-            Invoke(handler, layout, composition, "Insert", new LayoutHandlerUpdate(1, x));
+            Mutate(handler, composition, "Insert", () => layout.Insert(1, x));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "B", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -98,8 +89,7 @@ public class LayoutHandlerMutationTests
             var xState = observed["X"];
 
             AssertQuiescent(composition, snapshots);
-            layout.Remove(b);
-            Invoke(handler, layout, composition, "Remove", new LayoutHandlerUpdate(2, b));
+            Mutate(handler, composition, "Remove", () => layout.Remove(b));
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "X", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -108,8 +98,7 @@ public class LayoutHandlerMutationTests
             Assert.AreEqual(1, disposals["B"]);
 
             AssertQuiescent(composition, snapshots);
-            layout[1] = replacement;
-            Invoke(handler, layout, composition, "Update", new LayoutHandlerUpdate(1, replacement));
+            Mutate(handler, composition, "Update", () => layout[1] = replacement);
             Recompose(composition, snapshots, observed, order);
             AssertOrder(order, "A", "R", "C");
             Assert.AreSame(aState, observed["A"]);
@@ -118,8 +107,7 @@ public class LayoutHandlerMutationTests
             Assert.AreEqual(1, disposals["X"]);
 
             AssertQuiescent(composition, snapshots);
-            layout.Clear();
-            Invoke(handler, layout, composition, "Clear", null);
+            Mutate(handler, composition, "Clear", layout.Clear);
             Recompose(composition, snapshots, observed, order);
             Assert.AreEqual(0, order.Count);
             Assert.AreEqual(1, disposals["A"]);
@@ -129,26 +117,41 @@ public class LayoutHandlerMutationTests
         finally
         {
             composition.Dispose();
+            ((IElementHandler)handler).DisconnectHandler();
         }
     }
 
-    static Microsoft.Maui.Controls.Label Child(string id) => new() { Text = id };
+    static Microsoft.Maui.Controls.Label Child(
+        string id,
+        IDictionary<string, object> observed,
+        IList<string> order,
+        IDictionary<string, int> disposals)
+    {
+        var child = new Microsoft.Maui.Controls.Label { Text = id };
+        child.Handler = new MovableStateProbeHandler(id, observed, order, disposals);
+        return child;
+    }
 
-    static void Invoke(
+    static void RenderLayout(ComposeLayoutHandler handler, bool vertical, IComposer composer)
+    {
+        var node = handler.BuildNode(composer);
+        bool expectedType = vertical ? node is Column : node is Row;
+        Assert.IsTrue(expectedType, $"LayoutHandler returned '{node.GetType().Name}' for a {(vertical ? "vertical" : "horizontal")} stack.");
+        node.Render(composer);
+    }
+
+    static void Mutate(
         ComposeLayoutHandler handler,
-        MauiLayout layout,
         IControlledComposition composition,
         string command,
-        object? args)
+        Action mutation)
     {
-        var action = ComposeLayoutHandler.CommandMapper.GetCommand(command)
-            ?? throw new InvalidOperationException($"Layout command '{command}' is not registered.");
         int previousVersion = handler.ChildrenVersion;
-        action(handler, layout, args);
+        mutation();
         Assert.AreEqual(
             previousVersion + 1,
             handler.ChildrenVersion,
-            $"Layout command '{command}' did not increment the subscribed children version.");
+            $"Layout mutation '{command}' did not dispatch through the handler command mapper.");
         composition.RecordModificationsOf([handler.ChildrenVersionState]);
     }
 
