@@ -43,7 +43,7 @@ public class CompositionKeyTests
         try
         {
             var keys = await RunProbe(directory);
-            string[] childSites = ["ComposableContainer.cs:0", "ComposableContainer.cs:1", "SegmentedButton.cs:0"];
+            string[] childSites = ["ComposableContainer.cs:0", "SegmentedButton.cs:0"];
             foreach (string site in childSites)
             {
                 var values = keys[site];
@@ -51,6 +51,11 @@ public class CompositionKeyTests
                 Assert.Equal(values.Length - 1, values.Distinct().Count());
                 Assert.Equal(keys["ComposableContainer.cs:0"], values);
             }
+            var movable = keys["ComposableContainer.cs:movable:0"];
+            Assert.Equal(keys["ComposableContainer.cs:0"][0], movable[0]);
+            Assert.Equal(movable[0], movable[2]);
+            Assert.NotEqual(keys["ComposableContainer.cs:0"][2], movable[2]);
+            Assert.Equal(movable.Length - 2, movable.Distinct().Count());
             Assert.Equal(keys["ComposableContentNode.cs:0"], keys["ComposableContentNode.cs:1"]);
             Assert.Equal(keys["ContentNodeAsChild"], keys["ComposableContentNode.cs:0"]);
             Assert.Equal(keys["SourceLocation"], keys["Navigation"]);
@@ -72,22 +77,23 @@ public class CompositionKeyTests
                 ?? throw new InvalidOperationException("Cannot locate runtime sources beside the test project."),
             "Microsoft.AndroidX.Compose");
         var expressions = new Dictionary<string, string>();
-        (string File, int Count)[] files =
+        (string File, string GroupMethod, string Site, int Count)[] groups =
         [
-            ("ComposableContainer.cs", 2),
-            ("ComposableContentNode.cs", 2),
-            ("SegmentedButton.cs", 1),
+            ("ComposableContainer.cs", "StartReplaceableGroup", "ComposableContainer.cs", 1),
+            ("ComposableContainer.cs", "StartMovableGroup", "ComposableContainer.cs:movable", 1),
+            ("ComposableContentNode.cs", "StartReplaceableGroup", "ComposableContentNode.cs", 2),
+            ("SegmentedButton.cs", "StartReplaceableGroup", "SegmentedButton.cs", 1),
         ];
-        foreach (var (file, count) in files)
+        foreach (var (file, groupMethod, site, count) in groups)
         {
             var root = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(runtime, file))).GetRoot();
-            var groups = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
+            var calls = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
                 .Where(call => call.Expression is MemberAccessExpressionSyntax member &&
-                    member.Name.Identifier.ValueText == "StartReplaceableGroup").ToArray();
-            Assert.Equal(count, groups.Length);
-            for (int index = 0; index < groups.Length; index++)
-                expressions.Add($"{file}:{index}",
-                    groups[index].ArgumentList.Arguments[0].Expression.ToString()
+                    member.Name.Identifier.ValueText == groupMethod).ToArray();
+            Assert.Equal(count, calls.Length);
+            for (int index = 0; index < calls.Length; index++)
+                expressions.Add($"{site}:{index}",
+                    calls[index].ArgumentList.Arguments[0].Expression.ToString()
                         .Replace("child.GetType()", "childType", StringComparison.Ordinal));
         }
         var lambdas = CSharpSyntaxTree.ParseText(
