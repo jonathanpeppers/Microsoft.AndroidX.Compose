@@ -3,8 +3,8 @@ using AndroidX.Compose.Runtime;
 
 namespace Microsoft.AndroidX.Compose.Maui.DeviceTests;
 
-[Register("net/compose/maui/devicetests/StateOnlyApplier")]
-internal sealed class StateOnlyApplier : Java.Lang.Object, IApplier
+[Register("net/compose/maui/devicetests/LayoutTestApplier")]
+internal sealed class LayoutTestApplier : Java.Lang.Object, IApplier
 {
     readonly Stack<Java.Lang.Object> _nodes = new();
 

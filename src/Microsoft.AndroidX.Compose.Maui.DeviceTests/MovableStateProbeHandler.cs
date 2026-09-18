@@ -4,12 +4,16 @@ using AndroidX.Compose.Runtime;
 namespace Microsoft.AndroidX.Compose.Maui.DeviceTests;
 
 internal sealed class MovableStateProbeHandler(
+    global::Android.Content.Context context,
     string id,
     IDictionary<string, object> observed,
     IList<string> order,
     IDictionary<string, int> disposals) : IViewHandler, IComposeHandler
 {
-    public object? PlatformView => null;
+    readonly global::Android.Views.View _platformView = new(context);
+    bool _disconnected;
+
+    public object PlatformView => _platformView;
 
     public IView? VirtualView { get; private set; }
 
@@ -48,8 +52,12 @@ internal sealed class MovableStateProbeHandler(
 
     public void DisconnectHandler()
     {
+        if (_disconnected)
+            return;
+        _disconnected = true;
         VirtualView = null;
         MauiContext = null;
+        _platformView.Dispose();
     }
 
     public void BumpViewPropertiesVersion() { }

@@ -29,22 +29,23 @@ public class LayoutHandlerMutationTests
         var observed = new Dictionary<string, object>();
         var order = new List<string>();
         var disposals = new Dictionary<string, int>();
-        var a = Child("A", observed, order, disposals);
-        var b = Child("B", observed, order, disposals);
-        var c = Child("C", observed, order, disposals);
-        var x = Child("X", observed, order, disposals);
-        var replacement = Child("R", observed, order, disposals);
+        var androidContext = global::Android.App.Application.Context
+            ?? throw new InvalidOperationException("Android application context is unavailable.");
+        var a = Child(androidContext, "A", observed, order, disposals);
+        var b = Child(androidContext, "B", observed, order, disposals);
+        var c = Child(androidContext, "C", observed, order, disposals);
+        var x = Child(androidContext, "X", observed, order, disposals);
+        var replacement = Child(androidContext, "R", observed, order, disposals);
+        Microsoft.Maui.Controls.Label[] children = [a, b, c, x, replacement];
         layout.Add(a);
         layout.Add(b);
 
         using var services = new ServiceCollection().BuildServiceProvider();
-        var androidContext = global::Android.App.Application.Context
-            ?? throw new InvalidOperationException("Android application context is unavailable.");
         var handler = new ComposeLayoutHandler();
         handler.SetMauiContext(new MauiContext(services, androidContext));
         layout.Handler = handler;
 
-        using var applier = new StateOnlyApplier();
+        using var applier = new LayoutTestApplier();
         using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
             ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
         using var snapshots = GetSnapshotCompanion();
@@ -118,17 +119,20 @@ public class LayoutHandlerMutationTests
         {
             composition.Dispose();
             ((IElementHandler)handler).DisconnectHandler();
+            foreach (var child in children)
+                child.Handler?.DisconnectHandler();
         }
     }
 
     static Microsoft.Maui.Controls.Label Child(
+        global::Android.Content.Context context,
         string id,
         IDictionary<string, object> observed,
         IList<string> order,
         IDictionary<string, int> disposals)
     {
         var child = new Microsoft.Maui.Controls.Label { Text = id };
-        child.Handler = new MovableStateProbeHandler(id, observed, order, disposals);
+        child.Handler = new MovableStateProbeHandler(context, id, observed, order, disposals);
         return child;
     }
 
