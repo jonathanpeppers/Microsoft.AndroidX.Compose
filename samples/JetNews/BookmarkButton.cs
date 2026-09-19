@@ -8,22 +8,28 @@ namespace AndroidX.Compose.Samples.JetNews;
 /// </summary>
 internal static class BookmarkButton
 {
-    public static IconToggleButton Build(
+    public static ComposableNode Build(
         string postId,
         BookmarksViewModel bookmarks,
         Action<bool>? onToggled = null) =>
-        new(
-            @checked:         bookmarks.Contains(postId),
-            onCheckedChange:  isChecked =>
-            {
-                bookmarks.Set(postId, isChecked);
-                onToggled?.Invoke(isChecked);
-            })
+        new Composed(c =>
         {
-            new Icon(
-                bookmarks.Contains(postId)
+            bool isBookmarked = bookmarks.Contains(postId);
+            string addBookmark = c.StringResource(Resource.String.cd_add_bookmark);
+            string removeBookmark = c.StringResource(Resource.String.cd_remove_bookmark);
+            return new IconToggleButton(
+                @checked: isBookmarked,
+                onCheckedChange: isChecked =>
+                {
+                    bookmarks.Set(postId, isChecked);
+                    onToggled?.Invoke(isChecked);
+                })
+            {
+                new Icon(
+                isBookmarked
                     ? Resource.Drawable.ic_bookmark_filled
                     : Resource.Drawable.ic_bookmark,
-                bookmarks.Contains(postId) ? "Remove bookmark" : "Add bookmark"),
-        };
+                isBookmarked ? removeBookmark : addBookmark),
+            };
+        });
 }

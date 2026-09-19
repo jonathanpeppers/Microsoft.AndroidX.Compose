@@ -28,26 +28,69 @@ public static class HomeScreen
         {
             var vm = c.ViewModel(() => new HomeViewModel(repository));
             var state = vm.UiState.Value;
-
-            // Search-bar toggle: tap the magnifier in the action row to swap
-            // the wordmark title for an inline OutlinedTextField. The search
-            // is purely visual today — wiring it to filter the feed needs
-            // Modifier.interceptKey(Key.Enter), tracked in #159.
             var searchOpen  = c.MutableStateOf(false);
             var searchQuery = c.MutableStateOf(string.Empty);
             var snackbarMessage = snackbars.Message.Value;
+            var topBarState = c.RememberTopAppBarState();
+            var scrollBehavior = c.PinnedScrollBehavior(topBarState);
+            var typography = c.Typography();
+            string openNavigation = c.StringResource(Resource.String.cd_open_navigation_drawer);
+            string search = c.StringResource(Resource.String.cd_search);
+            string closeSearch = c.StringResource(Resource.String.cd_close_search);
+            string refresh = c.StringResource(Resource.String.cd_refresh);
+            string appName = c.StringResource(Resource.String.app_name);
+            string searchPlaceholder = c.StringResource(Resource.String.home_search);
+            string loadError = c.StringResource(Resource.String.home_load_error);
+            string retry = c.StringResource(Resource.String.retry);
+            string topStories = c.StringResource(Resource.String.home_top_section_title);
+            string popular = c.StringResource(Resource.String.home_popular_section_title);
+            string history = c.StringResource(Resource.String.home_post_based_on_history);
+            string searchResults = c.StringResource(Resource.String.home_search_results);
+            string noSearchResults = c.StringResource(
+                Resource.String.home_search_no_results,
+                searchQuery.Value.Trim());
 
             return new Scaffold
             {
-                TopBar = BuildTopBar(searchOpen, searchQuery, drawerState, vm),
+                TopBar = BuildTopBar(
+                    searchOpen,
+                    searchQuery,
+                    drawerState,
+                    vm,
+                    scrollBehavior,
+                    openNavigation,
+                    search,
+                    closeSearch,
+                    refresh,
+                    appName,
+                    searchPlaceholder),
                 SnackbarHost = snackbarMessage is null
                     ? null
                     : new Snackbar { Body = new Text(snackbarMessage) },
                 BodyContent = padding => state switch
                 {
                     HomeUiState.Loading       => BuildLoading(),
-                    HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
-                    HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars, padding),
+                    HomeUiState.Error e       => BuildError(
+                        e.Message,
+                        () => _ = vm.RefreshAsync(),
+                        loadError,
+                        retry,
+                        typography),
+                    HomeUiState.HasPosts h    => BuildBody(
+                        h,
+                        bookmarks,
+                        onSelectPost,
+                        vm,
+                        snackbars,
+                        padding,
+                        searchQuery.Value,
+                        scrollBehavior,
+                        topStories,
+                        popular,
+                        history,
+                        searchResults,
+                        noSearchResults,
+                        typography),
                     _                         => new Spacer(),
                 },
             };
@@ -57,20 +100,27 @@ public static class HomeScreen
         MutableState<bool> searchOpen,
         MutableState<string> searchQuery,
         DrawerStateHolder drawerState,
-        HomeViewModel vm) =>
+        HomeViewModel vm,
+        AndroidX.Compose.Material3.ITopAppBarScrollBehavior scrollBehavior,
+        string openNavigation,
+        string search,
+        string closeSearch,
+        string refresh,
+        string appName,
+        string searchPlaceholder) =>
         new CenterAlignedTopAppBar
         {
             NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
             {
-                new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
+                new Icon(Resource.Drawable.ic_menu, openNavigation),
             },
             Title = searchOpen.Value
                 ? new OutlinedTextField(searchQuery, singleLine: true)
                 {
                     Modifier    = Modifier.FillMaxWidth().Padding(horizontal: 8),
-                    Placeholder = new Text("Search JetNews"),
+                    Placeholder = new Text(searchPlaceholder),
                 }
-                : new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
+                : new Icon(Resource.Drawable.ic_jetnews_wordmark, appName)
                 {
                     Modifier = Modifier.Height(24),
                 },
@@ -83,20 +133,21 @@ public static class HomeScreen
                         searchOpen.Value  = false;
                     })
                     {
-                        new Icon(Resource.Drawable.ic_close, "Close search"),
+                        new Icon(Resource.Drawable.ic_close, closeSearch),
                     },
                 }
                 : new Row
                 {
                     new IconButton(onClick: () => searchOpen.Value = true)
                     {
-                        new Icon(Resource.Drawable.ic_search, "Search"),
+                        new Icon(Resource.Drawable.ic_search, search),
                     },
                     new IconButton(onClick: () => _ = vm.RefreshAsync())
                     {
-                        new Icon(Resource.Drawable.ic_refresh, "Refresh"),
+                        new Icon(Resource.Drawable.ic_refresh, refresh),
                     },
                 },
+            ScrollBehavior = scrollBehavior,
         };
 
     static Box BuildLoading() =>
@@ -109,21 +160,22 @@ public static class HomeScreen
             },
         };
 
-    static Column BuildError(string message, Action onRetry) =>
+    static Column BuildError(
+        string message,
+        Action onRetry,
+        string title,
+        string retry,
+        AndroidX.Compose.Material3.Typography typography) =>
         new()
         {
             Modifier.FillMaxSize().Padding(24),
-            new Text("Couldn't load the feed")
-            {
-                FontSize   = 18,
-                FontWeight = FontWeight.SemiBold,
-            },
+            new Text(title).WithTypography(typography.TitleLarge),
             new Spacer { Modifier = Modifier.Height(8) },
-            new Text(message),
+            new Text(message).WithTypography(typography.BodyMedium),
             new Spacer { Modifier = Modifier.Height(16) },
             new Button(onClick: onRetry)
             {
-                new Text("Try again"),
+                new Text(retry).WithTypography(typography.LabelLarge),
             },
         };
 
@@ -132,27 +184,50 @@ public static class HomeScreen
                                       Action<string> onSelectPost,
                                       HomeViewModel vm,
                                       SnackbarController snackbars,
-                                      PaddingValues padding)
+                                      PaddingValues padding,
+                                      string query,
+                                      AndroidX.Compose.Material3.ITopAppBarScrollBehavior scrollBehavior,
+                                      string topStories,
+                                      string popular,
+                                      string history,
+                                      string searchResults,
+                                      string noSearchResults,
+                                      AndroidX.Compose.Material3.Typography typography)
     {
         var feed = state.Feed;
-        var rows = new List<HomeRow>
+        List<HomeRow> rows = [];
+        if (query.Trim().Length > 0)
         {
-            new HomeRow.SectionHeader("Top stories for you"),
-            new HomeRow.Highlight(feed.Highlighted),
-            new HomeRow.Divider(),
-        };
+            rows.Add(new HomeRow.SectionHeader("search-results", searchResults));
+            var matches = PostSearch.Filter(feed, query);
+            if (matches.Count == 0)
+            {
+                rows.Add(new HomeRow.SearchEmpty(noSearchResults));
+            }
+            else
+            {
+                foreach (var post in matches)
+                    rows.Add(new HomeRow.Recommended("search-result", post));
+            }
+        }
+        else
+        {
+            rows.Add(new HomeRow.SectionHeader("top-stories", topStories));
+            rows.Add(new HomeRow.Highlight(feed.Highlighted));
+            rows.Add(new HomeRow.Divider("top-stories"));
 
-        foreach (var p in feed.Recommended)
-            rows.Add(new HomeRow.Recommended(p));
-        rows.Add(new HomeRow.Divider());
+            foreach (var post in feed.Recommended)
+                rows.Add(new HomeRow.Recommended("recommended", post));
+            rows.Add(new HomeRow.Divider("recommended"));
 
-        rows.Add(new HomeRow.SectionHeader("Popular on JetNews"));
-        rows.Add(new HomeRow.PopularCarousel(feed.Popular));
-        rows.Add(new HomeRow.Divider());
+            rows.Add(new HomeRow.SectionHeader("popular", popular));
+            rows.Add(new HomeRow.PopularCarousel(feed.Popular));
+            rows.Add(new HomeRow.Divider("popular"));
 
-        rows.Add(new HomeRow.SectionHeader("Based on your history"));
-        foreach (var p in feed.Recent)
-            rows.Add(new HomeRow.Recommended(p));
+            rows.Add(new HomeRow.SectionHeader("history", history));
+            foreach (var post in feed.Recent)
+                rows.Add(new HomeRow.Recommended("history", post));
+        }
 
         return new PullToRefreshBox(
             isRefreshing: state.IsRefreshing,
@@ -170,13 +245,18 @@ public static class HomeScreen
 
             new LazyColumn<HomeRow>(
                 items: rows,
-                itemContent: row => BuildRow(row, bookmarks, onSelectPost, snackbars))
+                itemContent: row => BuildRow(
+                    row,
+                    bookmarks,
+                    onSelectPost,
+                    snackbars,
+                    typography))
             {
-                // Route Scaffold padding into the list itself so items
-                // scroll under the top app bar and the gesture pill,
-                // matching Material's "edge-to-edge" templates.
                 ContentPadding = padding,
-                Modifier       = Modifier.FillMaxSize(),
+                Key            = static row => row.Identity,
+                Modifier       = Modifier
+                    .FillMaxSize()
+                    .NestedScroll(scrollBehavior.NestedScrollConnection),
             },
         };
     }
@@ -184,12 +264,17 @@ public static class HomeScreen
     static ComposableNode BuildRow(HomeRow row,
                                    BookmarksViewModel bookmarks,
                                    Action<string> onSelectPost,
-                                   SnackbarController snackbars) =>
+                                   SnackbarController snackbars,
+                                   AndroidX.Compose.Material3.Typography typography) =>
         row switch
         {
             HomeRow.Highlight h        => HomeCards.BuildHighlight(h.Post, onSelectPost),
-            HomeRow.SectionHeader s    => BuildSectionHeader(s.Label),
+            HomeRow.SectionHeader s    => BuildSectionHeader(s.Label, typography),
             HomeRow.Recommended r      => HomeCards.BuildSimple(r.Post, bookmarks, onSelectPost, snackbars),
+            HomeRow.SearchEmpty e      => new Text(e.Message)
+            {
+                Modifier = Modifier.Padding(16),
+            }.WithTypography(typography.BodyLarge),
             HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),
             HomeRow.Divider            => new HorizontalDivider
             {
@@ -205,16 +290,15 @@ public static class HomeScreen
         {
             Modifier              = Modifier.FillMaxWidth().Height(244).Padding(start: 16, top: 4, end: 16, bottom: 16),
             HorizontalArrangement = Arrangement.SpacedBy(8.Dp()),
+            Key                   = static post => post.Id,
         };
 
-    static Box BuildSectionHeader(string label) =>
+    static Box BuildSectionHeader(
+        string label,
+        AndroidX.Compose.Material3.Typography typography) =>
         new()
         {
             Modifier.FillMaxWidth().Padding(start: 16, end: 16, top: 16, bottom: 8),
-            new Text(label)
-            {
-                FontSize   = 16,
-                FontWeight = FontWeight.SemiBold,
-            },
+            new Text(label).WithTypography(typography.TitleMedium),
         };
 }

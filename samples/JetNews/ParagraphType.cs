@@ -2,9 +2,8 @@ namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Style of a single paragraph in a <see cref="Post"/> body. Matches the
-/// upstream Kotlin sample's <c>ParagraphType</c>, minus the inline-run
-/// styles (<c>CodeBlock</c>, <c>Quote</c>, <c>Bullet</c>) we render with
-/// a single styled <c>Text</c> instead of a custom layout.
+/// upstream Kotlin sample's <c>ParagraphType</c>; inline ranges are carried
+/// separately by <see cref="Markup"/>.
 /// </summary>
 public enum ParagraphType
 {
