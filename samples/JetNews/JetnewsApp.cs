@@ -46,6 +46,9 @@ public static class JetnewsApp
     /// from <see cref="MainActivity"/> so the chooser launches with the
     /// activity as its <see cref="Android.Content.Context"/>.
     /// </param>
+    /// <param name="onOpenLink">
+    /// Opens an annotated article URL with the activity context.
+    /// </param>
     [Composable]
     public static void Content(
         NavController nav,
@@ -57,6 +60,7 @@ public static class JetnewsApp
         MutableStateList<string> selectedPublications,
         MutableState<int> interestsTab,
         SnackbarController snackbars,
+        Action<string> onOpenLink,
         Action<Post>? onShare = null)
     {
         new MaterialTheme
@@ -64,7 +68,18 @@ public static class JetnewsApp
             new ModalNavigationDrawer(drawerState)
             {
                 Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
-                Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab, snackbars, onShare),
+                Content = BuildNavHost(
+                    nav,
+                    currentRoute,
+                    drawerState,
+                    bookmarks,
+                    selectedTopics,
+                    selectedPeople,
+                    selectedPublications,
+                    interestsTab,
+                    snackbars,
+                    onOpenLink,
+                    onShare),
             },
         }.Render();
     }
@@ -79,6 +94,7 @@ public static class JetnewsApp
         MutableStateList<string> selectedPublications,
         MutableState<int> interestsTab,
         SnackbarController snackbars,
+        Action<string> onOpenLink,
         Action<Post>? onShare)
     {
         return new NavHost(startDestination: Routes.Home, navController: nav)
@@ -100,6 +116,7 @@ public static class JetnewsApp
                     bookmarks: bookmarks,
                     onBack:    () => nav.NavigateUp(),
                     snackbars: snackbars,
+                    onOpenLink: onOpenLink,
                     onShare:   onShare);
             }),
         };

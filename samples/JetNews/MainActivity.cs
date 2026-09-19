@@ -50,6 +50,7 @@ public class MainActivity : ComponentActivity
                 selectedPublications,
                 interestsTab,
                 snackbars,
+                onOpenLink: url => OpenLink(url, snackbars),
                 onShare: post => SharePost(post, snackbars));
         });
     }
@@ -62,7 +63,7 @@ public class MainActivity : ComponentActivity
         // app-link demo (see #159's Navigation 3 / DeepLinkPattern bullet).
         try
         {
-            var send = new Intent(Intent.ActionSend);
+            using var send = new Intent(Intent.ActionSend);
             send.SetType("text/plain");
             send.PutExtra(Intent.ExtraSubject, post.Title);
             send.PutExtra(
@@ -71,14 +72,35 @@ public class MainActivity : ComponentActivity
 
             // Wrap in a chooser so the user always sees the system
             // picker rather than a possibly-stale default share target.
-            var chooser = Intent.CreateChooser(send, "Share article");
+            using var chooser = Intent.CreateChooser(
+                send,
+                GetString(Resource.String.post_share_article));
             StartActivity(chooser);
         }
         catch (ActivityNotFoundException)
         {
-            // No share target installed (e.g. minimal emulator image)
-            // — surface a snackbar instead of crashing.
-            snackbars.Show("No app available to share with");
+            snackbars.Show(GetString(Resource.String.post_share_no_handler));
+        }
+    }
+
+    void OpenLink(string url, SnackbarController snackbars)
+    {
+        if (!System.Uri.TryCreate(url, UriKind.Absolute, out _))
+        {
+            snackbars.Show(GetString(Resource.String.post_link_invalid));
+            return;
+        }
+
+        using var uri = Android.Net.Uri.Parse(url)
+            ?? throw new InvalidOperationException($"Android could not parse article URL '{url}'.");
+        using var intent = new Intent(Intent.ActionView, uri);
+        try
+        {
+            StartActivity(intent);
+        }
+        catch (ActivityNotFoundException)
+        {
+            snackbars.Show(GetString(Resource.String.post_link_no_handler));
         }
     }
 }
