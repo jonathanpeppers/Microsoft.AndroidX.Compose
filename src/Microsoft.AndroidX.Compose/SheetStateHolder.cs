@@ -66,9 +66,17 @@ public sealed class SheetStateHolder
     {
         if (Jvm is not { } jvm)
             return;
-        _rememberValue = jvm.CurrentValue;
-        Jvm = null;
+        try
+        {
+            _rememberValue = jvm.CurrentValue;
+        }
+        finally
+        {
+            Jvm = null;
+        }
     }
+
+    internal void BindJvm(SheetState jvm) => Jvm = jvm;
 
     /// <summary>
     /// When <c>true</c>, the sheet skips the half-expanded resting

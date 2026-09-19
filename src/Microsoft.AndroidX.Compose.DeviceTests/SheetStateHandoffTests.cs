@@ -7,6 +7,68 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class SheetStateHandoffTests
 {
+    /// <summary>Publishes standard-sheet veto replacements only after composition commits.</summary>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task StandardSheet_CommittedVetoReplacementControlsTransitions(bool direct)
+    {
+        var context = global::Android.App.Application.Context;
+        using var intent = new global::Android.Content.Intent(context, typeof(SheetStateHandoffTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        intent.PutExtra("direct", direct);
+        intent.PutExtra("standard", true);
+        SheetStateHandoffTestActivity? activity = null;
+        try
+        {
+            context.StartActivity(intent);
+            await WaitFor(() => SheetStateHandoffTestActivity.Current is not null,
+                "Standard sheet activity did not start.");
+            activity = SheetStateHandoffTestActivity.Current
+                ?? throw new InvalidOperationException("Standard sheet activity was unavailable.");
+            await WaitFor(() => activity.CompletedPass == 0,
+                "Initial standard sheet owner did not commit.");
+            await WaitFor(() => activity.Sheet.HasPartiallyExpandedState,
+                "Standard sheet did not install its partial anchor.");
+
+            await OnUiThread(activity, () => activity.Sheet.ExpandAsync());
+            Assert.AreEqual(SheetValue.PartiallyExpanded, activity.Sheet.CurrentValue,
+                "Initial callback did not veto the expand transition.");
+
+            await OnUiThread(activity, () =>
+            {
+                activity.AllowTransitions.Value = true;
+                activity.Pass.Value = 1;
+            });
+            await WaitFor(() => activity.CompletedPass == 1,
+                "Allowing callback replacement did not commit.");
+            await OnUiThread(activity, () => activity.Sheet.ExpandAsync());
+            Assert.AreEqual(SheetValue.Expanded, activity.Sheet.CurrentValue,
+                "Committed callback replacement did not allow the expand transition.");
+
+            await OnUiThread(activity, () =>
+            {
+                activity.AllowTransitions.Value = false;
+                activity.Pass.Value = 2;
+            });
+            await WaitFor(() => activity.CompletedPass == 2,
+                "Vetoing callback replacement did not commit.");
+            await OnUiThread(activity, () => activity.Sheet.PartialExpandAsync());
+            Assert.AreEqual(SheetValue.Expanded, activity.Sheet.CurrentValue,
+                "Latest committed callback did not veto the partial-expand transition.");
+        }
+        finally
+        {
+            var started = activity ?? SheetStateHandoffTestActivity.Current;
+            if (started is not null)
+            {
+                await OnUiThread(started, started.Finish);
+                await WaitFor(() => !ReferenceEquals(SheetStateHandoffTestActivity.Current, started),
+                    "Standard sheet activity did not finish.");
+            }
+        }
+    }
+
     /// <summary>Transfers a retired sheet through the other factory and back using tree or direct facades.</summary>
     [TestMethod]
     [DataRow(false, false, false, false)]
@@ -137,6 +199,24 @@ public class SheetStateHandoffTests
             try
             {
                 action();
+                completion.SetResult();
+            }
+            catch (Exception error)
+            {
+                completion.SetException(error);
+            }
+        });
+        return completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    static Task OnUiThread(SheetStateHandoffTestActivity activity, Func<Task> action)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        activity.RunOnUiThread(async () =>
+        {
+            try
+            {
+                await action();
                 completion.SetResult();
             }
             catch (Exception error)

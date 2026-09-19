@@ -122,43 +122,6 @@ public static partial class Composables
     }
 
     /// <summary>
-    /// Renders a persistent bottom-sheet scaffold with an explicit composer.
-    /// </summary>
-    [Composable, GenerateImplicitComposable]
-    internal static void BottomSheetScaffold(
-        IComposer composer,
-        [ComposableContent] Action<IComposer> sheetContent,
-        [ComposableContent] Action<IComposer> content,
-        SheetStateHolder? sheetState = null,
-        Modifier? modifier = null,
-        [ComposableContent] Action<IComposer>? sheetDragHandle = null,
-        [ComposableContent] Action<IComposer>? topBar = null,
-        Func<SheetValue, bool>? confirmValueChange = null)
-    {
-        ArgumentNullException.ThrowIfNull(composer);
-        ArgumentNullException.ThrowIfNull(sheetContent);
-        ArgumentNullException.ThrowIfNull(content);
-
-        var rememberedSheetContent = composer.Remember(
-            () => new ComposableContentNode(sheetContent));
-        rememberedSheetContent.Rebind(sheetContent);
-
-        var scaffold = composer.Remember(
-            () => new global::AndroidX.Compose.BottomSheetScaffold(sheetState)
-            {
-                SheetContent = rememberedSheetContent,
-            },
-            sheetState);
-        scaffold.Modifier = modifier;
-        scaffold.ComposableMethodContent = new ComposableContentNode(content);
-        scaffold.SheetDragHandle =
-            ComposableContentNode.Create(sheetDragHandle);
-        scaffold.TopBar = ComposableContentNode.Create(topBar);
-        scaffold.ConfirmValueChange = confirmValueChange;
-        scaffold.Render(composer);
-    }
-
-    /// <summary>
     /// Renders a single-choice segmented button at
     /// <paramref name="index"/> within <paramref name="count"/> row items
     /// with an explicit composer.

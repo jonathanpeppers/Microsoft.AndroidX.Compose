@@ -7,9 +7,8 @@ namespace AndroidX.Compose;
 /// <see cref="TopSearchBar"/> and their paired expanded popups
 /// (<see cref="ExpandedDockedSearchBar"/> /
 /// <see cref="ExpandedFullScreenSearchBar"/>). The underlying JVM
-/// <c>androidx.compose.material3.SearchBarState</c> is created lazily
-/// the first time a <see cref="SearchBar"/> bound to this state is
-/// rendered.
+/// <c>androidx.compose.material3.SearchBarState</c> is owned by the active
+/// composition and shared by every rendered consumer of this wrapper.
 /// </summary>
 /// <remarks>
 /// Compose's new state-based SearchBar API splits the always-visible
@@ -42,16 +41,17 @@ namespace AndroidX.Compose;
 /// }
 /// </code>
 ///
-/// The wrapper holds the JVM peer (managed-side <c>Java.Lang.Object</c>)
-/// so the underlying state object stays alive across recompositions and
-/// callbacks. The peer is set the first time a bound <see cref="SearchBar"/>
-/// renders.
+/// The active native owner publishes one managed JVM peer for sibling
+/// consumers. Removing every consumer retires that peer and retains the
+/// settled collapsed or expanded value; re-entry creates a new
+/// composition-owned peer initialized from the retained value.
 /// </remarks>
 public sealed class SearchBarState
 {
-    readonly bool _initiallyExpanded;
+    SearchBarValue _rememberValue;
 
     internal AndroidX.Compose.Material3.SearchBarState? Jvm;
+    internal SearchBarValue RememberValue => _rememberValue;
 
     /// <summary>Initial collapsed or expanded value used when the state first binds.</summary>
     public SearchBarValue InitialValue { get; }
@@ -71,28 +71,53 @@ public sealed class SearchBarState
     {
         ArgumentNullException.ThrowIfNull(initialValue);
         InitialValue = initialValue;
-        var expanded = SearchBarValue.Expanded
-            ?? throw new InvalidOperationException("SearchBarValue.Expanded was unavailable.");
-        _initiallyExpanded = InitialValue.Equals(expanded);
+        _rememberValue = initialValue;
+    }
+
+    internal void BindJvm(AndroidX.Compose.Material3.SearchBarState jvm) =>
+        Jvm = jvm;
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        try
+        {
+            _rememberValue = jvm.CurrentValue;
+        }
+        finally
+        {
+            Jvm = null;
+        }
     }
 
     /// <summary>
-    /// Current collapsed or expanded state. Before binding, returns
-    /// <see cref="InitialValue"/>.
+    /// Current collapsed or expanded state. While unbound, returns the
+    /// initial or most recently retired value.
     /// </summary>
-    public SearchBarValue CurrentValue => Jvm?.CurrentValue ?? InitialValue;
+    public SearchBarValue CurrentValue => Jvm?.CurrentValue ?? _rememberValue;
 
     /// <summary>
-    /// Target state during animation. Before binding, returns
-    /// <see cref="InitialValue"/>.
+    /// Target state during animation. While unbound, returns the initial or
+    /// most recently retired value.
     /// </summary>
-    public SearchBarValue TargetValue => Jvm?.TargetValue ?? InitialValue;
+    public SearchBarValue TargetValue => Jvm?.TargetValue ?? _rememberValue;
 
     /// <summary>
     /// Expansion progress from <c>0</c> (collapsed) through <c>1</c>
     /// (expanded).
     /// </summary>
-    public float Progress => Jvm?.Progress ?? (_initiallyExpanded ? 1f : 0f);
+    public float Progress
+    {
+        get
+        {
+            if (Jvm is { } jvm)
+                return jvm.Progress;
+            var expanded = SearchBarValue.Expanded
+                ?? throw new InvalidOperationException("SearchBarValue.Expanded was unavailable.");
+            return _rememberValue.Equals(expanded) ? 1f : 0f;
+        }
+    }
 
     /// <summary>Whether an expand, collapse, or snap animation is active.</summary>
     public bool IsAnimating => Jvm?.IsAnimating ?? false;

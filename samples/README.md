@@ -50,7 +50,7 @@ difference first.
 | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383) | **Reply sample integration**: delivered adaptive-navigation, FAB, selection, inset and theme APIs; exact remaining styling slots still require an audit. |
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | **Reply fold/list-detail**: reusable API and integration scope, separate from already-delivered NavigationSuite and size reads. Verify current binding members before repeating the tracker's historical package-availability claims. |
 | [#159](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/159) | **JetNews** remaining adaptive, navigation and sample polish; existing hero images, styled runs, refresh and share behavior are not missing features. |
-| [#120](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/120) | Remaining generator migrations: search family, SnackbarHost and BottomSheetScaffold. TimeInput and ModalBottomSheet already migrated. Not a reason to call existing sample controls unavailable. |
+| [#120](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/120) | Generator migrations implemented for the search family, SnackbarHost and BottomSheetScaffold; TimeInput and ModalBottomSheet were already generated. The tracker remains open until the implementation PR merges. |
 | [#346](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/346) | Separate frozen-build performance work. Screenshot or symbol parity does not establish performance parity. |
 
 Closed gaps that previously appeared here (now usable in samples):

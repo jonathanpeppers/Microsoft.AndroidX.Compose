@@ -49,13 +49,14 @@ public class StateControlTestActivity : ComponentActivity
     {
         base.OnCreate(savedInstanceState);
         Visible = new MutableState<bool>(true);
+        bool direct = Intent?.GetBooleanExtra("direct", false) == true;
         this.SetContent(_ => new Composed(_ =>
         {
             var visible = Visible
                 ?? throw new InvalidOperationException(
                     "Visibility state not set on StateControlTestActivity.");
             return new StateControlRenderMarker(
-                visible.Value ? BuildControls() : null);
+                visible.Value ? BuildControls(direct) : null);
         }));
         Current = this;
     }
@@ -68,7 +69,7 @@ public class StateControlTestActivity : ComponentActivity
         base.OnDestroy();
     }
 
-    static ComposableNode BuildControls()
+    static ComposableNode BuildControls(bool direct)
     {
         var pager = Pager
             ?? throw new InvalidOperationException("Pager state was not initialized.");
@@ -86,6 +87,26 @@ public class StateControlTestActivity : ComponentActivity
             ?? throw new InvalidOperationException("Snackbar state was not initialized.");
         IReadOnlyList<int> pages = [0, 1, 2];
 
+        ComposableNode searchNode = direct
+            ? new Composed(_ =>
+            {
+                Composables.SearchBar(
+                    state: search,
+                    inputField: () => Composables.SearchBarInputField(searchText, search));
+                return null;
+            })
+            : new SearchBar(search)
+            {
+                InputField = new SearchBarInputField(searchText, search),
+            };
+        ComposableNode snackbarNode = direct
+            ? new Composed(_ =>
+            {
+                Composables.SnackbarHost(state: snackbar);
+                return null;
+            })
+            : new SnackbarHost(snackbar);
+
         return new Column
         {
             new HorizontalPager<int>(
@@ -99,16 +120,13 @@ public class StateControlTestActivity : ComponentActivity
             {
                 new Text("Pull"),
             },
-            new SearchBar(search)
-            {
-                InputField = new SearchBarInputField(searchText, search),
-            },
+            searchNode,
             new SecureTextField(secureText),
             new ModalWideNavigationRail(rail)
             {
                 new Text("Rail"),
             },
-            new SnackbarHost(snackbar),
+            snackbarNode,
         };
     }
 }

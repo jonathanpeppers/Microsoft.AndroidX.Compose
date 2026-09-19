@@ -1,48 +1,6 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Material 3 <c>ExpandedDockedSearchBar</c> — the popup half of a
-/// docked <see cref="SearchBar"/> pair. Renders the search-results
-/// content (collection-initialized children) inside a docked popup
-/// when the shared <see cref="SearchBarState"/> is expanded.
+/// Material 3 docked expanded search popup with collection-backed results.
 /// </summary>
-/// <remarks>
-/// Render BOTH this and a <see cref="SearchBar"/> (or
-/// <see cref="TopSearchBar"/>) inside the same parent, sharing the
-/// same <see cref="SearchBarState"/> — Compose toggles this popup's
-/// visibility internally.
-///
-/// <see cref="InputField"/> is required and is rendered at the top of
-/// the expanded popup; the collection-initialized children render as
-/// the result list below it (the underlying Kotlin <c>content</c>
-/// lambda receives a <c>ColumnScope</c>).
-/// </remarks>
-public sealed class ExpandedDockedSearchBar : ComposableContainer
-{
-    readonly SearchBarState _state;
-
-    public ExpandedDockedSearchBar(SearchBarState state) => _state = state;
-
-    /// <summary>Required: composable that renders the search input field inside the popup.</summary>
-    public required ComposableNode InputField { get; set; }
-
-    public override void Render(IComposer composer)
-    {
-        if (InputField is null)
-            throw new InvalidOperationException(
-                "ExpandedDockedSearchBar.InputField is required (the Kotlin parameter has no default).");
-
-        var stateHandle = SearchBar.ResolveStateHandle(_state, composer);
-        var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
-        var content     = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
-        var __modifierKey = BuildModifierStructuralKey();
-        int __changed = 0;
-        __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
-        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
-        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(8);
-        ComposeBridges.ExpandedDockedSearchBar(stateHandle, inputField, BuildModifier(), content, composer, _changed: __changed);
-    }
-}
+public sealed partial class ExpandedDockedSearchBar;

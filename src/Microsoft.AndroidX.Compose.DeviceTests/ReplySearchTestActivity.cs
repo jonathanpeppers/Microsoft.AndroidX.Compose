@@ -21,6 +21,7 @@ public class ReplySearchTestActivity : ComponentActivity
     internal long? SelectedId;
     internal int SelectionCalls;
     internal int Passes;
+    internal ReplySearchSession? SearchSession;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -45,6 +46,9 @@ public class ReplySearchTestActivity : ComponentActivity
                         SelectionCalls++;
                         InInbox.Value = false;
                     })
+                    {
+                        SessionObserved = session => SearchSession = session,
+                    }
                     : new Text($"Selected email {SelectedId}"),
                 new Text($"Unrelated tick {tick}"),
                 new SideEffect(() => Passes++),

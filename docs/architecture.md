@@ -938,6 +938,8 @@ operations requiring a peer cannot run while the wrapper is unbound.
 | Date-range picker | Both selections, displayed month, display mode, year range, selection policy |
 | Drawer | Current settled drawer value |
 | Sheet | Current settled sheet value; construction options remain on the wrapper |
+| Search bar | Current settled collapsed or expanded value |
+| Search input | Text and exact packed selection |
 | Navigation suite | Current settled visibility |
 
 Layout anchors, gesture offsets, and in-flight animation progress belong to the
@@ -1532,15 +1534,15 @@ surfaces are modeled.
   the ambient composer while rendering the managed node and does not replace
   either Kotlin lambda factory. Collection parameters are treated as unstable
   and force execution so in-place list edits cannot be hidden by reference
-  equality. `MaterialTheme`, `Scaffold`, `SnackbarHost`, and both
-  `SegmentedButton` modes are also complete. Their internal explicit-composer
-  adapters remain the sole rendering implementation and delegate to the existing
-  handwritten facades. `[GenerateImplicitComposable]` derives the ambient
+  equality. `MaterialTheme`, `Scaffold`, and both `SegmentedButton` modes are
+  also complete. Their internal explicit-composer adapters remain the sole
+  rendering implementation and delegate to the existing handwritten facades.
+  `[GenerateImplicitComposable]` derives the ambient
   sibling, removing the trailing `IComposer` from each
   `[ComposableContent] Action<..., IComposer>` while preserving nullable
-  slots and defaults. This keeps Scaffold's borrowed `PaddingValues`,
-  SnackbarHost's `SnackbarData` forwarding, and SegmentedButton's row-index
-  dispatch inside their established facade implementations. The composable
+  slots and defaults. This keeps Scaffold's borrowed `PaddingValues` and
+  SegmentedButton's row-index dispatch inside their established facade
+  implementations. The composable
   `SegmentedButton` takes explicit `index`/`count`, matching Kotlin's
   `itemShape(index, count)` contract; the adapter publishes that position
   while retaining the enclosing row receiver scope. `Layout`, `TextField`,
@@ -1549,12 +1551,16 @@ surfaces are modeled.
   selection-aware `MutableState<TextFieldValue>` while leaving bridge
   selection and slot wrapping in the existing facades. `Layout` likewise
   retains its composer-remembered Java measure-policy peer. The complete
-  state-based search family is also available: collapsed/top bars,
-  docked/full-screen expanded content, and shared-state input fields.
-  `BottomSheetScaffold` completes the issue-listed holdouts: its composable
-  adapter remembers the existing facade keyed by `SheetStateHolder`, keeping
-  the per-node veto JCW stable while replacing sheet/body/slot nodes on each
-  executed composition.
+  state-based search family is generated: collapsed/top bars,
+  docked/full-screen expanded content, and input fields acquire
+  composition-owned peers from required shared wrappers. Full removal retains
+  settled values and exact text selection but retires the native peers.
+  `SnackbarHost` hides its native `SnackbarData` lambda from the public API
+  while generated tracked content forwards each payload through the bound
+  `Snackbar` overload. `BottomSheetScaffold` is a generated hybrid container:
+  it owns the shared standard `SheetState`, applies committed veto callbacks,
+  then remembers the enclosing `BottomSheetScaffoldState` inside the same
+  acquisition failure boundary.
 - **NavHost / NavDestination:** need a stable, remembered raw graph-builder
   callback plus route registration and destination-argument forwarding; this
   is a navigation DSL rather than a normal composable content slot.
@@ -1721,10 +1727,10 @@ class.
     building the modifier and consuming its side channels.
 
   Tracked content wrappers contribute Static only because body updates
-  invalidate their readers even beneath skipped parents. Hand-written narrow
-  SnackbarHost/SearchBar masks are supported; partial wide/receiver masks
-  from TextField, BottomSheetScaffold, and SegmentedButton are suppressed at
-  the bridge boundary.
+  invalidate their readers even beneath skipped parents. Generated narrow
+  routes compute complete masks; partial wide/receiver masks from TextField,
+  BottomSheetScaffold, and SegmentedButton are suppressed at the bridge
+  boundary.
 - **`Modifier.Companion` not bound upstream.** Wrapped by the
   `Modifier` class via a one-time JNI fetch of the `$$INSTANCE` field
   — invisible to callers. See [NOTES.md](NOTES.md) open issue #1 for

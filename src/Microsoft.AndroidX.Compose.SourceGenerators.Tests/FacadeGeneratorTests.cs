@@ -252,6 +252,12 @@ public class FacadeGeneratorTests
                     System.Action<System.IntPtr, global::AndroidX.Compose.Runtime.IComposer> body,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
+                public static Kotlin.Jvm.Functions.IFunction3 Wrap3WithValue(
+                    global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Action<Java.Lang.Object?, global::AndroidX.Compose.Runtime.IComposer> body,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "")
+                    => throw new System.NotImplementedException();
             }
             public static partial class ComposeBridges
             {
@@ -4249,6 +4255,339 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void RequiredSharedPeerState_PreservesRequiredTreeAndDirectSignatures()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("SearchDefault", "!nativeState", "!inputField")]
+
+            namespace AndroidX.Compose
+            {
+                public sealed class SearchPeer : Java.Lang.Object { }
+                public sealed class SearchState
+                {
+                    public SearchState(int value) { }
+                    internal SearchPeer? Jvm;
+                    internal int RememberValue => 0;
+                    internal void BindJvm(SearchPeer peer) => Jvm = peer;
+                    internal void UnbindJvm() => Jvm = null;
+                }
+
+                public static partial class ComposeBridges
+                {
+                    internal static string RememberSearchState(
+                        string ignored, IComposer composer) => ignored;
+                    internal static SearchPeer RememberSearchState(
+                        int rememberValue, IComposer composer) => new();
+
+                    [ComposeBridge(Class = "x/Search", JvmName = "Search",
+                        Signature = "(Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(SearchDefault))]
+                    [ComposeFacade]
+                    public static partial void Search(
+                        [StateHolder(Remember = nameof(RememberSearchState),
+                            StateType = typeof(SearchState),
+                            Bind = nameof(SearchState.BindJvm),
+                            Unbind = nameof(SearchState.UnbindJvm),
+                            SharedState = true,
+                            Required = true,
+                            PropertyName = "State",
+                            SuppressOwner = true)]
+                        System.IntPtr nativeState,
+                        [Slot("InputField")] IFunction2 inputField,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Search");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public Search(global::AndroidX.Compose.SearchState state)", emitted);
+        Assert.DoesNotContain("SearchState? state = null", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(state);", emitted);
+        Assert.DoesNotContain("__nativeStateDefaultHolder", emitted);
+        Assert.Contains("var __peer = global::AndroidX.Compose.ComposeBridges.RememberSearchState(", emitted);
+        Assert.Contains("__nativeStateHolder.BindJvm(__peer);", emitted);
+        Assert.Contains("__nativeStateHolder.UnbindJvm();", emitted);
+        Assert.DoesNotContain("GetObject<global::AndroidX.Compose.SearchPeer>", emitted);
+        Assert.Contains("public static void Search(", emitted);
+        Assert.Contains("global::AndroidX.Compose.SearchState state", emitted);
+        Assert.Contains("global::System.Action inputField", emitted);
+        Assert.DoesNotContain("Owns shared native state at this composition location", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void SharedStateTransform_AbortsFailureAndKeepsTransformedPeerAlive()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ScaffoldDefault", "!sheet", "!state", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public sealed class SheetPeer : Java.Lang.Object { }
+                public sealed class ScaffoldPeer : Java.Lang.Object { }
+                public sealed class SheetHolder
+                {
+                    internal SheetPeer? Jvm;
+                    internal int RememberValue => 0;
+                    internal void BindJvm(SheetPeer peer) => Jvm = peer;
+                    internal void UnbindJvm() => Jvm = null;
+                }
+
+                public static partial class ComposeBridges
+                {
+                    internal static SheetPeer RememberSheet(
+                        int rememberValue, IComposer composer) => new();
+                    internal static ScaffoldPeer TransformSheet(
+                        SheetPeer sheet, IComposer composer) => new();
+
+                    [ComposeBridge(Class = "x/Scaffold", JvmName = "Scaffold",
+                        Signature = "(Lkotlin/jvm/functions/Function3;Ljava/lang/Object;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(ScaffoldDefault))]
+                    [ComposeFacade(Container = true)]
+                    public static partial void Scaffold(
+                        [Slot("Sheet")] IFunction3 sheet,
+                        [StateHolder(Remember = nameof(RememberSheet),
+                            StateType = typeof(SheetHolder),
+                            Bind = nameof(SheetHolder.BindJvm),
+                            Unbind = nameof(SheetHolder.UnbindJvm),
+                            SharedState = true,
+                            SuppressOwner = true,
+                            Transform = nameof(TransformSheet))]
+                        System.IntPtr state,
+                        IFunction3 content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Scaffold");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        var generated = emitted
+            ?? throw new System.InvalidOperationException("Scaffold facade was not generated.");
+        var transform = generated.IndexOf(
+            "__stateTransformedPeer = global::AndroidX.Compose.ComposeBridges.TransformSheet(",
+            System.StringComparison.Ordinal);
+        var bind = generated.IndexOf(
+            "__stateHolder.BindJvm(__stateSourcePeer);",
+            System.StringComparison.Ordinal);
+        var publish = generated.IndexOf(
+            "__stateAcquisition.Publish((global::Java.Lang.Object)__stateSourcePeer);",
+            System.StringComparison.Ordinal);
+        var abortCatch = generated.IndexOf(
+            "catch (global::System.Exception __stateError)",
+            System.StringComparison.Ordinal);
+        Assert.True(transform >= 0 && bind > transform);
+        Assert.True(publish > bind && abortCatch > publish);
+        Assert.Contains("__stateAcquisition.Abort(__stateError);", generated);
+        Assert.Contains("global::System.GC.KeepAlive(__stateTransformedPeer);", generated);
+        Assert.Contains("public static void Scaffold(", generated);
+        Assert.Contains("global::System.Action sheet", generated);
+        Assert.Contains("global::System.Action content", generated);
+        Assert.Contains("global::AndroidX.Compose.SheetHolder? state = null", generated);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void NativePayloadContent_IsTrackedAndHiddenFromFacadeSurface()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("HostDefault", "!hostState", "modifier", "!snackbar")]
+
+            namespace AndroidX.Compose
+            {
+                public sealed class SnackbarHostState { }
+
+                public static partial class ComposeBridges
+                {
+                    internal static void RenderSnackbar(
+                        Java.Lang.Object? payload, IComposer composer) { }
+
+                    [ComposeFacade(Defaults = typeof(HostDefault))]
+                    public static partial void SnackbarHost(
+                        SnackbarHostState hostState,
+                        IModifier? modifier,
+                        [NativePayloadContent(nameof(RenderSnackbar))] IFunction3 snackbar,
+                        int defaults,
+                        IComposer composer);
+
+                    public static partial void SnackbarHost(
+                        SnackbarHostState hostState,
+                        IModifier? modifier,
+                        IFunction3 snackbar,
+                        int defaults,
+                        IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "SnackbarHost");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public SnackbarHost(global::AndroidX.Compose.SnackbarHostState hostState)", emitted);
+        Assert.DoesNotContain("ComposableNode Snackbar", emitted);
+        Assert.Contains("ComposableLambdas.Wrap3WithValue(composer, (payload, current) => global::AndroidX.Compose.ComposeBridges.RenderSnackbar(payload, current))", emitted);
+        Assert.Contains("public static void SnackbarHost(global::AndroidX.Compose.SnackbarHostState hostState, global::AndroidX.Compose.Modifier? modifier = null)", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void NativePayloadContent_WithIncompatibleHandler_ReportsCN3006()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    internal static void RenderPayload(string payload, IComposer composer) { }
+
+                    [ComposeBridge(Class = "x/Host", JvmName = "Host",
+                        Signature = "(Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Host(
+                        [NativePayloadContent(nameof(RenderPayload))] IFunction3 content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Host");
+
+        Assert.Contains(diags, d => d.Id == "CN3006" &&
+            d.GetMessage().Contains("NativePayloadContent"));
+    }
+
+    [Fact]
+    public void NativePayloadContent_OnNonFunction_ReportsCN3006()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    internal static void RenderPayload(
+                        Java.Lang.Object? payload, IComposer composer) { }
+
+                    [ComposeBridge(Class = "x/Host", JvmName = "Host",
+                        Signature = "(ILandroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Host(
+                        [NativePayloadContent(nameof(RenderPayload))] int content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Host");
+
+        Assert.Contains(diags, d => d.Id == "CN3006" &&
+            d.GetMessage().Contains("non-null IFunction3"));
+    }
+
+    [Fact]
+    public void PeerReturningRemember_WithoutSharedOwnership_ReportsCN3009()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+
+            namespace AndroidX.Compose
+            {
+                public sealed class StatePeer : Java.Lang.Object { }
+                public sealed class StateHolder
+                {
+                    internal StatePeer? Jvm;
+                }
+
+                public static partial class ComposeBridges
+                {
+                    internal static StatePeer RememberState(IComposer composer) => new();
+
+                    [ComposeBridge(Class = "x/Consumer", JvmName = "Consumer",
+                        Signature = "(Ljava/lang/Object;Landroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Consumer(
+                        [StateHolder(Remember = nameof(RememberState),
+                            StateType = typeof(StateHolder))]
+                        System.IntPtr state,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Consumer");
+
+        Assert.Contains(diags, d => d.Id == "CN3009" &&
+            d.GetMessage().Contains("SharedState = true"));
+    }
+
+    [Fact]
+    public void RememberState_WithMultipleCompatibleOverloads_ReportsCN3009()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+
+            namespace AndroidX.Compose
+            {
+                public sealed class StatePeer : Java.Lang.Object { }
+                public sealed class StateHolder
+                {
+                    internal StatePeer? Jvm;
+                }
+
+                public static partial class ComposeBridges
+                {
+                    internal static System.IntPtr RememberState(
+                        int value, IComposer composer) => default;
+                    internal static StatePeer RememberState(
+                        long value, IComposer composer) => new();
+
+                    [ComposeBridge(Class = "x/Consumer", JvmName = "Consumer",
+                        Signature = "(Ljava/lang/Object;Landroidx/compose/runtime/Composer;)V")]
+                    [ComposeFacade]
+                    public static partial void Consumer(
+                        [StateHolder(Remember = nameof(RememberState),
+                            StateType = typeof(StateHolder),
+                            SharedState = true)]
+                        System.IntPtr state,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Consumer");
+
+        Assert.Contains(diags, d => d.Id == "CN3009" &&
+            d.GetMessage().Contains("multiple compatible"));
     }
 
     // ─── [ConfirmStateChange] — per-instance JNI veto adapter ─────────
