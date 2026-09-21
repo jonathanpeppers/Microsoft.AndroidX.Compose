@@ -127,7 +127,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
                 global::Android.Util.Log.Error(
                     "ComposeAlertManager",
                     "DispatchProxy.Create failed for " + ifaceType.FullName +
-                    "; falling back to stock AppCompat dialogs. Inner: " +
+                    ": " +
                     ex.GetType().FullName + ": " + ex.Message + "\n" +
                     ex.StackTrace);
                 throw;
@@ -142,6 +142,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
     /// top-level fallback for forward-compat with future MAUI
     /// reorganizations.
     /// </summary>
+    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
     static Type? ResolveSubscriptionInterface()
     {
         // MAUI 10.0.x — interface is nested under AlertManager.
