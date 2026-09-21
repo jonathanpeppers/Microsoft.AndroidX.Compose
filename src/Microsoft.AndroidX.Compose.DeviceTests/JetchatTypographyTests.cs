@@ -10,15 +10,13 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class JetchatTypographyTests
 {
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void ThemeSlotsMatchPinnedJetchatMetrics(bool withResourceFamilies)
+    public void ThemeSlotsMatchPinnedJetchatMetricsAndFamilies()
     {
-        using var baseline = Typography.CreateJetchatTypography();
-        using var resourceTypography = withResourceFamilies ? JetchatFonts.WithFonts(baseline) : null;
-        var typography = resourceTypography ?? baseline;
         var karla = JetchatFonts.Karla;
         var montserrat = JetchatFonts.Montserrat;
+        using var typography = Typography.CreateJetchatTypography(karla, montserrat);
+        using var defaults = MaterialTheme.BuildTypography(bodyLarge: new TextStyle());
+        var defaultStyle = defaults.BodyLarge;
         (NativeTextStyle Style, int Size, int Height, float Spacing, int Weight, FontFamily Family)[] slots =
         [
             (typography.DisplayLarge, 57, 64, 0f, 300, montserrat),
@@ -43,8 +41,8 @@ public class JetchatTypographyTests
             Assert.AreEqual(slot.Height.Sp().PackedValue, slot.Style.LineHeight);
             Assert.AreEqual(slot.Spacing.Sp().PackedValue, slot.Style.LetterSpacing);
             Assert.AreEqual(slot.Weight, slot.Style.FontWeight?.Weight);
-            if (withResourceFamilies)
-                Assert.IsTrue(slot.Style.FontFamily?.Equals(slot.Family) == true);
+            Assert.IsTrue(slot.Style.FontFamily?.Equals(slot.Family) == true);
+            AssertInheritedDefaults(slot.Style, defaultStyle);
         }
     }
 
@@ -73,5 +71,28 @@ public class JetchatTypographyTests
         Assert.AreSame(FontWeight.Normal, annotated.FontWeight);
         Assert.AreEqual(Color.Blue, annotated.Color);
         Assert.AreSame(bodyFamily, annotated.FontFamily);
+    }
+
+    static void AssertInheritedDefaults(NativeTextStyle actual, NativeTextStyle expected)
+    {
+        Assert.AreEqual(expected.Color, actual.Color);
+        Assert.AreEqual(expected.FontStyle, actual.FontStyle);
+        Assert.AreEqual(expected.FontSynthesis, actual.FontSynthesis);
+        Assert.AreEqual(expected.FontFeatureSettings, actual.FontFeatureSettings);
+        Assert.AreEqual(expected.BaselineShift, actual.BaselineShift);
+        Assert.AreEqual(expected.TextGeometricTransform, actual.TextGeometricTransform);
+        Assert.AreEqual(expected.LocaleList, actual.LocaleList);
+        Assert.AreEqual(expected.Background, actual.Background);
+        Assert.AreEqual(expected.TextDecoration, actual.TextDecoration);
+        Assert.AreEqual(expected.Shadow, actual.Shadow);
+        Assert.AreEqual(expected.DrawStyle, actual.DrawStyle);
+        Assert.AreEqual(expected.GetTextAlign(), actual.GetTextAlign());
+        Assert.AreEqual(expected.GetTextDirection(), actual.GetTextDirection());
+        Assert.AreEqual(expected.TextIndent, actual.TextIndent);
+        Assert.AreEqual(expected.PlatformStyle, actual.PlatformStyle);
+        Assert.AreEqual(expected.LineHeightStyle, actual.LineHeightStyle);
+        Assert.AreEqual(expected.GetLineBreak(), actual.GetLineBreak());
+        Assert.AreEqual(expected.GetHyphens(), actual.GetHyphens());
+        Assert.AreEqual(expected.TextMotion, actual.TextMotion);
     }
 }

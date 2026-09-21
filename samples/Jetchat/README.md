@@ -537,10 +537,10 @@ The numeric reference is Google's
 [`theme/Typography.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/theme/Typography.kt)
 at **`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, not moving `main`.
 `Theme/Typography.cs` mirrors the upstream file organization. Its
-`Typography.CreateJetchatTypography()` factory constructs the 15 theme slots
-corresponding to Kotlin's top-level `JetchatTypography` value, retaining
-per-composition caching in `JetchatTheme`. `JetchatFonts.WithFonts(...)` applies
-the bundled Karla/Montserrat families to that baseline without changing its metrics.
+`Typography.CreateJetchatTypography(...)` factory constructs the 15 theme slots
+with the bundled Karla/Montserrat families in one pass, corresponding to
+Kotlin's top-level `JetchatTypography` value and retaining per-composition
+caching in `JetchatTheme`.
 The following screen text is explicitly assigned the corresponding metrics;
 buttons and the message editor also consume the theme's type slots.
 
@@ -560,11 +560,11 @@ spacing is fractional. The Gallery's **Fractional typography** demo separately
 exercises a 16.25 sp font, 24.75 sp line height, and positive/zero/negative
 tracking. No arbitrary fractional font-size adjustments are applied to Jetchat.
 
-`JetchatTypographyTests` compiles the actual sample metric definitions and
-font-copy helper into the device test app and checks every native `Typography`
-slot's packed font size, line height, letter spacing, and weight, both before
-and after applying the resource families. It also checks family assignments
-and that explicit families survive `WithTypography`. `ComposeValueTypeTests` checks
+`JetchatTypographyTests` compiles the actual sample metric definitions into the
+device test app and checks every native `Typography` slot's packed font size,
+line height, letter spacing, weight, resource-family assignment, and inherited
+default fields. It also checks that explicit families survive `WithTypography`.
+`ComposeValueTypeTests` checks
 the float bit payload through bound `GetSp(float)`, `TextStyle`, and `SpanStyle`.
 These are source/interop comparisons, not pixel-equality tests.
 
