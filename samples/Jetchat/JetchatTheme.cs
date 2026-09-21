@@ -157,7 +157,9 @@ public static class JetchatTheme
             var theme = new MaterialTheme
             {
                 ColorScheme = scheme,
-                Typography = c.Remember(() => JetchatFonts.WithFonts(Theme.Typography.CreateJetchatTypography())),
+                Typography = c.Remember(() => Theme.Typography.CreateJetchatTypography(
+                    JetchatFonts.Karla,
+                    JetchatFonts.Montserrat)),
             };
             theme.Add(content);
             return theme;

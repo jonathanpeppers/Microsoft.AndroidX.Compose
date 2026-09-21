@@ -1,7 +1,7 @@
 namespace AndroidX.Compose.Samples.Jetchat.Theme;
 
 // Numeric metrics and weights from compose-samples 4c1fe7586e2fbf1c934925ef8ab64d3803361423,
-// Jetchat/theme/Typography.kt. Resource families are applied by JetchatFonts.
+// Jetchat/theme/Typography.kt.
 internal static class Typography
 {
     internal static readonly TextStyle DisplayLarge = Create(57, 64, 0f, FontWeight.Light);
@@ -20,12 +20,23 @@ internal static class Typography
     internal static readonly TextStyle LabelMedium = Create(12, 16, 0.5f, FontWeight.SemiBold);
     internal static readonly TextStyle LabelSmall = Create(11, 16, 0.5f, FontWeight.SemiBold);
 
-    internal static Material3.Typography CreateJetchatTypography() => MaterialTheme.BuildTypography(
-        displayLarge: DisplayLarge, displayMedium: DisplayMedium, displaySmall: DisplaySmall,
-        headlineLarge: HeadlineLarge, headlineMedium: HeadlineMedium, headlineSmall: HeadlineSmall,
-        titleLarge: TitleLarge, titleMedium: TitleMedium, titleSmall: TitleSmall,
-        bodyLarge: BodyLarge, bodyMedium: BodyMedium, bodySmall: BodySmall,
-        labelLarge: LabelLarge, labelMedium: LabelMedium, labelSmall: LabelSmall);
+    internal static Material3.Typography CreateJetchatTypography(FontFamily karla, FontFamily montserrat) =>
+        MaterialTheme.BuildTypography(
+            displayLarge: WithFamily(DisplayLarge, montserrat),
+            displayMedium: WithFamily(DisplayMedium, montserrat),
+            displaySmall: WithFamily(DisplaySmall, montserrat),
+            headlineLarge: WithFamily(HeadlineLarge, montserrat),
+            headlineMedium: WithFamily(HeadlineMedium, montserrat),
+            headlineSmall: WithFamily(HeadlineSmall, montserrat),
+            titleLarge: WithFamily(TitleLarge, montserrat),
+            titleMedium: WithFamily(TitleMedium, montserrat),
+            titleSmall: WithFamily(TitleSmall, karla),
+            bodyLarge: WithFamily(BodyLarge, karla),
+            bodyMedium: WithFamily(BodyMedium, montserrat),
+            bodySmall: WithFamily(BodySmall, karla),
+            labelLarge: WithFamily(LabelLarge, montserrat),
+            labelMedium: WithFamily(LabelMedium, montserrat),
+            labelSmall: WithFamily(LabelSmall, montserrat));
 
     // Text facades have individual properties, not a TextStyle slot. Apply only metrics/weight
     // so explicit colors, resource families, and layout remain owned by the caller.
@@ -53,5 +64,14 @@ internal static class Typography
         LineHeight = lineHeight,
         LetterSpacing = letterSpacing.Sp(),
         FontWeight = weight,
+    };
+
+    static TextStyle WithFamily(TextStyle style, FontFamily family) => new()
+    {
+        FontSize = style.FontSize,
+        LineHeight = style.LineHeight,
+        LetterSpacing = style.LetterSpacing,
+        FontWeight = style.FontWeight,
+        FontFamily = family,
     };
 }
