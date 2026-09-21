@@ -17,6 +17,7 @@
     <_MicrosoftAndroidXComposeBinaryProfileMetadata>$(_MicrosoftAndroidXComposeProfileDirectory)baseline.profm</_MicrosoftAndroidXComposeBinaryProfileMetadata>
     <_MicrosoftAndroidXComposeStrictProfileDump>$(_MicrosoftAndroidXComposeProfileDirectory)strict-baseline-prof.txt</_MicrosoftAndroidXComposeStrictProfileDump>
     <_MicrosoftAndroidXComposeProfileState>$(_MicrosoftAndroidXComposeProfileDirectory)enabled.txt</_MicrosoftAndroidXComposeProfileState>
+    <_MicrosoftAndroidXComposeProfileInputsState>$(_MicrosoftAndroidXComposeProfileDirectory)inputs.txt</_MicrosoftAndroidXComposeProfileInputsState>
     <AndroidStoreUncompressedFileExtensions>$(AndroidStoreUncompressedFileExtensions);.prof;.profm</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 
@@ -95,8 +96,8 @@
   </Target>
 
   <Target Name="_MergeMicrosoftAndroidXComposeBaselineProfiles"
-          DependsOnTargets="_ValidateMicrosoftAndroidXComposeBaselineProfile"
-          Inputs="@(AndroidArtProfile)"
+          DependsOnTargets="_TrackMicrosoftAndroidXComposeBaselineProfileInputs"
+          Inputs="$(_MicrosoftAndroidXComposeProfileInputsState);@(AndroidArtProfile)"
           Outputs="$(_MicrosoftAndroidXComposeMergedProfile)"
           Condition="'$(MicrosoftAndroidXComposeEnableBaselineProfile)' == 'true'
                      And '$(AndroidApplication)' == 'true'
@@ -112,6 +113,20 @@
                       Lines="@(_MicrosoftAndroidXComposeUniqueProfileLine)"
                       Overwrite="true"
                       WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="_TrackMicrosoftAndroidXComposeBaselineProfileInputs"
+          DependsOnTargets="_ValidateMicrosoftAndroidXComposeBaselineProfile"
+          Condition="'$(MicrosoftAndroidXComposeEnableBaselineProfile)' == 'true'
+                     And '$(AndroidApplication)' == 'true'
+                     And '$(AndroidLinkTool)' == 'r8'">
+    <WriteLinesToFile File="$(_MicrosoftAndroidXComposeProfileInputsState)"
+                      Lines="@(AndroidArtProfile->'%(FullPath)')"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_MicrosoftAndroidXComposeProfileInputsState)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ExpandMicrosoftAndroidXComposeBaselineProfile"
@@ -140,7 +155,7 @@
                       Lines="@(_MicrosoftAndroidXComposeExpandArgument)"
                       Overwrite="true"
                       WriteOnlyWhenDifferent="true" />
-    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; @$(_MicrosoftAndroidXComposeProfileDirectory)expand.args" />
+    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; &quot;@$(_MicrosoftAndroidXComposeProfileDirectory)expand.args&quot;" />
   </Target>
 
   <Target Name="_ConfigureMicrosoftAndroidXComposeBaselineProfileForR8"
@@ -198,7 +213,7 @@ $(_MicrosoftAndroidXComposeRewrittenProfile)</AndroidR8ExtraArguments>
                       Lines="@(_MicrosoftAndroidXComposeBinArgument)"
                       Overwrite="true"
                       WriteOnlyWhenDifferent="true" />
-    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; @$(_MicrosoftAndroidXComposeProfileDirectory)bin.args" />
+    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; &quot;@$(_MicrosoftAndroidXComposeProfileDirectory)bin.args&quot;" />
     <ItemGroup>
       <_MicrosoftAndroidXComposeDumpArgument Include="-classpath" />
       <_MicrosoftAndroidXComposeDumpArgument Include="&quot;$(_MicrosoftAndroidXComposeProfgenClasspathArgument)&quot;" />
@@ -216,7 +231,7 @@ $(_MicrosoftAndroidXComposeRewrittenProfile)</AndroidR8ExtraArguments>
                       Lines="@(_MicrosoftAndroidXComposeDumpArgument)"
                       Overwrite="true"
                       WriteOnlyWhenDifferent="true" />
-    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; @$(_MicrosoftAndroidXComposeProfileDirectory)dump.args" />
+    <Exec Command="&quot;$(_MicrosoftAndroidXComposeJavaExe)&quot; &quot;@$(_MicrosoftAndroidXComposeProfileDirectory)dump.args&quot;" />
   </Target>
 
   <Target Name="_PackageMicrosoftAndroidXComposeBinaryBaselineProfile"

@@ -106,10 +106,11 @@ static bool CheckPackage(ZipArchive archive)
     bool composeRule = false;
     while (reader.ReadLine() is { } line)
     {
-        if (string.IsNullOrWhiteSpace(line))
+        string rule = line.Trim();
+        if (rule.Length == 0 || rule.StartsWith('#'))
             continue;
         rules++;
-        composeRule |= line.Contains("Landroidx/compose/", StringComparison.Ordinal);
+        composeRule |= rule.Contains("Landroidx/compose/", StringComparison.Ordinal);
     }
     if (rules < 1_000 || !composeRule)
     {
