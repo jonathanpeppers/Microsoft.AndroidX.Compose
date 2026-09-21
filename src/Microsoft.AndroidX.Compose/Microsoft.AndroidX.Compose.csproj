@@ -71,6 +71,10 @@
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.Layout" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.LayoutAndroid" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.Navigation" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationAndroid" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuiteAndroid" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material.Icons.Core" />
@@ -79,6 +83,7 @@
     <PackageReference Include="Xamarin.AndroidX.Navigation.Runtime" />
     <PackageReference Include="Xamarin.AndroidX.Navigation.Compose" />
     <PackageReference Include="Xamarin.AndroidX.Navigation.Compose.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Window" />
   </ItemGroup>
   <ItemGroup>
     <ProguardConfiguration Include="shared-state-lifetime.pro" />

@@ -145,6 +145,7 @@ public static class Catalog
         D.Navigation.NavigationRailOptionsDemo.Demo,
         D.Navigation.ModalWideNavigationRailDemo.Demo,
         D.Navigation.NavigationSuiteScaffoldDemo.Demo,
+        D.Navigation.ListDetailPaneScaffoldDemo.Demo,
 
         // ---- Dialogs & sheets ----
         D.DialogsSheets.AlertDialogDemo.Demo,

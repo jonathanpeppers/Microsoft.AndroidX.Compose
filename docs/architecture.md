@@ -1951,6 +1951,31 @@ class.
   save/background/kill/focus the same Android task without reinstalling.
   That isolated probe has no other tree-container ancestors; it is not a
   substitute for #353's broader tree-path restoration suite.
+- **Adaptive list/detail and window posture.**
+  `CurrentWindowAdaptiveInfo()` exposes Material 3's live
+  `WindowAdaptiveInfo`, including its fold-derived `WindowPosture`.
+  `CalculateListDetailPaneScaffoldDirective()` turns that information into
+  pane partitions and excluded hinge bounds using the bound Material 3
+  Adaptive Layout API. `RememberListDetailPaneScaffoldNavigator<T>()` owns
+  the native navigator in composition; `ListDetailPaneScaffold<T>` leaves
+  Back ownership to its host, while
+  `NavigableListDetailPaneScaffold<T>` installs Material 3's predictive and
+  system Back behavior. Both scaffold variants use `AnimatedPane` for list,
+  detail, and optional extra content. Managed content keys use the same
+  primitive, string, and Java-peer conversion contract as `MutableState<T>`.
+  The lower-level scaffold renders from `navigator.ScaffoldValue`, allowing
+  each NavHost destination composition to own its transition. Passing the
+  navigator's shared `SeekableTransitionState` to both the outgoing and
+  incoming destinations would attach one state to two simultaneous
+  `Transition` instances and AndroidX correctly rejects that with
+  `IllegalStateException`. The navigable scaffold remains on AndroidX's
+  native state overload because it is the sole owner of its transition and
+  predictive Back lifecycle.
+  `CollectWindowLayoutInfo()` separately exposes lifecycle-aware raw
+  Jetpack WindowManager `WindowLayoutInfo`, whose display features can be
+  inspected as `IFoldingFeature` values. These are official bound APIs from
+  the pinned compatible Adaptive `1.2.0.1` and Window `1.5.1.3` lines; no
+  Accompanist or custom binding is involved.
 - **Drawing.** `Canvas`, managed `DrawScope` / `ContentDrawScope` /
   `CacheDrawScope` callbacks, `drawBehind` / `drawWithContent` /
   `drawWithCache`, mutable `Path`, gradient `Brush` factories, and shape
@@ -1967,6 +1992,3 @@ class.
   [#103](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/103).
 - Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope —
   see [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144).
-- Adaptive `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack
-  `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) — see
-  [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168).

@@ -10,9 +10,10 @@ fully animated bottom-nav / nav-rail / nav-drawer switchover.
 
 This port keeps the **inbox/search data faithful** (12 emails and 13
 accounts with matching IDs, subjects and sender names), switches top-level
-navigation with the pinned width/height policy, and renders
-the email content as a **single pane**. Fold-aware dual-pane content remains
-separate [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168).
+navigation with the pinned width/height policy, and renders email content
+through Material 3 Adaptive's fold-aware list/detail scaffold. Compact
+windows animate between list and detail; expanded or separated windows show
+both panes while avoiding configured hinge bounds.
 Thread ordering is fixed in C# but shuffled for most Kotlin emails; see the
 [data comparison boundary](../parity-baseline.md#data-and-rendering-caveats).
 
@@ -42,9 +43,8 @@ physical-device results below keep their original source/APK identities.
     matching upstream string content
 - Routes: `Inbox`, `Articles`, `DirectMessages`, `Groups`,
   `EmailDetail/{emailId}` (the four top-level routes mirror upstream's
-  `Route` sealed interface; `EmailDetail` is added for the single-pane
-  port since upstream uses pane navigation, not a `NavHost` route, for
-  the detail view)
+  `Route` sealed interface; the extra detail route remains the durable
+  save/restore owner while Material 3's pane navigator owns presentation)
 - Top-level destinations + `ReplyNavigationActions` wrapper using native
   pop-to-Inbox, save/restore-state and single-top navigation
 - `NavigationSuiteScaffold` — bottom bar below 600 dp width or 480 dp
@@ -64,15 +64,21 @@ physical-device results below keep their original source/APK identities.
 - `EmptyComingSoon` — placeholder for the Articles / DMs / Groups
   tabs
 
-## Adaptive navigation and scoped styling
+## Adaptive navigation, list/detail, and scoped styling
 
 `ReplyApp` reads `CurrentWindowAdaptiveInfo().WindowSizeClass` inside
 composition and selects `NavigationBar`, `NavigationRail`, or
 `NavigationDrawer` using the pinned policy: bottom navigation below 600 dp
 width or 480 dp height, rail through 1199 dp, and drawer from 1200 dp. This is
-top-level navigation adaptation only: medium remains single-pane unless fold
-work in #168 explicitly changes that contract, and expanded does not claim
-the pinned Kotlin dual-pane layout.
+top-level navigation adaptation only; fold and expanded pane presentation is
+handled separately by
+`ListDetailPaneScaffold`. Its directive is calculated from the same live
+`WindowAdaptiveInfo`, including separating or occluding hinges. The low-level
+scaffold intentionally installs no competing Back handler: the existing
+`EmailDetail/{emailId}` NavHost route continues to own system Back, tab
+save/restore, and activity recreation, while the Material 3 navigator owns
+pane visibility and animation. Search results and inbox rows share this same
+open-email path.
 
 The sample now uses the pinned Reply light/dark palette, type scale, 4/8/16/24/32
 dp shape scale, system-bar inset readers, and Android string resources.
@@ -145,6 +151,52 @@ linked sample data.
 
 ### Device validation
 
+On 2026-09-18, the #168 candidate passed its focused fold-aware acceptance on
+a Pixel 6 Pro (Android 16 / API 36) at the original 1440 x 3120, 560 dpi
+viewport. `CurrentTabDoesNotDuplicate_AndSystemBackSelectsInbox`,
+`InboxViewportAndSelectionSurviveTabsAndDetail`,
+`AdaptiveTransitionsPreserveSearchAndTabState`, and
+`SimulatedHingeSeparatesPanes_AndRouteRestores` all passed independently.
+The hinge case verified exact selected email IDs, replacement without stacked
+detail routes, compact detail-only presentation, a separating/occluding
+vertical gap, tabletop vertical partitions, nonseparating and removed folds,
+activity recreation, and system Back to Inbox. Raw `WindowLayoutInfo` and
+bound `IFoldingFeature` members were observed by
+`ListDetailPresentationMatchesAdaptivePaneDirective`.
+
+The same presentation test passed after temporarily resizing the slab window
+to 3000 x 2000 pixels (857 x 571 dp), where list and detail were both visible.
+The `navigation-list-detail-pane` Gallery route also rendered its list,
+actions, and detail content without a fatal runtime error. These are
+deterministic simulated `WindowAdaptiveInfo` posture tests plus a resized
+phone-window test. They are not physical hinge, tablet, or foldable-hardware
+evidence. The size override was reset, both owned packages were removed, and
+the original size, density, font scale, night-mode key, and rotation settings
+were verified before releasing the device.
+
+Self-contained Debug payloads were rebuilt and rechecked on that device from
+22:17:36Z through 22:29:54Z. The build and installed APK hashes matched:
+DeviceTests
+`08F027E27C11E6A4C2D5DB15F8C41E3D51CE2A46666DCC144BBA46F76CA2E576`
+and Gallery
+`450C14F9E15ABDE9CC845A3C45D1D4C43B92F5044405F425EE06B07D47BCF21D`.
+The compact Back/tab control, simulated-hinge restoration control, adaptive
+search/tab control, compact viewport/detail control, compact and resized
+expanded directive controls, and Gallery deep link all passed on those
+payloads.
+
+Two additional screenshot-driving reruns at 3000 x 2000 initially failed
+before reaching their product assertions: the preserved TRXs reported
+`Reply 'Articles' node was not present` and
+`Selected tab 'Inbox' is missing`. The permanent drawer exposes those labels
+through accessibility text, while the compact navigation items expose content
+descriptions. The shared test helper now accepts either semantic form. A final
+test-only DeviceTests rebuild from commit `0385492`, with matching build and
+installed APK hash
+`EF1F6DF66011446133AE401F5CA117FBB10B99EDD8EA6A9CEB44005095820BD0`,
+passed both corrected cases at 3000 x 2000. The failed and passing
+instrumentation streams and TRXs were retained separately.
+
 On 2026-09-17, executable source `0edae77` passed all nine
 `ReplyNavigationTests` and all three `ReplySearchTests` on a Pixel 10
 (Android 16 / API 36) at its original 1080 x 2424, 420 dpi viewport
@@ -186,9 +238,8 @@ Owned native hierarchies prove the localized Inbox label belongs to a
 clickable/selected navigation control rather than content text. Earlier
 light/dark Inbox/detail frames at 600 and 840 dp remain valid for the
 unchanged presentation code; a detail hierarchy confirms the centered title
-node. These are emulated phone-window results, not physical tablet or
-foldable proof. The sample remains single-pane and fold-aware list/detail
-remains #168.
+node. These are emulated phone-window results, not physical tablet or foldable
+proof, and they predate the fold-aware list/detail integration.
 
 On 2026-09-15, source `8da2c4f` passed all four focused checks on the attached
 Pixel 7: the numeric-padding regression and all three `ReplySearchTests`
@@ -250,6 +301,7 @@ and [`ReplyHomeViewModel.kt`](https://github.com/android/compose-samples/blob/4c
 | Tap the current top-level tab repeatedly | Pop to the graph start without removing it, save popped entries, launch single-top, restore saved state. No duplicate current-tab entries. C# uses `PopUpToRoute = Route.Inbox` because its graph has a flat, fixed start route. |
 | Switch tabs and return to Inbox | Restore the destination's native saved state, including the inbox's default Kotlin `rememberLazyListState()`. Do not replace it with a new managed `LazyListState`. |
 | Open an email; system Back or app-bar Up | Return to the retained inbox context and reset the opened-email highlight to the first email. The same close action handles both paths. |
+| Select another email while both panes are visible | Replace the current detail route and pane destination; Inbox remains the sole predecessor rather than accumulating detail routes. |
 | Multi-selection | Long-press toggles a selected email. Selection persists through detail/tab navigation; **selection alone does not consume Back**. The pinned source has no selection Back handler. |
 | Selected bottom-navigation item | Derived from the rendered destination, including Inbox for the port's detail route, rather than a separate click-updated route variable. Native Back and restoration cannot leave a stale selected tab. |
 | Activity recreation | Compose saves the navigation stack and each destination's list state. `ReplyState` saves opened-email and selected IDs in the activity Bundle. Kotlin's ViewModel retains these on configuration changes; this port also saves them for Android saved-task restoration. |
@@ -307,21 +359,22 @@ search implementation remains outside this navigation test suite.
 
 The 2026-09-17 Pixel 10 run supersedes those historical focused test counts
 for the integrated #383 UI. It does not supersede the paired Kotlin/C# visual
-baseline or establish fold-aware dual-pane behavior.
+baseline; it predates the fold-aware dual-pane implementation described
+above.
 
-## What's missing (and why)
+## Remaining differences
 
 Upstream Reply is, before anything else, an **adaptive layouts
-showcase**. This port remains single-pane; adaptive/fold-aware integration is
-separate from the completed top-level navigation work. Entries below describe
-sample omissions, not proof that the current library lacks the corresponding API.
+showcase**. The port now supports adaptive and fold-aware list/detail, while
+the entries below distinguish delivered adaptations from remaining parity
+work. They do not prove that the library lacks a corresponding API.
 
 | Upstream feature | Status | Tracking issue |
 |------------------|--------|----------------|
-| `NavigationSuiteScaffold` compact-height/width, rail and drawer policy | Integrated at pinned 600 dp width / 480 dp height and 1200 dp drawer boundaries. Content remains single-pane. | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383); #143, #158 and #163 are delivered prerequisites. |
-| `accompanist.adaptive.TwoPane` + folding-feature-aware list/detail | Missing reusable API/integration work: single-pane remains. Exact supported replacement and binding members still require an API audit, not inference from symbol counts. | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
+| `NavigationSuiteScaffold` compact-height/width, rail and drawer policy | Integrated at pinned 600 dp width / 480 dp height and 1200 dp drawer boundaries. | [#383](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/383); #143, #158 and #163 are delivered prerequisites. |
+| `accompanist.adaptive.TwoPane` + folding-feature-aware list/detail | Integrated with the supported Material 3 Adaptive replacement (`ListDetailPaneScaffold`, pane navigator, directive calculation) and live Jetpack WindowManager posture rather than deprecated Accompanist. | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
 | Scroll-responsive Compose FAB, detail presence and tertiary colors | Integrated for compact bottom navigation; label expansion uses `lastScrolledBackward || !canScrollBackward`, and compact detail retains the latest inbox-derived expansion state. | #383; [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) and [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) shipped. |
-| Detail toolbar scroll, title alignment and styling | Integrated as the first detail `LazyColumn` item with centered single-pane title and explicit insets. This is not an `exitUntilCollapsedScrollBehavior` claim. | #383; see pinned `ReplyListContent.kt` and `ReplyAppBars.kt`. |
+| Detail toolbar scroll, title alignment and styling | Integrated as the first detail `LazyColumn` item with a centered title and explicit insets. This is not an `exitUntilCollapsedScrollBehavior` claim. | #383; see pinned `ReplyListContent.kt` and `ReplyAppBars.kt`. |
 | Avatar selection and `semantics { selected = isSelected }` on email cards | Integrated without changing row tap or long-press behavior. | #383; [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) shipped. |
 | System-bar spacing, named typography, theme palette and resource-localized strings | Integrated for the scoped Reply UI. Contrast-level palette switching remains different. | #383; [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) and [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) shipped. |
 | Legacy inline `DockedSearchBar` | Intentional API adaptation: working state-based popup, with different outside-tap and expansion geometry; not a missing search implementation. | Completed [#348](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/348); bounded comparison in #349. |

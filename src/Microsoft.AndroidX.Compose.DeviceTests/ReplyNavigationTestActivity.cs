@@ -1,9 +1,13 @@
 using Android.Runtime;
 using AndroidX.Activity;
 using AndroidX.Compose;
+using AndroidX.Compose.Material3.Adaptive.Layout;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.Samples.Reply;
+using AndroidX.Compose.Material3.Adaptive;
 using AndroidX.Compose.UI.Platform;
+using AndroidX.Window.Layout;
+using ComposeButton = AndroidX.Compose.Button;
 using Snapshot = AndroidX.Compose.Runtime.Snapshots.Snapshot;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
@@ -14,23 +18,58 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class ReplyNavigationTestActivity : ComponentActivity
 {
     internal static TaskCompletionSource<ReplyNavigationTestActivity> Started { get; private set; } = NewStarted();
+    internal static Func<ReplyNavigationTestActivity, WindowAdaptiveInfo?>?
+        AdaptiveInfoOverrideFactory { get; private set; }
+    internal static bool NavigableScaffoldMode { get; private set; }
     internal TaskCompletionSource Destroyed { get; } = NewSignal();
     internal NavController Controller { get; } = new();
     internal ReplyState State => _state ?? throw new InvalidOperationException("Reply state is not initialized.");
     internal ComposeView View => _view ?? throw new InvalidOperationException("Reply ComposeView is not initialized.");
+    internal ListDetailPaneScaffoldNavigator<long> PaneNavigator =>
+        _paneNavigator ?? throw new InvalidOperationException(
+            "Navigable list-detail pane navigator is not initialized.");
     internal TaskCompletionSource<NavigationSuiteType> NavigationTypeObserved { get; } =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
+    internal TaskCompletionSource<int> PanePartitionsObserved { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+    internal TaskCompletionSource<WindowLayoutInfo> WindowLayoutInfoObserved
+        { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    internal MutableManagedState<WindowAdaptiveInfo?> AdaptiveInfoOverride { get; } =
+        new(null);
+    internal int PanePartitions { get; private set; }
+    internal int VerticalPartitions { get; private set; }
+    internal int ExcludedBoundsCount { get; private set; }
+    internal bool OwnedPopupExpected => _ownedPopupExpected;
     readonly object _progressLock = new();
     TaskCompletionSource _progress = NewSignal();
     ReplyState? _state;
     ComposeView? _view;
+    ListDetailPaneScaffoldNavigator<long>? _paneNavigator;
+    Action<long>? _navigateToPane;
     Snapshot.Companion? _snapshots;
     bool _resumed;
     bool _ending;
     bool _admitted;
+    bool _ownedPopupExpected;
     string? _admissionFailure;
 
-    internal static void Prepare() => Started = NewStarted();
+    internal static void Prepare(
+        Func<ReplyNavigationTestActivity, WindowAdaptiveInfo?>?
+            adaptiveInfoOverrideFactory = null)
+    {
+        Started = NewStarted();
+        AdaptiveInfoOverrideFactory = adaptiveInfoOverrideFactory;
+        NavigableScaffoldMode = false;
+    }
+
+    internal static void PrepareNavigableScaffold()
+    {
+        Started = NewStarted();
+        AdaptiveInfoOverrideFactory = null;
+        NavigableScaffoldMode = true;
+    }
+
+    internal static void PrepareForRecreation() => Started = NewStarted();
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -40,17 +79,82 @@ public class ReplyNavigationTestActivity : ComponentActivity
         var view = new ComposeView(this) { Id = 0x34701 };
         _view = view;
         view.ViewAttachedToWindow += OnAttached;
-        view.SetContent(() => ReplyApp.Content(
-            Controller,
-            State,
-            type => NavigationTypeObserved.TrySetResult(type)));
+        AdaptiveInfoOverride.Value = AdaptiveInfoOverrideFactory?.Invoke(this);
+        view.SetContent(() =>
+        {
+            var composer = ComposableContext.Current;
+            if (NavigableScaffoldMode)
+            {
+                RenderNavigableScaffold(composer);
+                return;
+            }
+            var windowLayoutInfo =
+                Composables.CollectWindowLayoutInfo(this).Value;
+            if (windowLayoutInfo is not null)
+            {
+                composer.SideEffect(
+                    () => WindowLayoutInfoObserved.TrySetResult(
+                        windowLayoutInfo));
+            }
+            ReplyApp.Content(
+                Controller,
+                State,
+                type => NavigationTypeObserved.TrySetResult(type),
+                AdaptiveInfoOverride.Value,
+                ObservePaneDirective);
+        });
         SetContentView(view);
         Started.TrySetResult(this);
     }
 
+    void RenderNavigableScaffold(IComposer composer)
+    {
+        var navigator =
+            composer.RememberListDetailPaneScaffoldNavigator<long>();
+        _paneNavigator = navigator;
+        var scope = composer.RememberCoroutineScope();
+        void Navigate(long key) => Run(
+            scope,
+            ct => navigator.NavigateToAsync(
+                AdaptivePaneRole.Detail,
+                key,
+                ct));
+        _navigateToPane = Navigate;
+        var list = new ComposeButton(
+            () => Navigate(1L))
+        {
+            new Text("Open detail"),
+        };
+        var detail = new Column
+        {
+            new Text("Navigable detail"),
+            new ComposeButton(() => Navigate(2L))
+            {
+                new Text("Open next detail"),
+            },
+        };
+        new NavigableListDetailPaneScaffold<long>(navigator)
+        {
+            Modifier = Modifier.FillMaxSize(),
+            ListPane = list,
+            DetailPane = detail,
+            DefaultBackBehavior = PaneBackNavigationBehavior.PopLatest,
+        }.Render(composer);
+        composer.SideEffect(Signal);
+    }
+
+    internal void NavigateToPane(long contentKey)
+    {
+        var navigate = _navigateToPane
+            ?? throw new InvalidOperationException(
+                "Navigable list-detail pane callback is not initialized.");
+        navigate(contentKey);
+    }
+
     protected override void OnSaveInstanceState(Bundle outState)
     {
-        State.Save(outState);
+        if (!NavigableScaffoldMode)
+            State.Save(outState);
         base.OnSaveInstanceState(outState);
     }
 
@@ -74,7 +178,8 @@ public class ReplyNavigationTestActivity : ComponentActivity
     public override void OnWindowFocusChanged(bool hasFocus)
     {
         base.OnWindowFocusChanged(hasFocus);
-        if (!hasFocus && _admitted && !_ending)
+        if (!hasFocus && _admitted && !_ending &&
+            !_ownedPopupExpected)
             _admissionFailure = "Reply test activity lost window focus.";
         Signal();
     }
@@ -91,6 +196,30 @@ public class ReplyNavigationTestActivity : ComponentActivity
     }
 
     internal void ExpectLifecycleEnd() => _ending = true;
+
+    internal void ExpectOwnedPopup() => _ownedPopupExpected = true;
+
+    internal void ExpectHostWindow()
+    {
+        _ownedPopupExpected = false;
+        _admissionFailure = null;
+    }
+
+    internal void SetAdaptiveInfo(WindowAdaptiveInfo adaptiveInfo)
+    {
+        ArgumentNullException.ThrowIfNull(adaptiveInfo);
+        AdaptiveInfoOverride.Value = adaptiveInfo;
+    }
+
+    void ObservePaneDirective(PaneScaffoldDirective directive)
+    {
+        PanePartitions = directive.MaxHorizontalPartitions;
+        VerticalPartitions = directive.MaxVerticalPartitions;
+        ExcludedBoundsCount =
+            AdaptiveTestWindowInfo.ExcludedBoundsCount(directive);
+        PanePartitionsObserved.TrySetResult(PanePartitions);
+        Signal();
+    }
 
     internal async Task AtNativeIdle()
     {
@@ -129,13 +258,18 @@ public class ReplyNavigationTestActivity : ComponentActivity
                         _snapshots = field.Get(null)?.JavaCast<Snapshot.Companion>()
                             ?? throw new InvalidOperationException("Snapshot.Companion is unavailable.");
                     }
-                    bool resumed = _resumed && View.HasWindowFocus && View.IsAttachedToWindow &&
+                    bool focusReady =
+                        View.HasWindowFocus || _ownedPopupExpected;
+                    bool resumed = _resumed && focusReady && View.IsAttachedToWindow &&
                         View.IsLaidOut && owner.IsLifecycleInResumedState;
                     if (resumed) _admitted = true;
                     var entry = Controller.Jvm?.CurrentBackStackEntry;
                     var lifecycle = entry?.Lifecycle.CurrentState;
                     // A navigation entry is RESUMED only after its native transition completes.
-                    bool destinationResumed = lifecycle == global::AndroidX.Lifecycle.Lifecycle.State.Resumed;
+                    bool destinationResumed =
+                        NavigableScaffoldMode ||
+                        lifecycle ==
+                            global::AndroidX.Lifecycle.Lifecycle.State.Resumed;
                     bool measurePending = owner.HasPendingMeasureOrLayout;
                     bool compositionPending = recomposer.HasPendingWork;
                     bool snapshotPending = _snapshots.Current.HasPendingChanges;
@@ -146,7 +280,9 @@ public class ReplyNavigationTestActivity : ComponentActivity
                         $"entryLifecycle={lifecycle}, measurePending={measurePending}, " +
                         $"compositionPending={compositionPending}, snapshotPending={snapshotPending}, " +
                         $"notificationPending={notificationPending}";
-                    idle = resumed && destinationResumed && !measurePending && !compositionPending &&
+                    bool compositionReady =
+                        !compositionPending || _ownedPopupExpected;
+                    idle = resumed && destinationResumed && !measurePending && compositionReady &&
                         !snapshotPending && !notificationPending;
                 }).WaitAsync(timeout.Token);
                 if (idle)
@@ -180,6 +316,20 @@ public class ReplyNavigationTestActivity : ComponentActivity
             catch (Exception error) { completion.TrySetException(error); }
         });
         return completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    static async void Run(
+        CoroutineScope scope,
+        Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            await scope.Launch(action);
+        }
+        catch (OperationCanceledException)
+        {
+            // Leaving composition cancels this await; Kotlin may finish.
+        }
     }
 
     void OnAttached(object? sender, EventArgs args)
