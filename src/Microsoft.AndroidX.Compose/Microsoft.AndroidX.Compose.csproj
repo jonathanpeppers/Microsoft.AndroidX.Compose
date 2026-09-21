@@ -42,6 +42,10 @@
           Pack="true"
           PackagePath="buildTransitive"
           Visible="false" />
+    <None Include="profiles\Microsoft.AndroidX.Compose.baseline-prof.txt"
+          Pack="true"
+          PackagePath="buildTransitive"
+          Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />

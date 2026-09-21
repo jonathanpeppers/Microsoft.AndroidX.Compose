@@ -101,6 +101,7 @@
 
   <PropertyGroup Condition="'$(AndroidApplication)' == 'true'">
     <_MicrosoftAndroidXComposeProguardConfiguration>$(MSBuildThisFileDirectory)src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.pro</_MicrosoftAndroidXComposeProguardConfiguration>
+    <_MicrosoftAndroidXComposeBaselineProfile>$(MSBuildThisFileDirectory)src\Microsoft.AndroidX.Compose\profiles\Microsoft.AndroidX.Compose.baseline-prof.txt</_MicrosoftAndroidXComposeBaselineProfile>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)src\Microsoft.AndroidX.Compose\buildTransitive\Microsoft.AndroidX.Compose.targets" />
 

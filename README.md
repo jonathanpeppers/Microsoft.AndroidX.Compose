@@ -32,6 +32,30 @@ Generator unit tests run without an Android SDK:
 dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
 ```
 
+### ART Baseline Profile
+
+Release applications built with R8 automatically consume the package's
+Jetpack Compose ART Baseline Profile. The build merges any additional
+`AndroidArtProfile` items, expands library wildcard rules against the
+application's actual Java archives, lets R8 remove or rewrite rules with the
+code it optimizes, and packages checksum-bound `baseline.prof` and
+`baseline.profm` files for the final DEX.
+
+The latest Android SDK Command-line Tools must be installed because binary
+profile generation uses `profgen`. Set
+`MicrosoftAndroidXComposeEnableBaselineProfile` to `false` to opt out, or add
+an application profile:
+
+```xml
+<ItemGroup>
+  <AndroidArtProfile Include="MyApplication.baseline-prof.txt" />
+</ItemGroup>
+```
+
+This is separate from a Startup Profile, NativeAOT, and R8 correctness rules.
+The library profile does not control primary-DEX startup layout, and hidden
+JNI or reflection access still requires explicit ProGuard configuration.
+
 ## Install CI builds
 
 Successful `main` builds publish prerelease packages to
