@@ -669,7 +669,7 @@ reflection metadata, not compositions or queues; it neither installs a tooling
 observer nor mutates native storage. Missing fields or unsupported queue shapes
 throw explicit compatibility errors. Runtime upgrades must re-audit the
 registration operations and rerun both backend regressions. Consumer keep rules
-in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
+in `Microsoft.AndroidX.Compose.pro` preserve reflected fields, operation identities,
 and the JNI-only shared time/sheet entry points through R8.
 
 The reflection declarations need `-keep class ... { <named fields>; }`, not
@@ -692,7 +692,7 @@ class-plus-field retention restores all eleven eager reflection declarations.
 `dotnet run scripts/check-shared-state-dex.cs -- <apk> [<apk> ...]` checks the final APK's
 DEX class-data declarations (not mere field references) against the Java
 helper's actual reflection calls. CI runs it on the NativeAOT template APK.
-It also requires the JNI-only Java entry points retained by `shared-state-lifetime.pro`:
+It also requires the JNI-only Java entry points retained by `Microsoft.AndroidX.Compose.pro`:
 `PointerInputEventHandlerImpl`'s `Function2` constructor and public suspend
 `invoke(PointerInputScope, Continuation)`, plus `MeasurePolicyFactory.create(Function3)`.
 These helpers are compiled with `Bind=false`; managed `FindClass`/method lookup
@@ -711,8 +711,10 @@ the extracted `proguard.txt` remains present. This removed both
 `SharedStateLifetime` and the JNI-only `TimePickerKt` factories in a reproduced
 incremental build. A clean build restores collection of the existing narrow
 rules; verify the actual R8 `--pg-conf` inputs and final DEX, not just the AAR.
-The library exports its rules, but this work does not fix the SDK's incremental
-cache behavior. That historical clean-build coverage did not establish incremental,
+The package also exports the same file through `buildTransitive`, and in-repo
+Android projects import that configuration directly. Neither path depends on
+incremental AAR consumer-rule extraction. The SDK cache behavior itself remains
+unchanged. That historical clean-build coverage did not establish incremental,
 AOT, obfuscated, or full Release UI compatibility.
 
 The `DeviceTests` project always compiles the complete test source set and

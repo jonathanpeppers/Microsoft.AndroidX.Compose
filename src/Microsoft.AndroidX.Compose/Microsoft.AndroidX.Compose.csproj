@@ -34,6 +34,14 @@
           Pack="true"
           PackagePath="buildTransitive"
           Visible="false" />
+    <None Include="buildTransitive\Microsoft.AndroidX.Compose.targets"
+          Pack="true"
+          PackagePath="buildTransitive"
+          Visible="false" />
+    <None Update="Microsoft.AndroidX.Compose.pro"
+          Pack="true"
+          PackagePath="buildTransitive"
+          Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />
@@ -86,7 +94,7 @@
     <PackageReference Include="Xamarin.AndroidX.Window" />
   </ItemGroup>
   <ItemGroup>
-    <ProguardConfiguration Include="shared-state-lifetime.pro" />
+    <ProguardConfiguration Include="Microsoft.AndroidX.Compose.pro" />
     <AndroidJavaSource Include="Java\PointerInputEventHandlerImpl.java">
       <Bind>false</Bind>
     </AndroidJavaSource>

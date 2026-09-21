@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <_MicrosoftAndroidXComposeProguardConfiguration
+        Condition="'$(_MicrosoftAndroidXComposeProguardConfiguration)' == ''">$(MSBuildThisFileDirectory)Microsoft.AndroidX.Compose.pro</_MicrosoftAndroidXComposeProguardConfiguration>
+  </PropertyGroup>
+  <Target Name="_AddMicrosoftAndroidXComposeProguardConfiguration"
+          BeforeTargets="_CalculateProguardConfigurationFiles"
+          Condition="'$(AndroidApplication)' == 'true'">
+    <Error Condition="!Exists('$(_MicrosoftAndroidXComposeProguardConfiguration)')"
+           Text="Microsoft.AndroidX.Compose ProGuard configuration '$(_MicrosoftAndroidXComposeProguardConfiguration)' was not found." />
+    <ItemGroup>
+      <ProguardConfiguration Include="$(_MicrosoftAndroidXComposeProguardConfiguration)" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -99,4 +99,9 @@
     <PackageReference Update="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(AndroidApplication)' == 'true'">
+    <_MicrosoftAndroidXComposeProguardConfiguration>$(MSBuildThisFileDirectory)src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.pro</_MicrosoftAndroidXComposeProguardConfiguration>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)src\Microsoft.AndroidX.Compose\buildTransitive\Microsoft.AndroidX.Compose.targets" />
+
 </Project>
