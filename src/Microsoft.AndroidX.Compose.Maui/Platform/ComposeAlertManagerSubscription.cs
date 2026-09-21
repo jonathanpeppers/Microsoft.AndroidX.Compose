@@ -113,40 +113,23 @@ public class ComposeAlertManagerSubscription : DispatchProxy
             return;
         }
 
-        // DispatchProxy.Create<TInterface, TProxy>() requires both
-        // type args at compile time, but TInterface is internal to
-        // MAUI. Find the open-generic via reflection and close it.
-        // We register a *factory* so the proxy is built lazily — this
-        // keeps a DispatchProxy initialization failure (e.g. a stripped
-        // System.Reflection.Emit on a trimmed build) from blowing up
-        // application startup; instead the missing service falls back
-        // to MAUI's stock AppCompat dialog.
-        var createGeneric = typeof(DispatchProxy)
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .First(m => m.Name == nameof(DispatchProxy.Create)
-                && m.IsGenericMethodDefinition
-                && m.GetGenericArguments().Length == 2);
-        var create = createGeneric.MakeGenericMethod(
-            ifaceType, typeof(ComposeAlertManagerSubscription));
-
         services.AddSingleton(ifaceType, _ =>
         {
             try
             {
-                return create.Invoke(null, null)
-                    ?? throw new InvalidOperationException(
-                        $"DispatchProxy.Create returned null for " +
-                        $"{ifaceType.FullName}.");
+                // This overload carries linker annotations for every
+                // interface member and the proxy's default constructor.
+                return DispatchProxy.Create(
+                    ifaceType, typeof(ComposeAlertManagerSubscription));
             }
             catch (Exception ex)
             {
-                var inner = ex is TargetInvocationException tie ? (tie.InnerException ?? tie) : ex;
                 global::Android.Util.Log.Error(
                     "ComposeAlertManager",
                     "DispatchProxy.Create failed for " + ifaceType.FullName +
-                    "; falling back to stock AppCompat dialogs. Inner: " +
-                    inner.GetType().FullName + ": " + inner.Message + "\n" +
-                    inner.StackTrace);
+                    ": " +
+                    ex.GetType().FullName + ": " + ex.Message + "\n" +
+                    ex.StackTrace);
                 throw;
             }
         });
@@ -159,6 +142,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
     /// top-level fallback for forward-compat with future MAUI
     /// reorganizations.
     /// </summary>
+    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
     static Type? ResolveSubscriptionInterface()
     {
         // MAUI 10.0.x — interface is nested under AlertManager.
