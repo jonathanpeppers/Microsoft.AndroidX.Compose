@@ -717,6 +717,46 @@ incremental AAR consumer-rule extraction. The SDK cache behavior itself remains
 unchanged. That historical clean-build coverage did not establish incremental,
 AOT, obfuscated, or full Release UI compatibility.
 
+### ART Baseline Profile packaging
+
+`Microsoft.AndroidX.Compose` also packs
+`Microsoft.AndroidX.Compose.baseline-prof.txt` and build-transitive MSBuild
+integration. It is enabled for Android applications when R8 is active. The
+profile is the deterministic merge of the human-readable profiles supplied by
+the pinned AndroidX Compose dependency graph; it deliberately remains an
+optimization input rather than an R8 keep file.
+
+The consumer pipeline is:
+
+1. merge and deduplicate the packaged profile with application-provided
+   `AndroidArtProfile` items;
+2. run `profgen expandWildcards` against the application class archive and
+   resolved program JARs;
+3. pass the concrete rules to R8 through `--art-profile`, producing a rewritten
+   profile for the surviving, renamed, inlined, or merged final program;
+4. create a temporary APK containing the exact final DEX files, run
+   `profgen bin`, and strict-dump the binary profile back against those DEX
+   checksums;
+5. package both outputs uncompressed at `assets/dexopt/baseline.prof` and
+   `assets/dexopt/baseline.profm`, or as
+   `BUNDLE-METADATA/com.android.tools.build.profiles` metadata in an AAB.
+
+R8 may remove a profiled class or method that the application does not use.
+That prevents a broad library profile from retaining the entire Compose
+dependency graph. Raw JNI and reflection contracts remain independently
+protected by `Microsoft.AndroidX.Compose.pro`; profile membership must never be
+used as a correctness keep. Startup Profile/DEX layout is intentionally not
+enabled because that must describe a measured application startup path.
+
+The build requires `profgen` from the latest Android SDK Command-line Tools.
+`MicrosoftAndroidXComposeProfgenClasspath` can select another installation,
+and `MicrosoftAndroidXComposeEnableBaselineProfile=false` opts out. Profile
+rules and generated binaries participate in the R8 and APK incremental inputs.
+`scripts/check-art-baseline-profile.cs` validates package contents and final
+APK/AAB paths and magic. The checked-in profile is generated from the runtime
+library's own resolved Android dependency graph, not from a sample
+application's broader dependency closure.
+
 The `DeviceTests` project always compiles the complete test source set and
 resources, including both the normal MSTest instrumentation and the bounded
 direct-call shared-state runner. Use the standard SDK properties:
