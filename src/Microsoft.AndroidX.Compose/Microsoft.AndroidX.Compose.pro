@@ -1,3 +1,11 @@
+# Temporary until the selected Android SDK includes dotnet/android#12828.
+# The native GC bridge constructs this peer and invokes these methods via JNI.
+-keep class mono.android.GCUserPeer {
+    <init>();
+    public void monodroidAddReference(java.lang.Object);
+    public void monodroidClearReferences();
+}
+
 # JNI constructs this adapter; Compose calls its suspend interface method.
 -keep class net.compose.PointerInputEventHandlerImpl {
     public <init>(kotlin.jvm.functions.Function2);
