@@ -182,6 +182,9 @@ static bool ConfirmGetterIsPreserved(MethodMap methods) =>
 
 static (string Owner, string Name, string Signature, uint Access, bool Direct)[] JniHelperContract() =>
 [
+    ("Lmono/android/GCUserPeer;", "<init>", "()V", 0x10000, true),
+    ("Lmono/android/GCUserPeer;", "monodroidAddReference", "(Ljava/lang/Object;)V", 1, false),
+    ("Lmono/android/GCUserPeer;", "monodroidClearReferences", "()V", 1, false),
     ("Lnet/compose/PointerInputEventHandlerImpl;", "<init>", "(Lkotlin/jvm/functions/Function2;)V", 0x10001, true),
     ("Lnet/compose/PointerInputEventHandlerImpl;", "invoke",
         "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", 1, false),
@@ -360,7 +363,7 @@ static void RunSelfTests()
             (string Name, string Signature, uint Access, bool Direct, uint CodeOffset)[] invalid =
             [
                 original with { Name = "renamed" },
-                original with { Signature = "()V" },
+                original with { Signature = original.Signature == "()V" ? "(I)V" : "()V" },
                 original with { Access = original.Access ^ 8 },
                 original with { Access = original.Access | 0x100 },
                 original with { Access = original.Access | 0x400 },
@@ -402,8 +405,8 @@ static void RunSelfTests()
                 using var json = JsonDocument.Parse(output.ToArray());
                 var result = json.RootElement;
                 Check(result.GetProperty("passed").GetBoolean() == declared);
-                Check(result.GetProperty("dex").GetArrayLength() == 4);
-                Check(result.GetProperty("jni_helpers").GetArrayLength() == 3);
+                Check(result.GetProperty("dex").GetArrayLength() == 5);
+                Check(result.GetProperty("jni_helpers").GetArrayLength() == 6);
                 Check(result.GetProperty("jni_helpers").EnumerateArray().All(helper => helper.GetProperty("present").GetBoolean()));
                 Check(result.GetProperty("sha256").GetString() ==
                     Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(apkPath))));
