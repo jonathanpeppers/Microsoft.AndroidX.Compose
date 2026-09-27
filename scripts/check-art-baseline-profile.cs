@@ -87,6 +87,7 @@ static bool CheckPackage(ZipArchive archive)
         "buildTransitive/Microsoft.AndroidX.Compose.props",
         "buildTransitive/Microsoft.AndroidX.Compose.targets",
         "buildTransitive/Microsoft.AndroidX.Compose.pro",
+        "buildTransitive/Microsoft.AndroidX.Compose.bridges.pro",
         "buildTransitive/Microsoft.AndroidX.Compose.baseline-prof.txt",
     ];
     bool passed = true;

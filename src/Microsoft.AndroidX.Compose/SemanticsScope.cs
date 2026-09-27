@@ -1,3 +1,5 @@
+using AndroidX.Compose.UI.Semantics;
+
 namespace AndroidX.Compose;
 
 /// <summary>
@@ -115,6 +117,46 @@ public sealed class SemanticsScope
     public SemanticsScope Selected(bool isSelected)
     {
         ComposeBridges.SemanticsSetSelected(Handle, isSelected);
+        return this;
+    }
+
+    /// <summary>
+    /// Mark this node as a group of mutually exclusive selectable choices.
+    /// Keep each choice's own selection and radio-button role semantics.
+    /// </summary>
+    public SemanticsScope SelectableGroup()
+    {
+        ComposeBridges.SemanticsSetSelectableGroup(Handle);
+        return this;
+    }
+
+    /// <summary>Expose a toggle's current on/off state to accessibility services.</summary>
+    public SemanticsScope ToggleableState(bool value)
+    {
+        using var state = value
+            ? AndroidX.Compose.UI.State.ToggleableState.On
+            : AndroidX.Compose.UI.State.ToggleableState.Off;
+        ComposeBridges.SemanticsSetToggleableState(
+            Handle, state ?? throw new InvalidOperationException("ToggleableState peer was unavailable."));
+        return this;
+    }
+
+    /// <summary>
+    /// Expose an adjustable value, its inclusive range, and its accessibility
+    /// action on a single node, even when overriding a built-in slider's semantics.
+    /// </summary>
+    public SemanticsScope Progress(float current, FloatRange range, Func<float, bool> onSetProgress, int steps = 0)
+    {
+        ArgumentNullException.ThrowIfNull(onSetProgress);
+        if (!float.IsFinite(current) || current < range.Start || current > range.End)
+            throw new ArgumentOutOfRangeException(nameof(current), current, "Progress must be finite and inside the value range.");
+        if (steps < 0)
+            throw new ArgumentOutOfRangeException(nameof(steps), steps, "Steps cannot be negative.");
+
+        using var javaRange = range.ToKotlin();
+        using var info = new ProgressBarRangeInfo(current, javaRange, steps);
+        ComposeBridges.SemanticsSetProgressBarRangeInfo(Handle, info);
+        ComposeBridges.SemanticsSetProgress(Handle, label: null, new ProgressSemanticsCallback(onSetProgress));
         return this;
     }
 

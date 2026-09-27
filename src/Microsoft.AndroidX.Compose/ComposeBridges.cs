@@ -2497,20 +2497,19 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierBorderDefault))]
     internal static partial IntPtr ModifierBorder(IntPtr modifier, float width, long color, IntPtr? shape);
 
-    // androidx.compose.foundation.BorderKt.border-ziNgDLE$default —
-    // (Modifier, Dp width, Brush, Shape). width is mangled because Dp
-    // is a @JvmInline value class. shape is optional (null → Kotlin
-    // default of RectangleShape).
+    // androidx.compose.foundation.BorderKt.border-ziNgDLE —
+    // (Modifier, Dp width, Brush, Shape). The pinned Foundation binding
+    // has no $default variant for this overload; callers supply
+    // RectangleShape when no shape was requested.
     [ComposeBridge(
         Class     = "androidx/compose/foundation/BorderKt",
-        JvmName   = "border-ziNgDLE$default",
+        JvmName   = "border-ziNgDLE",
         Signature = "(Landroidx/compose/ui/Modifier;F" +
                     "Landroidx/compose/ui/graphics/Brush;" +
-                    "Landroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)" +
-                    "Landroidx/compose/ui/Modifier;",
-        Defaults  = typeof(ModifierBorderBrushDefault))]
+                    "Landroidx/compose/ui/graphics/Shape;)" +
+                    "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierBorderBrush(
-        IntPtr modifier, float width, AndroidX.Compose.UI.Graphics.Brush brush, Shape? shape);
+        IntPtr modifier, float width, AndroidX.Compose.UI.Graphics.Brush brush, Shape shape);
 
     // androidx.compose.ui.draw.DrawModifierKt.drawBehind —
     // (Modifier, Function1<DrawScope, Unit>). Plain Kotlin static
@@ -3222,6 +3221,36 @@ internal static partial class ComposeBridges
         JvmName   = "setSelected",
         Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;Z)V")]
     internal static partial void SemanticsSetSelected(IntPtr receiver, bool selected);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "selectableGroup",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;)V")]
+    internal static partial void SemanticsSetSelectableGroup(IntPtr receiver);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setToggleableState",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Landroidx/compose/ui/state/ToggleableState;)V")]
+    internal static partial void SemanticsSetToggleableState(
+        IntPtr receiver, AndroidX.Compose.UI.State.ToggleableState state);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setProgressBarRangeInfo",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Landroidx/compose/ui/semantics/ProgressBarRangeInfo;)V")]
+    internal static partial void SemanticsSetProgressBarRangeInfo(
+        IntPtr receiver, AndroidX.Compose.UI.Semantics.ProgressBarRangeInfo info);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setProgress",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V")]
+    internal static partial void SemanticsSetProgress(
+        IntPtr receiver, string? label, IFunction1 action);
 
     // androidx.compose.ui.semantics.SemanticsPropertiesKt.setStateDescription(
     //   SemanticsPropertyReceiver, String) — short state hint TalkBack

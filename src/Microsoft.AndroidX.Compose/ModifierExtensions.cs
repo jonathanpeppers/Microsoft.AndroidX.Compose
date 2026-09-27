@@ -479,7 +479,7 @@ public static class ModifierExtensions
     {
         ArgumentNullException.ThrowIfNull(brush);
         var w = width.Value;
-        return modifier.Append(curr => ComposeBridges.ModifierBorderBrush(curr, w, brush, shape),
+        return modifier.Append(curr => ComposeBridges.ModifierBorderBrush(curr, w, brush, shape ?? Shape.Rectangle),
             new ModifierOpKey("BorderBrush", (w, (object)brush, (object?)shape)));
     }
 
@@ -1912,7 +1912,11 @@ public static class ModifierExtensions
             {
                 var scope = new SemanticsScope(obj.Handle);
                 try { properties(scope); }
-                finally { scope.Invalidate(); }
+                finally
+                {
+                    scope.Invalidate();
+                    GC.KeepAlive(obj);
+                }
             }
         });
 }

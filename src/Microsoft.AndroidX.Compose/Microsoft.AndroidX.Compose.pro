@@ -23,6 +23,18 @@
     static int dependencyCount();
     static java.util.concurrent.atomic.AtomicReference pausedOrigin(androidx.compose.runtime.CompositionImpl);
 }
+
+# The rememberNavController JNI call is hand-written, not [ComposeBridge].
+-keep class androidx.navigation.compose.NavHostControllerKt {
+    public static androidx.navigation.NavHostController rememberNavController(androidx.navigation.Navigator[], androidx.compose.runtime.Composer, int);
+}
+
+# The String compatibility overload is generated from [ComposeBridge].
+# Keep this additional AnnotatedString compatibility entry point as well.
+-keep class androidx.compose.material3.TextKt {
+    public static void Text--4IGK_g(androidx.compose.ui.text.AnnotatedString, androidx.compose.ui.Modifier, long, long, androidx.compose.ui.text.font.FontStyle, androidx.compose.ui.text.font.FontWeight, androidx.compose.ui.text.font.FontFamily, long, androidx.compose.ui.text.style.TextDecoration, androidx.compose.ui.text.style.TextAlign, long, int, boolean, int, java.util.Map, kotlin.jvm.functions.Function1, androidx.compose.ui.text.TextStyle, androidx.compose.runtime.Composer, int, int, int);
+}
+
 -keepnames class androidx.compose.runtime.RecomposeScopeImpl
 # These declarations are reflected eagerly, even for an uninstantiated backend.
 # R8 full mode can discard instance fields under keepclassmembers alone.

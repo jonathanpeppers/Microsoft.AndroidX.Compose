@@ -19,7 +19,7 @@ Both are pure C# with no Kotlin source or custom runtime.
 
 ## Build & run
 
-Requires the .NET 10 SDK with the `android` workload and an Android API 34+ emulator or device.
+Requires a .NET 11 SDK with the `android` workload and an Android API 34+ emulator or device.
 
 ```pwsh
 dotnet workload restore
@@ -31,6 +31,9 @@ Generator unit tests run without an Android SDK:
 ```pwsh
 dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
 ```
+
+For a pure `net11.0-android` project that restores the built NuGet from a
+local feed, see [standalone package consumer verification](docs/direct-consumer-verification.md).
 
 ### ART Baseline Profile
 
@@ -414,7 +417,7 @@ exercise these surfaces, including independent LTR/RTL previews.
 
 The gallery builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The catalog app in [`src/Microsoft.AndroidX.Compose.Gallery`](src/Microsoft.AndroidX.Compose.Gallery) exercises the full facade across a category-organized, navigable, searchable surface (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
 
-The facade and sample reference the official `Xamarin.AndroidX.Compose.*` 1.11.2.x and `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly — the per-binding projects this repo originally needed have been deleted.
+The facade and sample reference the official `Xamarin.AndroidX.Compose.*` 1.11.3.x and `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly — the per-binding projects this repo originally needed have been deleted.
 
 ## Docs
 

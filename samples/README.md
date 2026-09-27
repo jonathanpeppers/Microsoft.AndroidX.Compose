@@ -11,7 +11,12 @@ The [sample parity baseline](parity-baseline.md) pins the Kotlin reference,
 defines finite Jetchat/Reply flows and separates source findings from paired
 device evidence. A runnable port is not a claim of whole-app parity.
 
-Build any sample with:
+[`DirectConsumer`](DirectConsumer/) is not a Kotlin port. It is a small pure
+`net11.0-android` app that restores the packed facade from a local NuGet feed
+rather than referencing its source. Its package commands, API-36 evidence, and
+provenance are in [standalone package consumer verification](../docs/direct-consumer-verification.md).
+
+Build a source-referencing port with:
 
 ```pwsh
 dotnet build samples/<Name> -c Release
@@ -32,7 +37,7 @@ Port status legend: ✅ runnable port · 🚧 in progress · ⬜️ not started 
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
 | High                  | JetLagged   | ⬜️     | Custom drawing + heavy animation. |
 
-When adding a new sample, append a row above and create
+When adding a new Kotlin port, append a row above and create
 `samples/<Name>/README.md` describing the omissions.
 
 ## Tracked differences
@@ -115,7 +120,9 @@ All other sample drawables and string content under each `samples/<Name>/` folde
 
 - Each sample is its own `net11.0-android` Exe project under
   `samples/<Name>/`.
-- `<ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />`.
+- Kotlin ports use `<ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />`.
+  `DirectConsumer` instead uses a versioned `PackageReference` and the local feed
+  described above.
 - Reuse the existing root `Directory.Build.targets` for AndroidX
   version management — do not pin versions per sample.
 - Omit `android:icon=` from `AndroidManifest.xml` so the framework

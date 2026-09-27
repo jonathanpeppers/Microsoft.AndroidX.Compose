@@ -34,6 +34,9 @@ jobs:
       - name: Test source generators
         run: dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=test-results.trx"
 
+      - name: Verify generated JNI keep rules
+        run: dotnet run scripts/sync-compose-bridge-r8.cs -- --check
+
       - name: Pack project template
         run: |
           mkdir -p "$RUNNER_TEMP/template-packages"
@@ -41,6 +44,75 @@ jobs:
           dotnet pack src/Microsoft.AndroidX.Compose.Templates -c Release -o "$RUNNER_TEMP/template-packages" -p:PackageVersion="$CI_PACKAGE_VERSION"
           dotnet run scripts/check-art-baseline-profile.cs -- \
             "$(find "$RUNNER_TEMP/template-packages" -maxdepth 1 -name 'Microsoft.AndroidX.Compose.*.nupkg' ! -name '*Templates*' -print -quit)"
+
+      - name: Build isolated direct C# NuGet consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          consumer="$RUNNER_TEMP/direct-consumer"
+          mkdir -p "$consumer"
+          consumer="$(realpath "$consumer")"
+          checkout="$(realpath "$GITHUB_WORKSPACE")"
+          case "$consumer/" in
+            "$checkout/"*)
+              echo "The package consumer must be outside the checkout" >&2
+              exit 1
+              ;;
+          esac
+          cp samples/DirectConsumer/DirectConsumer.csproj \
+            samples/DirectConsumer/*.cs \
+            tests/Microsoft.AndroidX.Compose.PackageSmoke/PackageConsumer.cs "$consumer/"
+          package="$RUNNER_TEMP/template-packages/Microsoft.AndroidX.Compose.$CI_PACKAGE_VERSION.nupkg"
+          test -f "$package"
+          dotnet build "$consumer/DirectConsumer.csproj" -c Release -f net11.0-android \
+            -p:ComposePackageVersion="$CI_PACKAGE_VERSION" \
+            -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:AndroidPackageFormat=apk \
+            -p:AndroidLinkTool=r8 \
+            -p:AndroidBuildApplicationPackage=true \
+            -p:TreatWarningsAsErrors=true \
+            -p:EmitCompilerGeneratedFiles=true \
+            -p:CompilerGeneratedFilesOutputPath="$consumer/obj/generated"
+          preprocessed="$consumer/obj/direct-consumer.pp.xml"
+          dotnet msbuild "$consumer/DirectConsumer.csproj" -p:TargetFramework=net11.0-android \
+            -p:ComposePackageVersion="$CI_PACKAGE_VERSION" \
+            -preprocess:"$preprocessed"
+          for extension in props targets; do
+            if grep -Fq "$checkout/Directory.Build.$extension" "$preprocessed"; then
+              echo "Repository Directory.Build.$extension leaked into the package consumer" >&2
+              exit 1
+            fi
+          done
+          package_root="$(dotnet msbuild "$consumer/DirectConsumer.csproj" \
+            -p:TargetFramework=net11.0-android \
+            -p:ComposePackageVersion="$CI_PACKAGE_VERSION" -getProperty:NuGetPackageRoot)"
+          test -n "$package_root"
+          cached_package="${package_root%/}/microsoft.androidx.compose/$CI_PACKAGE_VERSION/microsoft.androidx.compose.$CI_PACKAGE_VERSION.nupkg"
+          cmp "$package" "$cached_package"
+          echo "Restored NuGet package matches $package"
+          for extension in props targets; do
+            imported="${package_root%/}/microsoft.androidx.compose/$CI_PACKAGE_VERSION/buildTransitive/Microsoft.AndroidX.Compose.$extension"
+            test -f "$imported"
+            grep -Fq "$imported" "$preprocessed"
+            echo "Imported packed asset: $imported"
+          done
+          echo "Repository Directory.Build.props/targets not imported"
+          generated="$(find "$consumer/obj/generated" -type f -name '*Interceptors.g.cs' -print -quit)"
+          test -f "$generated"
+          grep -Fq 'PackageConsumer.Greeting(' "$generated"
+          grep -Fq 'Composables.Text(' "$generated"
+          grep -Fq 'InterceptsLocationAttribute(1,' "$generated"
+          echo "Packaged analyzer generated Greeting and Text interceptors: $generated"
+          dotnet run scripts/check-art-baseline-profile.cs -- \
+            "$consumer/bin/Release/net11.0-android/net.compose.samples.directconsumer-Signed.apk"
+          unzip -p "$package" buildTransitive/Microsoft.AndroidX.Compose.bridges.pro > \
+            "$consumer/packed-bridges.pro"
+          test -s "$consumer/packed-bridges.pro"
+          cmp "$consumer/packed-bridges.pro" \
+            src/Microsoft.AndroidX.Compose/buildTransitive/Microsoft.AndroidX.Compose.bridges.pro
+          python3 scripts/check-compose-bridge-dex.py \
+            "$consumer/bin/Release/net11.0-android/net.compose.samples.directconsumer-Signed.apk" \
+            --bridge-rules "$consumer/packed-bridges.pro"
 
       - name: Install and instantiate project template
         run: |
