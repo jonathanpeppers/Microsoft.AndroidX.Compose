@@ -38,6 +38,10 @@
           Pack="true"
           PackagePath="buildTransitive"
           Visible="false" />
+    <None Include="buildTransitive\Microsoft.AndroidX.Compose.bridges.pro"
+          Pack="true"
+          PackagePath="buildTransitive"
+          Visible="false" />
     <None Update="Microsoft.AndroidX.Compose.pro"
           Pack="true"
           PackagePath="buildTransitive"
@@ -99,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProguardConfiguration Include="Microsoft.AndroidX.Compose.pro" />
+    <ProguardConfiguration Include="buildTransitive\Microsoft.AndroidX.Compose.bridges.pro" />
     <AndroidJavaSource Include="Java\PointerInputEventHandlerImpl.java">
       <Bind>false</Bind>
     </AndroidJavaSource>

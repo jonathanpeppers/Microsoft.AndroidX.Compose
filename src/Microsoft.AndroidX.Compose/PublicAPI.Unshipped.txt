@@ -1525,10 +1525,13 @@ AndroidX.Compose.SemanticsScope.OnClick(System.Action! action) -> AndroidX.Compo
 AndroidX.Compose.SemanticsScope.OnClick(System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Action! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.Progress(float current, AndroidX.Compose.FloatRange range, System.Func<float, bool>! onSetProgress, int steps = 0) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.Role(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.SelectableGroup() -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.Selected(bool isSelected) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.StateDescription(string! description) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.TestTagsAsResourceId(bool value) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.ToggleableState(bool value) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.Shape
 AndroidX.Compose.SheetStateHolder
 AndroidX.Compose.SheetStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.SheetValue!
