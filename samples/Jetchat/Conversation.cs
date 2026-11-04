@@ -259,9 +259,7 @@ public static class Conversation
             // away from the newest message (index 0 in reverse layout).
             c =>
             {
-                var densityValue = AndroidX.Compose.UI.Platform.CompositionLocalsKt.LocalDensity.GetCurrent(c, 0)
-                    ?? throw new InvalidOperationException("LocalDensity was unavailable in the Jetchat conversation.");
-                var density = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Unit.IDensity>(densityValue);
+                var density = LocalDensity.Current(c);
                 int jumpThreshold = (int)(56 * density.Density);
                 var visible = c.Remember(
                     () => ComposeExtensions.DerivedStateOf(

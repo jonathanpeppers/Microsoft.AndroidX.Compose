@@ -10,7 +10,7 @@ receiver, and inferred module ownership checks before short-name matching.
 ## Summary
 
 - **Total Kotlin public symbols in scope**: 2274
-- **Covered by Microsoft.AndroidX.Compose (any kind)**: 447 (**19.7%**)
+- **Covered by Microsoft.AndroidX.Compose (any kind)**: 448 (**19.7%**)
 
 - **@Composable functions**: 176 / 294 (**59.9%**)
 
@@ -26,7 +26,7 @@ receiver, and inferred module ownership checks before short-name matching.
 | `material3-adaptive-navigation-suite` | 3/5 (60%) | 5/13 (38%) |
 | `runtime` | 7/20 (35%) | 13/204 (6%) |
 | `runtime-saveable` | 1/3 (33%) | 1/13 (8%) |
-| `ui` | 11/26 (42%) | 49/607 (8%) |
+| `ui` | 11/26 (42%) | 50/607 (8%) |
 | `ui-graphics` | 0/0 (0%) | 32/189 (17%) |
 | `ui-text` | 0/0 (0%) | 18/131 (14%) |
 | `ui-unit` | 0/0 (0%) | 12/67 (18%) |
@@ -1996,7 +1996,7 @@ receiver, and inferred module ownership checks before short-name matching.
 - [ ] `TouchBoundsExpansion`
 - [x] `TransformOrigin` → type match
 
-### Top-level properties — 5/106 (5%)
+### Top-level properties — 6/106 (6%)
 
 - [ ] `SemanticsPropertyReceiver.accessibilityClassName`
 - [ ] `SemanticsPropertyReceiver.collectionInfo by SemanticsProperties.CollectionInfo`
@@ -2056,7 +2056,7 @@ receiver, and inferred module ownership checks before short-name matching.
 - [x] `LocalConfiguration` → type match
 - [x] `LocalContext` → type match
 - [ ] `LocalCursorBlinkEnabled`
-- [ ] `LocalDensity`
+- [x] `LocalDensity` → type match
 - [x] `LocalFocusManager` → type match
 - [ ] `LocalFontFamilyResolver`
 - [ ] `LocalFontLoader`

@@ -209,6 +209,7 @@ public static class Catalog
         // ---- CompositionLocal & misc ----
         D.LocalsMisc.LocalContextDemo.Demo,
         D.LocalsMisc.BuiltInCompositionLocalsDemo.Demo,
+        D.LocalsMisc.LocalDensityDemo.Demo,
         D.LocalsMisc.CustomCompositionLocalDemo.Demo,
         D.LocalsMisc.ComposeViewInteropDemo.Demo,
         D.LocalsMisc.WindowSizeClassDemo.Demo,
