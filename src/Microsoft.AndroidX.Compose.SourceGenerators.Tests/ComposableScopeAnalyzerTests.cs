@@ -54,6 +54,11 @@ public class ComposableScopeAnalyzerTests
                 public static object Current() => new();
             }
 
+            public static class LocalDensity
+            {
+                public static object Current() => new();
+            }
+
             public sealed class WindowInsets
             {
                 public PaddingValues AsPaddingValues() => new();
@@ -304,6 +309,30 @@ public class ComposableScopeAnalyzerTests
             SourceText(d) == "AndroidX.Compose.LocalFocusManager.Current()");
         Assert.Contains(diagnostics, d =>
             SourceText(d) == "() => AndroidX.Compose.LocalFocusManager.Current()");
+    }
+
+    [Fact]
+    public void ImplicitDensityRead_RequiresComposition()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                public static object Read() => AndroidX.Compose.LocalDensity.Current();
+
+                [AndroidX.Compose.Composable]
+                public static void Render()
+                {
+                    var density = AndroidX.Compose.LocalDensity.Current();
+                    AndroidX.Compose.Composables.Column(
+                        () => AndroidX.Compose.LocalDensity.Current());
+                }
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(
+            "AndroidX.Compose.LocalDensity.Current()",
+            SourceText(diagnostic));
     }
 
     [Fact]

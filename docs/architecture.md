@@ -1107,6 +1107,17 @@ CN5009. `Provides` supports a scoped override. No manager is globally cached.
 the caller passes `true`. Clearing input focus is distinct from moving
 accessibility focus or issuing a keyboard show/hide command.
 
+## Density and font scale
+
+`LocalDensity.Current(composer)` and `Current()` return the bound
+`UI.Unit.IDensity` at the current composition position. Implicit lookup outside
+composition is diagnosed by CN5009. `Provides(IDensity)` installs a density for
+a `CompositionLocalProvider` subtree, and `Provides(density, fontScale)` creates
+one with the bound Kotlin `Density(density, fontScale)` factory. Text, `Dp`, and
+`Sp` measurement inside the provider use the provided values; the Android
+`Configuration` and views outside the composition are unchanged. An app text-size
+setting keeps the inherited density and multiplies the inherited font scale.
+
 ## The `$default` bitmask source generator
 
 Every `@Composable` JVM method takes a trailing `int $default` bitmask

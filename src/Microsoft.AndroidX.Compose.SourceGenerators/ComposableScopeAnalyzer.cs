@@ -99,6 +99,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
                 && type.Name is "LocalColorScheme"
                     or "LocalConfiguration"
                     or "LocalContext"
+                    or "LocalDensity"
                     or "LocalFocusManager"
                     or "LocalLifecycleOwner"
                     or "LocalResources"

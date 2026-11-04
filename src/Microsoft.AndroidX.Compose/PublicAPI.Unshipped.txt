@@ -965,6 +965,7 @@ AndroidX.Compose.ListItem.Trailing.set -> void
 AndroidX.Compose.LocalColorScheme
 AndroidX.Compose.LocalConfiguration
 AndroidX.Compose.LocalContext
+AndroidX.Compose.LocalDensity
 AndroidX.Compose.LocalFocusManager
 AndroidX.Compose.LocalLifecycleOwner
 AndroidX.Compose.LocalResources
@@ -2907,6 +2908,10 @@ static AndroidX.Compose.LocalConfiguration.Provides(Android.Content.Res.Configur
 static AndroidX.Compose.LocalContext.Current() -> Android.Content.Context!
 static AndroidX.Compose.LocalContext.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Content.Context!
 static AndroidX.Compose.LocalContext.Provides(Android.Content.Context! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalDensity.Current() -> AndroidX.Compose.UI.Unit.IDensity!
+static AndroidX.Compose.LocalDensity.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.UI.Unit.IDensity!
+static AndroidX.Compose.LocalDensity.Provides(AndroidX.Compose.UI.Unit.IDensity! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalDensity.Provides(float density, float fontScale) -> AndroidX.Compose.ProvidedValue!
 static AndroidX.Compose.LocalFocusManager.Current() -> AndroidX.Compose.UI.Focus.IFocusManager!
 static AndroidX.Compose.LocalFocusManager.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.UI.Focus.IFocusManager!
 static AndroidX.Compose.LocalFocusManager.Provides(AndroidX.Compose.UI.Focus.IFocusManager! value) -> AndroidX.Compose.ProvidedValue!
