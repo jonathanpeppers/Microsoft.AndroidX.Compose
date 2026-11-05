@@ -77,6 +77,7 @@ public static class Catalog
         D.Selection.RadioButtonGroupDemo.Demo,
         D.Selection.SliderDemo.Demo,
         D.Selection.RangeSliderDemo.Demo,
+        D.Selection.SliderChangeFinishedDemo.Demo,
         D.Selection.SingleChoiceSegmentedButtonsDemo.Demo,
         D.Selection.MultiChoiceSegmentedButtonsDemo.Demo,
 

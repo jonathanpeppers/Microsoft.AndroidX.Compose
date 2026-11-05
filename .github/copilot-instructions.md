@@ -297,6 +297,7 @@ helpers, operators.
 |-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `AndroidX.Compose.UI.IModifier?`                                              | Passed as `BuildModifier()` — no ctor param                                                                                                                                                |
 | `IFunction0` (onClick-style)                                                  | `System.Action` ctor parameter                                                                                                                                                             |
+| `IFunction0?` (optional event, e.g. Slider `onValueChangeFinished`)          | Optional `System.Action?` property / direct parameter; `RememberAction` and the cleared `$default` bit only when supplied                                                                   |
 | `IFunction1` + `[Callback(typeof(T))]`                                        | `Action<T>` ctor; `T` is `bool`, `string`, `float`, or a bound `Java.Lang.Object` peer; nullable callbacks become optional properties |
 | `IFunction3?` + `[DecorationBox]`                                           | Native inner-editor decoration callback; preserves the supplied inner composable on tree and direct surfaces |
 | `IFunction2` content (non-nullable, sole content slot)                        | `ComposableLambdas.Wrap2(…)` — container shape                                                                                                                                             |
@@ -938,6 +939,7 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 |-----------------------------------|-------------------------------------------------------|
 | `IModifier?` (BuildModifier)      | `DiffSlot` on the complete pre-build structural snapshot |
 | `Action` → `IFunction0`           | `Static << bit` (RememberAction-stable peer)          |
+| `Action?` → `IFunction0?`         | `DiffSlot` on the delegate, as for nullable `[Callback]` slots (conservative: a new closure reads Different) |
 | `Action<T>` → `IFunction1`        | `Static << bit` (RememberAction-stable peer)          |
 | `IFunction2`/`IFunction3` content | `Static << bit` for tracked Wrap2/Wrap3; nullable slots also diff presence/identity |
 | `IntPtr` scope receiver           | Entire mask Uncertain until receiver positions are modelled |

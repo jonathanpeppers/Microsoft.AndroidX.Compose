@@ -4349,6 +4349,8 @@ internal static partial class ComposeBridges
         IFunction3?                 thumb,
         FloatRange?                 valueRange,
         SliderColors?               colors,
+        [FacadeAdded]
+        IFunction0?                 onValueChangeFinished,
         bool                        enabled  = true,
         int                         steps    = 0,
         int                         defaults = 0,
@@ -4365,7 +4367,7 @@ internal static partial class ComposeBridges
     //   C# `steps:` (after `_composer`) = JVM `$changed` int
     //   C# `_changed` = JVM `$changed1`
     //   C# `_changed1` = JVM `$default` ← the bitmask we forward
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, FloatRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, FloatRange? valueRange, SliderColors? colors, IFunction0? onValueChangeFinished, bool enabled, int steps, int defaults, IComposer composer, int _changed)
     {
         using var kotlinValueRange = valueRange is { } range
             ? range.ToKotlin()
@@ -4375,7 +4377,7 @@ internal static partial class ComposeBridges
             onValueChange:          onValueChange,
             modifier:               modifier,
             enabled:                enabled,
-            onValueChangeFinished:  null,
+            onValueChangeFinished:  onValueChangeFinished,
             colors:                 colors,
             interactionSource:      null,
             p7:                     steps,

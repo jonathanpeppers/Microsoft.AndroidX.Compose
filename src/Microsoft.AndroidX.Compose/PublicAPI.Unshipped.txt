@@ -1390,6 +1390,8 @@ AndroidX.Compose.RadioButton.Colors.get -> AndroidX.Compose.Material3.RadioButto
 AndroidX.Compose.RadioButton.Colors.set -> void
 AndroidX.Compose.RadioButton.RadioButton(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.RangeSlider
+AndroidX.Compose.RangeSlider.OnValueChangeFinished.get -> System.Action?
+AndroidX.Compose.RangeSlider.OnValueChangeFinished.set -> void
 AndroidX.Compose.RangeSlider.RangeSlider(AndroidX.Compose.FloatRange value, System.Action<AndroidX.Compose.FloatRange>! onValueChange) -> void
 AndroidX.Compose.RangeSlider.ValueRange.get -> AndroidX.Compose.FloatRange?
 AndroidX.Compose.RangeSlider.ValueRange.set -> void
@@ -1555,6 +1557,8 @@ AndroidX.Compose.Size.Width.get -> float
 AndroidX.Compose.Slider
 AndroidX.Compose.Slider.Colors.get -> AndroidX.Compose.Material3.SliderColors?
 AndroidX.Compose.Slider.Colors.set -> void
+AndroidX.Compose.Slider.OnValueChangeFinished.get -> System.Action?
+AndroidX.Compose.Slider.OnValueChangeFinished.set -> void
 AndroidX.Compose.Slider.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0) -> void
 AndroidX.Compose.Slider.Thumb.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Slider.Thumb.set -> void
@@ -2345,7 +2349,8 @@ static AndroidX.Compose.Composables.SelectionContainer(System.Action! content, A
 static AndroidX.Compose.Composables.Shapes() -> AndroidX.Compose.Material3.Shapes!
 static AndroidX.Compose.Composables.SideEffect(System.Action! effect) -> void
 static AndroidX.Compose.Composables.SingleChoiceSegmentedButtonRow(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0, AndroidX.Compose.Modifier? modifier = null, System.Action? thumb = null, AndroidX.Compose.FloatRange? valueRange = null, AndroidX.Compose.Material3.SliderColors? colors = null) -> void
+static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0, AndroidX.Compose.Modifier? modifier = null, System.Action? thumb = null, AndroidX.Compose.FloatRange? valueRange = null, AndroidX.Compose.Material3.SliderColors? colors = null, System.Action? onValueChangeFinished = null) -> void
+static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled, int steps, AndroidX.Compose.Modifier? modifier, System.Action? thumb, AndroidX.Compose.FloatRange? valueRange, AndroidX.Compose.Material3.SliderColors? colors) -> void
 static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
 static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.Snackbar(System.Action! body, bool actionOnNewLine = false, AndroidX.Compose.Modifier? modifier = null, System.Action? action = null, System.Action? dismissAction = null) -> void

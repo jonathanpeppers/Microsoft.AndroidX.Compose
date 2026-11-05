@@ -13,7 +13,8 @@ namespace AndroidX.Compose;
 /// </code>
 /// Set <see cref="ValueRange"/> to change the overall selectable range;
 /// leaving it <see langword="null"/> preserves Material 3's default
-/// <c>0f..1f</c> range.
+/// <c>0f..1f</c> range. Set <see cref="OnValueChangeFinished"/> to run work
+/// once a change ends instead of on every <c>onValueChange</c>.
 /// </summary>
 public sealed class RangeSlider : ComposableNode
 {
@@ -36,6 +37,13 @@ public sealed class RangeSlider : ComposableNode
     /// </summary>
     public FloatRange? ValueRange { get; set; }
 
+    /// <summary>
+    /// Optional callback Material 3 invokes when a value change ends, for
+    /// example when a drag or tap is released. <see langword="null"/> uses
+    /// Kotlin's default (no callback).
+    /// </summary>
+    public Action? OnValueChangeFinished { get; set; }
+
     /// <inheritdoc/>
     public override void Render(IComposer composer)
     {
@@ -44,11 +52,14 @@ public sealed class RangeSlider : ComposableNode
             ? overallRange.ToKotlin()
             : null;
         var onChange = FloatRangeInterop.WrapCallback(_onValueChange);
+        var onValueChangeFinished = OnValueChangeFinished;
+        var onFinished = onValueChangeFinished is null ? null : composer.RememberAction(onValueChangeFinished);
 
         var modifier = BuildModifier();
         int defaults = (int)RangeSliderDefault.All;
         if (modifier is not null) defaults &= ~(int)RangeSliderDefault.Modifier;
         if (valueRange is not null) defaults &= ~(int)RangeSliderDefault.ValueRange;
+        if (onFinished is not null) defaults &= ~(int)RangeSliderDefault.OnValueChangeFinished;
 
         SliderKt.RangeSlider(
             value:                  range,
@@ -57,7 +68,7 @@ public sealed class RangeSlider : ComposableNode
             enabled:                true,
             valueRange:             valueRange,
             p5:                     0,
-            onValueChangeFinished:  null,
+            onValueChangeFinished:  onFinished,
             colors:                 null,
             _composer:              composer,
             steps:                  0,

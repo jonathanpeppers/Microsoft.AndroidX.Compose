@@ -17,6 +17,18 @@ namespace AndroidX.Compose;
 /// <c>composer.SliderColors(...)</c> to override individual color slots
 /// without restating the full theme.
 ///
+/// Optional <c>OnValueChangeFinished</c> runs once a value change ends: a
+/// drag or tap is released, a key is released, or an accessibility action
+/// sets the progress. Use it for work that shouldn't run on every
+/// <c>onValueChange</c> step; leaving it <see langword="null"/> keeps
+/// Material 3's default (no callback):
+/// <code>
+/// new Slider(value: size.Value, onValueChange: v => size.Value = v)
+/// {
+///     OnValueChangeFinished = () => ApplyTextSize(size.Value),
+/// }
+/// </code>
+///
 /// Optional <c>Thumb</c> property replaces the stock 20-dp filled
 /// circle with any <see cref="ComposableNode"/>:
 /// <code>

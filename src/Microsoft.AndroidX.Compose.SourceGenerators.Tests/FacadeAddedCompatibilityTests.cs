@@ -106,6 +106,117 @@ public class FacadeAddedCompatibilityTests
         Assert.Contains("color", full.ToString().ToLowerInvariant());
     }
 
+    static string ActionContract(bool added) => $$"""
+        using AndroidX.Compose.Runtime;
+        using AndroidX.Compose.UI;
+        using AndroidX.Compose;
+        using Kotlin.Jvm.Functions;
+        [assembly: ComposeDefaults("ReleaseDefault", "!value", "!onValueChange", "modifier",
+            "onValueChangeFinished")]
+        namespace AndroidX.Compose
+        {
+            public static partial class ComposeBridges
+            {
+                public static int LastDefaults;
+                [ComposeFacade(Defaults = typeof(ReleaseDefault))]
+                public static partial void Release(float value,
+                    [Callback(typeof(float))] IFunction1 onValueChange, IModifier? modifier,
+                    {{(added ? "[FacadeAdded] IFunction0? onValueChangeFinished," : "")}}
+                    int defaults, IComposer composer, int _changed = 0);
+                public static partial void Release(float value, IFunction1 onValueChange, IModifier? modifier,
+                    {{(added ? "IFunction0? onValueChangeFinished," : "")}}
+                    int defaults, IComposer composer, int _changed)
+                {
+                    LastDefaults = defaults;
+                }
+            }
+        }
+        """;
+
+    [Fact]
+    public void AddedOptionalActionKeepsOldContractsAndKotlinDefaultUntilSupplied()
+    {
+        // ReleaseDefault: Modifier = 4, OnValueChangeFinished = 8.
+        var (old, oldDiags, _) = FacadeGeneratorTests.Run(ActionContract(false), "Release");
+        Assert.Empty(oldDiags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        using var oldImage = Emit(old);
+        const string legacySource = """
+            using System;
+            using AndroidX.Compose;
+            public static class Consumer
+            {
+                public static bool Run()
+                {
+                    Action<float, Action<float>, Modifier?> method = Composables.Release;
+                    Action<AndroidX.Compose.Runtime.IComposer, float, Action<float>, Modifier?, ulong, int>
+                        direct = Composables.Release_PrimaryResource_Implicit;
+                    direct(new TestComposer(), 0f, _ => {}, null, 0UL, 0);
+                    return ComposeBridges.LastDefaults == 8;
+                }
+                public static void SourceCalls()
+                {
+                    Composables.Release(0f, _ => {});
+                    Composables.Release(0f, _ => {}, null);
+                }
+            }
+            """;
+        using var binaryConsumer = Emit(Consumer(legacySource, oldImage.ToArray(), "OldActionConsumer"));
+        var (current, diags, emitted) = FacadeGeneratorTests.Run(ActionContract(true), "Release");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        using var currentImage = Emit(current);
+        using var rebuiltConsumer = Emit(Consumer(legacySource, currentImage.ToArray(), "RebuiltActionConsumer"));
+        const string addedSource = """
+            using System;
+            using AndroidX.Compose;
+            public static class Consumer
+            {
+                public static bool Run()
+                {
+                    var composer = new TestComposer();
+                    new Release(0f, _ => {}).Render(composer);
+                    bool treeOmitted = ComposeBridges.LastDefaults == 12;
+                    new Release(0f, _ => {}) { OnValueChangeFinished = () => {} }.Render(composer);
+                    bool treeSupplied = ComposeBridges.LastDefaults == 4;
+                    Composables.Release_PrimaryResource_Implicit_WithAddedSlots(composer, 0f, _ => {}, null, null, 0x8UL, 0);
+                    bool directOmitted = ComposeBridges.LastDefaults == 8;
+                    Composables.Release_PrimaryResource_Implicit_WithAddedSlots(composer, 0f, _ => {}, null, () => {}, 0UL, 0);
+                    bool directSupplied = ComposeBridges.LastDefaults == 0;
+                    return treeOmitted && treeSupplied && directOmitted && directSupplied;
+                }
+                public static void SourceCalls()
+                {
+                    Composables.Release(0f, _ => {}, onValueChangeFinished: () => {});
+                    Composables.Release(0f, _ => {}, null, () => {});
+                }
+            }
+            """;
+        using var addedConsumer = Emit(Consumer(addedSource, currentImage.ToArray(), "AddedActionConsumer"));
+        var context = new AssemblyLoadContext("FacadeAddedAction", isCollectible: true);
+        try
+        {
+            context.LoadFromStream(currentImage);
+            MemoryStream[] consumers = [binaryConsumer, rebuiltConsumer, addedConsumer];
+            foreach (var image in consumers)
+            {
+                var method = context.LoadFromStream(image).GetType("Consumer")?.GetMethod("Run")
+                    ?? throw new InvalidOperationException("Compatibility consumer entry point missing.");
+                Assert.Equal(true, method.Invoke(null, null));
+            }
+        }
+        finally
+        {
+            context.Unload();
+        }
+
+        var legacy = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .Single(m => m.Identifier.Text == "Release_PrimaryResource_Implicit");
+        Assert.DoesNotContain("ReleaseDefault.OnValueChangeFinished", legacy.ToString());
+        Assert.DoesNotContain("RememberAction(onValueChangeFinished)", legacy.ToString());
+        Assert.Contains("__modifier, default, (int)__defaults", legacy.ToString());
+    }
+
     [Fact]
     public void ExplicitAndImplicitCallsResolveWithoutAmbiguity()
     {
