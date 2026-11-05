@@ -382,6 +382,55 @@ public class FacadeGeneratorTests
         Assert.DoesNotContain("new global::AndroidX.Compose.ComposableLambda3", source);
     }
 
+    [Fact]
+    public void NullableFunction0_IsOptionalActionOnEverySurface()
+    {
+        // Slider's onValueChangeFinished: (() -> Unit)? = null.
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("ReleaseDefault", "!value", "!onValueChange", "modifier", "onValueChangeFinished")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(ReleaseDefault))]
+                    public static partial void Release(float value,
+                        [Callback(typeof(float))] IFunction1 onValueChange,
+                        IModifier? modifier,
+                        IFunction0? onValueChangeFinished,
+                        int defaults, IComposer composer, int _changed = 0);
+                    public static partial void Release(float value, IFunction1 onValueChange, IModifier? modifier,
+                        IFunction0? onValueChangeFinished, int defaults, IComposer composer, int _changed) { }
+                }
+            }
+            """;
+        var (output, diagnostics, source) = Run(code, "Release");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(source);
+
+        // Tree: an optional property, not a required constructor Action.
+        Assert.Contains("public global::System.Action? OnValueChangeFinished { get; set; }", source);
+        Assert.Contains("public Release(float value, global::System.Action<float> onValueChange)", source);
+        Assert.Contains("var __onValueChangeFinishedCallback = OnValueChangeFinished;", source);
+        Assert.Contains("var __onValueChangeFinished = __onValueChangeFinishedCallback is null ? null : composer.RememberAction(__onValueChangeFinishedCallback);", source);
+        Assert.Contains("if (OnValueChangeFinished is not null) __defaults &= ~(int)global::AndroidX.Compose.ReleaseDefault.OnValueChangeFinished;", source);
+        Assert.Contains("composer.DiffSlot(OnValueChangeFinished, ", source);
+        Assert.Contains("__modifier, __onValueChangeFinished, __defaults", source);
+
+        // Direct: an optional Action? parameter whose omission keeps the Kotlin default.
+        Assert.Contains("global::System.Action? onValueChangeFinished = null", source);
+        Assert.Contains("var __onValueChangeFinished = onValueChangeFinished is null ? null : __composer.RememberAction(onValueChangeFinished);", source);
+        Assert.Contains("(onValueChangeFinished is null ? 0x8UL : 0UL)", source);
+        Assert.Contains("if ((__omittedArguments & 0x8UL) == 0) __defaults &= ~global::AndroidX.Compose.ReleaseDefault.OnValueChangeFinished;", source);
+        Assert.Contains("__changed |= ((__directChanged >> 10) & 0b111) << 10;", source);
+        Assert.DoesNotContain("ThrowIfNull(onValueChangeFinished)", source);
+        Assert.DoesNotContain("IFunction0? OnValueChangeFinished", source);
+    }
+
     [Theory]
     [InlineData("IFunction2?")]
     [InlineData("IFunction3")]

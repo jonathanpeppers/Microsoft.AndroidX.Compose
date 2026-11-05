@@ -1440,7 +1440,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (classification.Mode == LambdaExecutionMode.Event
                 && classification.Arity == 0)
             {
-                return new FacadeSlot(p, FacadeSlotKind.OnClick);
+                // A nullable IFunction0? (e.g. Slider's onValueChangeFinished)
+                // is an optional Action? property, not a required ctor Action.
+                return new FacadeSlot(p,
+                    p.NullableAnnotation == NullableAnnotation.Annotated
+                        ? FacadeSlotKind.OptionalValue : FacadeSlotKind.OnClick);
             }
 
             if (classification.Mode
@@ -1784,8 +1788,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(" = ").Append(adapter).AppendLine(";");
         }
 
-        // Callback wrappers (Phase 2).
-        foreach (var s in slots.Where(s => s.CallbackType is not null))
+        // Callback wrappers (Phase 2), including optional Action? callbacks.
+        foreach (var s in slots.Where(HasCallbackWrapper))
         {
             EmitCallbackWrapper(sb, s, composerName);
         }
@@ -2611,7 +2615,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(" = ").Append(adapter).AppendLine(";");
         }
 
-        foreach (var s in slots.Where(s => s.CallbackType is not null))
+        foreach (var s in slots.Where(HasCallbackWrapper))
             EmitComposableMethodCallbackWrapper(sb, s);
 
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
@@ -2824,21 +2828,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static void EmitComposableMethodCallbackWrapper(StringBuilder sb, FacadeSlot s)
     {
-        var t = s.CallbackType
-            ?? throw new InvalidOperationException("Callback slot is missing its callback type.");
-        string expr = t.SpecialType switch
-        {
-            SpecialType.System_Boolean => "v is global::Java.Lang.Boolean __b && __b.BooleanValue()",
-            SpecialType.System_Single => "v is global::Java.Lang.Float __f ? __f.FloatValue() : 0f",
-            SpecialType.System_String => "v?.ToString() ?? string.Empty",
-            _ => CallbackPeerExpression(t),
-        };
         var adapter = LambdaAdapterLowering.EmitExpression(
             new LambdaAdapterClassification(
                 LambdaExecutionMode.Event,
-                arity: 1),
+                arity: s.IsOptionalAction ? 0 : 1),
             "__composer",
-            "v => " + EscapeIdent(s.Param.Name) + "(" + expr + ")");
+            CallbackAdapterBody(s, EscapeIdent(s.Param.Name)));
         sb.Append("            var __").Append(s.Param.Name)
           .Append(" = ");
         if (s.Kind == FacadeSlotKind.OptionalValue)
@@ -3199,7 +3194,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("            var __").Append(s.Param.Name)
               .Append(" = ").Append(adapter).AppendLine(";");
         }
-        foreach (var s in secondarySlots.Where(s => s.CallbackType is not null))
+        foreach (var s in secondarySlots.Where(HasCallbackWrapper))
             EmitComposableMethodCallbackWrapper(sb, s);
 
         if (secondarySlots.Any(s => s.Kind == FacadeSlotKind.Modifier))
@@ -3333,7 +3328,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
                 or FacadeSlotKind.StateHolder or FacadeSlotKind.NativePayloadContent
                 => "__" + s.Param.Name,
-            FacadeSlotKind.OptionalValue when s.CallbackType is not null => "__" + s.Param.Name,
+            FacadeSlotKind.OptionalValue when HasCallbackWrapper(s) => "__" + s.Param.Name,
             FacadeSlotKind.Primitive or FacadeSlotKind.OptionalValue
                 => EscapeIdent(s.Param.Name),
             FacadeSlotKind.PainterResource => "__painterPeer",
@@ -3447,16 +3442,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string indent = "            ",
         string? localName = null)
     {
-        var t = s.CallbackType
-            ?? throw new InvalidOperationException(
-                $"Callback slot '{s.Param.Name}' has no callback type.");
-        string expr = t.SpecialType switch
-        {
-            SpecialType.System_Boolean => "v is global::Java.Lang.Boolean __b && __b.BooleanValue()",
-            SpecialType.System_Single  => "v is global::Java.Lang.Float __f ? __f.FloatValue() : 0f",
-            SpecialType.System_String  => "v?.ToString() ?? string.Empty",
-            _ => CallbackPeerExpression(t),
-        };
         string name = localName ?? "__" + s.Param.Name;
         string target = CtorFieldExpression(s);
         if (s.Kind == FacadeSlotKind.OptionalValue)
@@ -3468,15 +3453,46 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var adapter = LambdaAdapterLowering.EmitExpression(
             new LambdaAdapterClassification(
                 LambdaExecutionMode.Event,
-                arity: 1),
+                arity: s.IsOptionalAction ? 0 : 1),
             composerName,
-            "v => " + target + "(" + expr + ")");
+            CallbackAdapterBody(s, target));
         sb.Append(indent).Append("var ").Append(name)
           .Append(" = ");
         if (s.Kind == FacadeSlotKind.OptionalValue)
             sb.Append(target).Append(" is null ? null : ");
         sb.Append(adapter).AppendLine(";");
     }
+
+    /// <summary>
+    /// <c>RememberAction</c> argument for a callback slot. An optional
+    /// <c>Action?</c> (nullable <c>IFunction0?</c>) passes
+    /// <paramref name="target"/> through; a <c>[Callback(typeof(T))]</c>
+    /// slot unboxes the Kotlin argument and invokes it.
+    /// </summary>
+    static string CallbackAdapterBody(FacadeSlot s, string target)
+    {
+        if (s.IsOptionalAction)
+            return target;
+        var t = s.CallbackType
+            ?? throw new InvalidOperationException(
+                $"Callback slot '{s.Param.Name}' has no callback type.");
+        string expr = t.SpecialType switch
+        {
+            SpecialType.System_Boolean => "v is global::Java.Lang.Boolean __b && __b.BooleanValue()",
+            SpecialType.System_Single  => "v is global::Java.Lang.Float __f ? __f.FloatValue() : 0f",
+            SpecialType.System_String  => "v?.ToString() ?? string.Empty",
+            _ => CallbackPeerExpression(t),
+        };
+        return "v => " + target + "(" + expr + ")";
+    }
+
+    /// <summary>
+    /// True for slots lowered through a remembered callback local:
+    /// <c>[Callback(typeof(T))]</c> callbacks and optional <c>Action?</c>
+    /// callbacks.
+    /// </summary>
+    static bool HasCallbackWrapper(FacadeSlot s) =>
+        s.CallbackType is not null || s.IsOptionalAction;
 
     static bool IsJavaObject(INamedTypeSymbol type)
     {
@@ -3935,7 +3951,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.ThemeColor       => "__color",
             FacadeSlotKind.ScopeReceiver    => "global::AndroidX.Compose.RenderContext.CurrentScope",
             FacadeSlotKind.StateHolder      => "__" + s.Param.Name,
-            FacadeSlotKind.OptionalValue when s.CallbackType is not null => "__" + s.Param.Name,
+            FacadeSlotKind.OptionalValue when HasCallbackWrapper(s) => "__" + s.Param.Name,
             FacadeSlotKind.OptionalValue    => PropertyName(s),
             _ => "default",
         };
@@ -4166,7 +4182,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("                var __sec").Append(Pascal(s.Param.Name))
               .Append(" = ").Append(adapter).AppendLine(";");
         }
-        foreach (var s in secondarySlots.Where(s => s.CallbackType is not null))
+        foreach (var s in secondarySlots.Where(HasCallbackWrapper))
         {
             EmitCallbackWrapper(
                 sb,
@@ -4297,7 +4313,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 else if (slot.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
                     or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3)
                     sb.Append("__sec").Append(Pascal(slot.Param.Name));
-                else if (slot.Kind == FacadeSlotKind.OnClick || slot.CallbackType is not null)
+                else if (slot.Kind == FacadeSlotKind.OnClick || HasCallbackWrapper(slot))
                     sb.Append("__sec").Append(Pascal(slot.Param.Name));
                 else if (slot.Kind == FacadeSlotKind.ThemeColor)
                     sb.Append("__secColor");
@@ -4457,6 +4473,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         if (s.CallbackType is { } callbackType)
             return "global::System.Action<" + callbackType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ">?";
+        if (s.IsOptionalAction)
+            return "global::System.Action?";
         var t = s.Param.Type;
         var format = SymbolDisplayFormat.FullyQualifiedFormat
             .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes
@@ -4976,6 +4994,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             a.AttributeClass?.ToDisplayString() == "AndroidX.Compose.DecorationBoxAttribute");
         public bool IsNullableSlot => Param.NullableAnnotation == NullableAnnotation.Annotated
             && KindIsFnSlot(Kind);
+        /// <summary>
+        /// Nullable <c>IFunction0?</c> event callback surfaced as an optional
+        /// <c>Action?</c> (for example Slider's <c>onValueChangeFinished</c>).
+        /// </summary>
+        public bool IsOptionalAction => Kind == FacadeSlotKind.OptionalValue
+            && CallbackType is null
+            && LambdaAdapterLowering.KotlinFunctionArity(Param.Type) == 0;
         public bool IsParameterisedStateHolder =>
             Kind == FacadeSlotKind.StateHolder && RememberArgExpressions.Length > 0;
         static bool KindIsFnSlot(FacadeSlotKind k) =>
